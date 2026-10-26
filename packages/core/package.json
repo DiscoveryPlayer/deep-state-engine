@@ -1,0 +1,13 @@
+{
+  "name": "@dse/core",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Silnik meta-gry: stan, reguły, zegary, Rejestr. Bez dostępu do plików i sieci.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "zod": "^3.25.0"
+  }
+}

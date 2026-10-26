@@ -1,0 +1,91 @@
+# Postaci startowe: dyrektorzy frakcji (GDD 7.2–7.7).
+# Pierścień środkowy z Dokumentu Decyzyjnego 5.3 — postaci fikcyjne, czasem kompozyty.
+# Korpus Astronautów z Biblii świata dochodzi w osobnym kroku (decyzja w toku).
+
+characters:
+  - id: voss
+    name: gen. Harlan Voss
+    faction: DPO
+    role: Dyrektor Programów Obronnych
+    competence: 4
+    loyalty: 0
+    ambition: 3
+    traits: [weteran, lojalista_instytucji]
+    dmNote: Kompozyt LeMaya i Schrievera. Chłodny, rzeczowy, lojalny wobec instytucji bardziej niż wobec ludzi.
+    voice:
+      register: krótkie zdania wojskowe, liczby zamiast przymiotników
+      habits: [zaczyna od wniosku, mówi „mój zespół” zamiast „ja”]
+      neverSays: [że ZSRR może mieć rację]
+
+  - id: ames
+    name: Dorothy Ames
+    faction: BAS
+    role: Kierowniczka Biura Analiz Specjalnych
+    competence: 5
+    loyalty: 0
+    ambition: 3
+    traits: [paranoik, lojalista_instytucji]
+    hiddenTraits: [kontakt_cia]
+    dmNote: Była analityczka kryptologiczna. Wie o przeszłości Brandta (R-0001).
+    voice:
+      register: uprzejmy, precyzyjny, z niedopowiedzeniami
+      habits: [odpowiada pytaniem, podaje źródło i kod wiarygodności]
+      neverSays: [skąd naprawdę wie]
+
+  - id: brandt
+    name: dr Emil Brandt
+    faction: RN
+    role: Przewodniczący Rady Naukowej
+    competence: 5
+    loyalty: 0
+    ambition: 4
+    traits: [wizjoner, pedant]
+    hiddenTraits: [przeszlosc_wojenna]
+    dmNote: Kompozyt Paperclip. Praca w zakładzie wykorzystującym pracę przymusową. BAS wie, Anderson nie.
+    voice:
+      register: formalny, akademicki, lekko staroświecki angielski
+      habits: [podpisuje się inicjałami, odwołuje się do danych telemetrycznych]
+      neverSays: [czegokolwiek o latach 1943–1945]
+
+  - id: delaney
+    name: Frank Delaney
+    faction: BLZ
+    role: Dyrektor Lotów
+    competence: 4
+    loyalty: 0
+    ambition: 2
+    traits: [pedant, weteran]
+    dmNote: Były pilot doświadczalny, perfekcjonista.
+    voice:
+      register: krótkie zdania, techniczny żargon lotniczy, zero ozdobników
+      habits: [zaczyna od faktów, kończy prośbą, używa liczb zamiast przymiotników]
+      neverSays: [że lot jest bezpieczny, jeśli nie jest]
+
+  - id: haskell
+    name: Leonard Haskell
+    faction: PRZ
+    role: Szef biura łącznikowego Konsorcjów
+    competence: 3
+    loyalty: 0
+    ambition: 4
+    traits: [karierowicz, medialny]
+    hiddenTraits: [dlugi]
+    dmNote: Postać nowa, nieobecna w GDD v1.0 — PRZ potrzebuje twarzy. Do zatwierdzenia.
+    voice:
+      register: serdeczny ton sprzedawcy, dużo „partnerstwa” i „wspólnego interesu”
+      habits: [wspomina senatorów po imieniu, zaprasza na kolacje]
+      neverSays: [ile naprawdę kosztuje produkcja]
+
+  - id: ruskin
+    name: Walt Ruskin
+    faction: DOI
+    role: Dyrektor Operacji i Infrastruktury
+    competence: 4
+    loyalty: 0
+    ambition: 1
+    traits: [weteran, wypalony]
+    dmNote: Były kierownik budowy, małomówny i bardzo zmęczony.
+    voice:
+      register: notatki odręczne, półsłówka, język budowy
+      habits: [pisze krótko, podaje terminy w tygodniach]
+      neverSays: [że coś jest niemożliwe — mówi „potrwa”]

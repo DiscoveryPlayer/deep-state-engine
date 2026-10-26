@@ -1,0 +1,14 @@
+{
+  "name": "@dse/cli",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Narzędzia wiersza poleceń: nowa kampania, podgląd stanu, walidacja danych.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@dse/core": "0.1.0",
+    "@dse/content": "0.1.0"
+  }
+}

@@ -1,0 +1,146 @@
+# Sześć frakcji wewnętrznych PACE (GDD 7.2–7.7).
+# Wpływ 1–5 na start: GDD aneks B. Agendy: GDD „Typowe Agendy”.
+# Nazwy koncernów w PRZ: Dokument Decyzyjny 5.4.
+
+factions:
+  - id: DPO
+    name: Dyrektoriat Programów Obronnych
+    influence: 4
+    summary: >-
+      Oficerowie oddelegowani z sił zbrojnych, z zapleczem w Pentagonie. Wewnątrz rywalizują
+      trzy Służby: Lotnictwo, Armia i Marynarka (DD 4.5).
+    wants: Niezawodnych rakiet, rozpoznania, łączności wojskowej i żadnej przewagi technicznej po stronie ZSRR.
+    measuresSuccessBy: Seria udanych startów, terminowość, liczba ładunków wojskowych na orbicie.
+    levers:
+      - Wycofanie funduszy celowych
+      - Wniosek do Pentagonu o przejęcie programu
+      - Odmowa udostępnienia obiektów wojskowych
+      - Wpływ na poziom klauzul tajności
+    gifts:
+      - Fundusze celowe
+      - Dane z testów rakiet wojskowych (niezawodność wybranych rodzin silników)
+      - Osłona polityczna przy porażkach „obronnych”
+    agendas:
+      - { id: seria_bez_awarii, title: Seria startów bez awarii }
+      - { id: rozpoznanie_polarne, title: Satelita rozpoznawczy na orbicie polarnej }
+      - { id: stacja_wojskowa, title: Militarna stacja orbitalna }
+      - { id: odpowiedz_asat, title: Odpowiedź na radziecki system antysatelitarny }
+    startAgenda: seria_bez_awarii
+    paradox: Najbardziej przewidywalna frakcja i największe zagrożenie dla Fasady — każdy jej sukces osłabia WF.
+    rivals: [RN]
+
+  - id: BAS
+    name: Biuro Analiz Specjalnych
+    influence: 3
+    summary: Formalnie komórka analityczna, faktycznie łącznik z CIA (NRO powstaje dopiero w 1961 r.).
+    wants: Tajemnicy, kontroli nad informacją i dostępu do możliwości technicznych PACE.
+    measuresSuccessBy: Brak przecieków, jakość wiedzy o ZSRR, kontrola nad tym, kto wie co.
+    levers:
+      - Opóźnianie i selekcja raportów wywiadowczych
+      - Postępowania sprawdzające wobec kadry
+      - Kontrola Ciśnienia Tajemnic
+    gifts:
+      - Lepsze Oceny wywiadowcze o ZSRR
+      - Zamknięcie przecieku
+      - Operacje dezinformacyjne
+    agendas:
+      - { id: weryfikacja_kadry, title: Weryfikacja lojalności kadry }
+      - { id: siec_rozpoznania, title: Zbudować sieć satelitów rozpoznawczych }
+      - { id: zatrzymac_przeciek, title: Zatrzymać przeciek }
+      - { id: kontrola_telemetrii, title: Przejąć kontrolę nad telemetrią }
+    startAgenda: weryfikacja_kadry
+    paradox: Jedyne okno na ZSRR i jedyna frakcja, która może celowo wprowadzić Andersona w błąd.
+    rivals: [RN]
+
+  - id: RN
+    name: Rada Naukowa
+    influence: 2
+    summary: Uczeni z uniwersytetów, NACA i laboratoriów państwowych; najbliżej idei „pokoju przez wiedzę”.
+    wants: Czasu, danych, sond, satelitów naukowych i jawnej publikacji wyników.
+    measuresSuccessBy: Liczba i jakość eksperymentów, odkrycia, prestiż międzynarodowy.
+    levers:
+      - Publiczna krytyka programu przez autorytety naukowe
+      - Odmowa udziału w programach niejawnych
+      - Odejście kluczowych specjalistów
+    gifts:
+      - Przyspieszenie badań
+      - Prestiż międzynarodowy (WF)
+      - Naukowe uzasadnienie misji, które Waszyngton uważa za zbędne
+    agendas:
+      - { id: satelita_naukowy, title: Pierwszy satelita naukowy z jawnymi danymi }
+      - { id: sonda_planetarna, title: Pierwsza sonda planetarna }
+      - { id: jawnosc_danych, title: Pełna jawność danych }
+      - { id: ochrona_budzetu_nauki, title: Ochrona budżetu nauki przed cięciami }
+    startAgenda: satelita_naukowy
+    paradox: Najsilniejszy sojusznik Fasady i najsłabsza frakcja w Waszyngtonie.
+    rivals: [DPO, BAS]
+
+  - id: BLZ
+    name: Biuro Lotów Załogowych
+    influence: 1
+    summary: Dyrektorzy lotów, lekarze lotniczy i — od Epoki II — Korpus Astronautów. W 1951 r. mała grupa przy programie X-Planes.
+    wants: Bezpieczeństwa, lotów i prawa weta wobec misji uznanych za zbyt ryzykowne.
+    measuresSuccessBy: Bezpieczny powrót każdej załogi, liczba lotów załogowych, prestiż publiczny.
+    levers:
+      - Formalna odmowa lotu
+      - Wypowiedzi publiczne pilotów i astronautów
+      - Żądanie dodatkowych testów
+    gifts:
+      - Poparcie Publiczne
+      - Morale
+      - Szybsza realizacja trudnych misji
+    agendas:
+      - { id: bezpieczne_x_planes, title: Program X-Planes bez ofiar }
+      - { id: prawo_weta, title: Prawo weta dla pilotów }
+      - { id: dodatkowe_testy, title: Dodatkowy cykl testów przed lotem }
+      - { id: pierwszy_na_orbicie, title: Pierwszy człowiek na orbicie }
+    startAgenda: bezpieczne_x_planes
+    paradox: Daje najwięcej Poparcia Publicznego i najbardziej katastrofalne kryzysy.
+    rivals: [DOI]
+
+  - id: PRZ
+    name: Konsorcja Przemysłowe
+    influence: 3
+    summary: >-
+      Wspólne biuro łącznikowe czterech koncernów: Liberty Rocket & Motors (silniki ciekłe),
+      Stratton-Marwick Aviation (nosiciele i struktury), Ellison-Wright Aircraft (kapsuły)
+      i Keystone Propulsion (paliwa stałe, stopnie górne).
+    wants: Kontraktów, stabilnych zamówień, zysków i przewagi nad konkurencją.
+    measuresSuccessBy: Udział w budżecie i w pojazdach (mechanika Udziałów, GDD 7.6).
+    levers:
+      - Lobbing w Kongresie przed Sesją Budżetową
+      - Opóźnienia dostaw
+      - Przekroczenia kosztów
+    gifts:
+      - Wsparcie w Kongresie
+      - Rabaty i przyspieszenia
+      - Dostęp do prototypów
+    agendas:
+      - { id: duzy_kontrakt, title: Duży kontrakt na nową rakietę }
+      - { id: stale_zamowienia, title: Stabilne zamówienia seryjne }
+      - { id: monopol_silnikowy, title: Monopol na silniki główne }
+    startAgenda: stale_zamowienia
+    paradox: Jedyna frakcja, która może podnieść budżet, i jedyna, która zarabia na problemach programu.
+    rivals: []
+
+  - id: DOI
+    name: Dyrektoriat Operacji i Infrastruktury
+    influence: 2
+    summary: Zarządcy ośrodków, logistycy, ekipy wyrzutni i stacje śledzące.
+    wants: Realistycznych harmonogramów, inwestycji w infrastrukturę i uznania.
+    measuresSuccessBy: Stan infrastruktury, terminowość przygotowań, brak wypadków naziemnych.
+    levers:
+      - Spowolnienie przygotowań
+      - Raporty o zagrożeniach bezpieczeństwa
+      - Odmowa startu w niebezpiecznych warunkach
+    gifts:
+      - Szybsze przygotowania i rozbudowa obiektów
+      - Ostrzeżenia o problemach, zanim staną się wypadkami
+    agendas:
+      - { id: modernizacja_wyrzutni, title: Modernizacja wyrzutni }
+      - { id: nowy_osrodek, title: Nowy ośrodek startowy }
+      - { id: mniej_nadgodzin, title: Ograniczenie nadgodzin }
+      - { id: siec_sledzenia, title: Rozbudowa sieci śledzenia }
+    startAgenda: modernizacja_wyrzutni
+    paradox: Najmniej widoczna frakcja; ignorowana staje się źródłem najbardziej upokarzających wypadków.
+    rivals: [BLZ]

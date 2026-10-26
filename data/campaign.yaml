@@ -1,0 +1,32 @@
+# Parametry startowe kampanii.
+# Źródła: GDD v1.0 aneks B, Dokument Decyzyjny v1.1, Plan Budowy (rozdz. 1–2).
+
+organization:
+  acronym: PACE
+  brand: Intermarium History
+  # Kolejne rozwinięcia skrótu. Zmiana w 1958 r. jest decyzją Andersona w kryzysie
+  # „Szok orbitalny” (DD 4.2), więc data „from” to najwcześniejszy możliwy moment.
+  names:
+    - from: 1951-Q1
+      full: Pan-Atlantic Commission for Experimentation
+      fullFr: Commission Pan-Atlantique pour l'Expérimentation
+      note: „Pace” po włosku znaczy „pokój” — Departament Stanu bardzo się postarał.
+    - from: 1958-Q1
+      full: Pan-Atlantic Commission for Exploration
+      note: Wersja po szoku orbitalnym, jeśli Anderson zgodzi się na zmianę.
+
+start:
+  date: 1951-01-01
+  era: I
+
+# Wskaźniki strategiczne 0–100; NG to skala 1–5 (5 = odprężenie, 1 = krawędź).
+indicators:
+  ZW: 55   # Zaufanie Waszyngtonu
+  SO: 60   # Spójność Organizacji
+  PP: 50   # Poparcie Publiczne
+  WF: 70   # Wiarygodność Fasady
+  NG: 4    # Napięcie Geopolityczne — stan normalny
+
+currencies:
+  UD: 6    # Uwaga Dowódcy na kwartał
+  KP: 3    # Kapitał Polityczny
