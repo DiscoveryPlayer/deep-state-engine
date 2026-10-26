@@ -1,0 +1,18 @@
+# Zależności i artefakty
+node_modules/
+dist/
+*.tsbuildinfo
+coverage/
+
+# Sekrety — klucze API trzymamy wyłącznie lokalnie
+.env
+.env.*
+!.env.example
+
+# Lokalne kampanie i kopie zapasowe zapisów KSP
+campaigns/
+backups/
+
+# System
+.DS_Store
+Thumbs.db

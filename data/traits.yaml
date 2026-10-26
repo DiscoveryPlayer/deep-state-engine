@@ -1,0 +1,60 @@
+# Cechy postaci. Jawne — GDD 8.2. Ukryte — Warstwa Personelu, przerobione w DD 7.2.
+# Opis efektu to na razie tekst; mechanika cech wchodzi w fazie 5.
+
+visible:
+  - id: pedant
+    name: Pedant
+    effect: +1 do niezawodności w swoim obszarze; −1 do tempa.
+  - id: hazardzista
+    name: Hazardzista
+    effect: Śmielsze plany; większa szansa i na przyspieszenie, i na wypadek. Zaniża ryzyko w raportach.
+  - id: karierowicz
+    name: Karierowicz
+    effect: Lojalność zależy od korzyści; odejdzie, gdy zobaczy lepszą ofertę.
+  - id: idealista
+    name: Idealista
+    effect: Odmawia udziału w zatajeniach; wysoka motywacja w zgodzie z wartościami.
+  - id: gadula
+    name: Gaduła
+    effect: Zwiększa Ciśnienie Tajemnic, o których wie.
+  - id: weteran
+    name: Weteran
+    effect: Odporny na presję; mentor dla młodszej kadry.
+  - id: medialny
+    name: Medialny
+    effect: Wzmacnia efekty Poparcia Publicznego — w obie strony.
+  - id: paranoik
+    name: Paranoik
+    effect: Częściej wykrywa przecieki; częściej oskarża niewinnych.
+  - id: biurokrata
+    name: Biurokrata
+    effect: Stabilizuje Spójność Organizacji; spowalnia reakcje kryzysowe.
+  - id: wizjoner
+    name: Wizjoner
+    effect: Generuje propozycje ambitnych programów; ignoruje koszty.
+  - id: lojalista_instytucji
+    name: Lojalista instytucji
+    effect: Lojalny wobec organizacji ponad osobami; nie kryje Andersona, ale też go nie zdradzi.
+  - id: wypalony
+    name: Wypalony
+    effect: Kompetencja spada o 1 co 4 kwartały bez odpoczynku.
+
+hidden:
+  - id: szantazowany
+    name: Szantażowany
+    effect: Ktoś ma na niego haka; w kryzysie może działać wbrew Andersonowi.
+  - id: kontakt_cia
+    name: Kontakt z CIA
+    effect: Raportuje na boku do Agencji; zwiększa wiedzę BAS o decyzjach Andersona.
+  - id: dlugi
+    name: Długi
+    effect: Podatny na przekupstwo przez przemysł.
+  - id: przeszlosc_wojenna
+    name: Przeszłość wojenna
+    effect: Wojenna karta, której ujawnienie zniszczy karierę i uderzy w Fasadę.
+  - id: nalog
+    name: Nałóg
+    effect: Kompetencja waha się; ryzyko kompromitującego incydentu.
+  - id: kret
+    name: Kret
+    effect: Pracuje dla obcego wywiadu albo rywalizującej agencji (Wtyczka, DD 7.2).

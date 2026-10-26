@@ -1,0 +1,28 @@
+{
+  "name": "deep-state-engine",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The Deep State Engine — meta-gra strategiczna nad KSP RP-1 (Intermarium History)",
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "tools/*"
+  ],
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "tsx --test \"packages/*/test/**/*.test.ts\" \"tools/*/test/**/*.test.ts\"",
+    "check": "npm run typecheck && npm test",
+    "dse": "tsx tools/cli/src/main.ts",
+    "format": "prettier --write \"packages/*/{src,test}/**/*.ts\" \"tools/*/{src,test}/**/*.ts\"",
+    "format:check": "prettier --check \"packages/*/{src,test}/**/*.ts\" \"tools/*/{src,test}/**/*.ts\""
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.20.0",
+    "typescript": "^6.0.0",
+    "prettier": "^3.6.0"
+  }
+}

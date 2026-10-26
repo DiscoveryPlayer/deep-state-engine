@@ -1,0 +1,10 @@
+{
+  "name": "@dse/ksp-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Most do KSP RP-1: parser .sfs, dziennik kariery, Migawki, zapis Korekt (faza 1B i 7).",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

@@ -1,0 +1,29 @@
+# Wpisy startowe Rejestru Następstw (GDD 12).
+# visibleToPlayer: false oznacza, że Anderson o wpisie nie wie — widzi go tylko silnik.
+
+entries:
+  - id: R-0001
+    type: hook
+    title: BAS zna wojenną przeszłość dr. Brandta
+    knownBy: [ames, BAS]
+    hiddenFrom: [anderson, prasa, kongres, rada_atlantycka]
+    weight: 3
+    triggers:
+      - Brandt publicznie krytykuje programy niejawne
+      - śledztwo prasowe w sprawie Paperclip
+      - przesłuchanie w Kongresie dotyczące naukowców zagranicznych
+    visibleToPlayer: false
+    dmNote: Ames może użyć haka, by zmusić Brandta do udziału w programie niejawnym.
+
+  - id: R-0002
+    type: secret
+    title: Tajny protokół CARC z 1949 r. — pierwszeństwo ładunków wojskowych
+    knownBy: [anderson, voss, ames]
+    hiddenFrom: [prasa, rada_atlantycka, RN]
+    weight: 2
+    pressure: 1
+    triggers:
+      - Rada Naukowa żąda jawności planu startów
+      - delegacja francuska prosi o pełny dostęp do harmonogramu
+    visibleToPlayer: true
+    dmNote: Ukryta twarz PACE od pierwszego dnia (GDD 4.2). Ujawnienie uderza w WF.
