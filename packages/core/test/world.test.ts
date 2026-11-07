@@ -112,7 +112,12 @@ function worldFixture(): WorldContent {
         title: 'Spór w kraju {kraj}',
         region: 'bliski_wschod',
         summary: 's',
-        params: { kraj: ['Irak', 'Kuwejt'] },
+        params: {
+          kraj: [
+            { mian: 'Irak', dop: 'Iraku' },
+            { mian: 'Kuwejt', dop: 'Kuwejtu' },
+          ],
+        },
         conditions: { flag: 'szablony' },
         chancePerQuarter: 1,
         cooldownQuarters: 2,
@@ -122,7 +127,9 @@ function worldFixture(): WorldContent {
             id: 'etap',
             title: 'etap',
             offset: 1,
-            branches: [{ id: 'a', title: 'A', weight: 1, text: 'Spór w kraju {kraj} wygasa.' }],
+            branches: [
+              { id: 'a', title: 'A', weight: 1, text: 'Spór w kraju {kraj} wygasa. Rząd {kraj.dop} ogłasza sukces.' },
+            ],
           },
         ],
       }),
@@ -154,6 +161,7 @@ function worldFixture(): WorldContent {
           { id: 'nie', title: 'Nie', effects: [{ var: 'sila', add: -2 }], text: 'Nie.' },
         ],
         defaultOption: 'nie',
+        inactionEffects: [{ currency: 'KP', add: -1 }],
       }),
     ],
   };
@@ -187,7 +195,7 @@ test('walidacja łapie złe odwołania, brak gałęzi historycznej i nieznane pa
   const w = worldFixture();
   w.threads[0]!.stages[0]!.branches[0]!.historical = false;
   w.threads[0]!.stages[0]!.branches[2]!.next = 'nie_ma';
-  w.templates[0]!.stages[0]!.branches[0]!.text = 'Spór w {miasto}.';
+  w.templates[0]!.stages[0]!.branches[0]!.text = 'Spór w {miasto}, ropa z {kraj.miejsc}.';
   w.dilemmas[0]!.defaultOption = 'moze';
   const problems = validateWorldContent(w, new Set(['DPO', 'RN']))
     .map((p) => p.message)
@@ -195,6 +203,7 @@ test('walidacja łapie złe odwołania, brak gałęzi historycznej i nieznane pa
   assert.match(problems, /histor/i);
   assert.match(problems, /nie_ma/);
   assert.match(problems, /miasto/);
+  assert.match(problems, /kraj\.miejsc/, 'forma, której nie mają wszystkie wartości');
   assert.match(problems, /moze/);
 });
 
@@ -293,7 +302,8 @@ test('szablon: parametry z listy, limit instancji, odstęp i etap przesunięty o
   assert.equal(first!.history[0]!.quarter, '1951-Q2', 'offset 1');
   const entry = s.world.log.find((e) => e.kind === 'template')!;
   assert.match(entry.title, /Spór w kraju (Irak|Kuwejt)/);
-  assert.ok(!entry.text.includes('{kraj}'));
+  assert.ok(!entry.text.includes('{'), 'wszystkie parametry wstawione');
+  assert.match(entry.text, /Rząd (Iraku|Kuwejtu) ogłasza/);
   assert.equal(s.world.divergence.bliski_wschod, 0, 'szablony nie podnoszą Rozbieżności same z siebie');
 });
 
@@ -314,6 +324,7 @@ test('dylemat: trafia na Biurko, a bez decyzji po terminie rozstrzyga się opcj�
   s = run({ ...s, quarter: nextQuarter(s.quarter) }, w, 1);
   assert.equal(s.world.pendingDilemmas.length, 0);
   assert.equal(s.world.vars.sila, 4, 'opcja domyślna "nie"');
+  assert.equal(s.currencies.KP, 2, 'koszt bierności: przegapiony termin');
   assert.ok(s.world.log.some((e) => e.ref === 'wybor.nie' && e.title.includes('bez decyzji')));
   s = run(s, w, 4);
   assert.equal(s.world.dilemmaLog.wybor!.count, 1, 'once: tylko raz w kampanii');
@@ -324,6 +335,8 @@ test('dylemat: decyzja Andersona stosuje skutki wybranej opcji', () => {
   const s = advanceWorld(start(['dylematy'], w), w).state;
   const { state, entry } = resolveDilemma(s, w, s.world.pendingDilemmas[0]!.instanceId, 'tak');
   assert.equal(state.world.vars.sila, 8);
+  const passive = resolveDilemma(s, w, s.world.pendingDilemmas[0]!.instanceId, 'nie').state;
+  assert.equal(passive.currencies.KP, s.currencies.KP, 'świadomy wybór opcji domyślnej nie kosztuje bierności');
   assert.equal(entry.ref, 'wybor.tak');
   assert.equal(state.world.pendingDilemmas.length, 0);
   assert.equal(s.world.pendingDilemmas.length, 1, 'stan wejściowy bez zmian');

@@ -1,6 +1,6 @@
 # Wydarzenia świata — projekt systemu
 
-**Status:** wersja 1 (7.11.2026) · **Decyzja:** [0015](../decisions/0015-wydarzenia-swiata-model.md) · **Kod:** `packages/core/src/world/` · **Treść:** `data/events/`
+**Status:** wersja 1.1 (7.11.2026, po odpowiedziach autora) · **Decyzja:** [0015](../decisions/0015-wydarzenia-swiata-model.md) · **Kod:** `packages/core/src/world/` · **Treść:** `data/events/`
 
 ## 1. Problem i rozwiązanie
 
@@ -15,7 +15,7 @@ Dlatego treść nie opisuje lat, tylko **mechanizmy**. Silnik sam składa z nich
 | **Kotwica** | Wątek z jedną gałęzią w każdym etapie: rzecz pewna (decyzja 0013) | Wybór Eisenhowera w 1952 roku | `kind: anchor` |
 | **Szablon wątku** | Ten sam mechanizm co wątek, ale bez dat i z parametrami. Startuje, gdy pozwala stan świata | Kryzys naftowy w kraju {Irak, Kuwejt, Wenezuela…} | `data/events/templates/<id>.yaml` |
 | **Wzorzec** | Pojedyncze zdarzenie bez daty, z warunkami i szansą na kwartał | Strajk u dostawcy, drenaż mózgów, przeciek do prasy | `data/events/patterns.yaml` |
-| **Dylemat** | Zdarzenie, które trafia na Biurko i czeka na decyzję Andersona. Bez decyzji silnik przyjmuje opcję domyślną | Lotnictwo kontra NACA, zakup maszyny liczącej | `data/events/dilemmas.yaml` |
+| **Dylemat** | Zdarzenie, które trafia na Biurko i czeka na decyzję Andersona. Bez decyzji silnik przyjmuje opcję domyślną i dolicza koszt bierności | Lotnictwo kontra NACA, zakup maszyny liczącej | `data/events/dilemmas.yaml` |
 
 Do tego dochodzą **zmienne świata** (np. koniunktura, popyt na ropę, siła Wielkiej Brytanii) i **Rozbieżność** każdego regionu (0–10). Zmienne i Rozbieżność są ukryte przed graczem. Gracz widzi ich skutki w depeszach, cenach i raportach.
 
@@ -53,7 +53,7 @@ Stałe mają nazwy i komentarze w `engine.ts`: `HISTORICAL_BIAS_AT_ZERO = 3`, `N
 
 Silnik rozlicza świat raz na kwartał (`advanceWorld`), w stałej kolejności:
 
-1. Dylematy po terminie rozstrzygają się opcją domyślną (wpis „bez decyzji Dowódcy”).
+1. Dylematy po terminie rozstrzygają się opcją domyślną (wpis „bez decyzji Dowódcy”). Dochodzi koszt bierności (`inactionEffects`), np. −1 KP.
 2. Startują wątki historyczne, których czas nadszedł (`start.from` i opcjonalne `start.conditions`).
 3. Szablony mogą uruchomić nowe instancje: warunki, odstęp, limit instancji i szansa × Rozbieżność.
 4. Wątki rozstrzygają etapy, na które przyszła pora. Silnik losuje gałąź według wag, stosuje skutki, zapisuje historię i ustala następny etap.
@@ -84,6 +84,8 @@ Skutki są strukturalne (YAML), a zod sprawdza je przy wczytaniu:
 | Korekta budżetu | `{ correction: { units: -0.5, quarters: 4, reason: '…' } }` | decyzja 0012; trafia do `world.corrections` |
 
 **Zasada:** wydarzenie świata nie tworzy faktów w KSP. Nie niszczy rakiety i nie zabija pilota. Działa na świat poza PACE albo daje Korektę, którą gracz stosuje w KSP sam.
+
+**Bierność w dylematach** (odpowiedź autora: „bycie biernym kosztuje, ale czasami może być wskazane”). Opcja domyślna to zwykle „nie angażować się”. Wybrana świadomie bywa najrozsądniejsza i nic nie kosztuje poza własnymi skutkami. Przegapiony termin dolicza `inactionEffects`: Dowódca, który nie czyta teczek, traci Kapitał Polityczny, Spójność albo życzliwość frakcji.
 
 ## 5. Warunki
 
@@ -156,7 +158,7 @@ stages:
 
 **Zasady pisania:**
 - Etap historyczny ma `at` i dokładnie jedną gałąź `historical: true`. Etap alternatywny (`alternative: true`) nie ma gałęzi historycznej.
-- Szablony używają `offset` (kwartały od startu), nie `at`. Parametry wstawia się do tekstów jako `{kraj}`.
+- Szablony używają `offset` (kwartały od startu), nie `at`. Parametry wstawia się do tekstów jako `{kraj}`. Polszczyzna wymaga odmiany, więc wartość może mieć formy: `{ mian: Kuwejt, dop: Kuwejtu, miejsc: Kuwejcie }`, a tekst używa `{kraj.dop}` („ropa z Kuwejtu”) albo `{kraj.miejsc}` („w Kuwejcie”). Walidacja sprawdza, czy każda wartość ma użytą formę.
 - Co najmniej jedna gałąź etapu nie może mieć `requires`, żeby etap zawsze się rozstrzygnął.
 - Teksty piszemy jak depesze: konkretnie, bez oceny, w czasie teraźniejszym.
 - Prawdziwe osoby: żadnych wymyślonych przestępstw. Brudne sprawy przypisujemy postaciom fikcyjnym albo instytucjom.
@@ -174,7 +176,7 @@ npm run dse -- swiat --serie 300                  # statystyka 300 światów do 
 ```
 
 **Wynik serii 300 symulacji (1951–1960) dla obecnej treści:**
-- w całości zgodny z historią był co czwarty świat (26%);
+- w całości zgodny z historią był co czwarty świat (27% w serii 1000);
 - najczęstsze rozejście: wybory 1952 i maccartyzm (Rozbieżność USA średnio 0,74);
 - plan Buccaneer wykonano w 7% światów;
 - kryzys naftowy z szablonu pojawił się średnio 0,8 raza na dekadę;
@@ -186,9 +188,9 @@ Im więcej wątków, tym rzadszy świat w pełni historyczny: przy 12 etapach na
 
 | Rodzaj | Pozycje |
 |---|---|
-| Wątki | Wojna w Korei (1951–1953), Kryzys irański (1951–1953), Maccartyzm (1952–1954), Wybory prezydenckie 1952 |
+| Wątki | Wojna w Korei (1951–1953), Kryzys irański (1951–1953), Maccartyzm (1952–1954), Wybory prezydenckie 1952 (z dziewięcioma kandydatami na wiceprezydenta) |
 | Szablony | Kryzys naftowy (5 krajów), Kryzys walutowy sojusznika (3 kraje) |
-| Wzorce (16) | strajk u dostawcy, drenaż mózgów, zimny lut, wybuch na stanowisku, przełom w tunelu, grypa, wizyta dygnitarza, weto Francji, przeciek do prasy, przesłuchanie w sprawie kosztów, wojna podjazdowa Służb, incydent rozpoznawczy, kradzież dokumentacji (tajna), fala UFO, boom SF, zmęczenie płaceniem za Europę |
+| Wzorce (17) | strajk u dostawcy, drenaż mózgów, nowy rocznik inżynierów, zimny lut, wybuch na stanowisku, przełom w tunelu, grypa, wizyta dygnitarza, weto Francji, przeciek do prasy, przesłuchanie w sprawie kosztów, wojna podjazdowa Służb, incydent rozpoznawczy, kradzież dokumentacji (tajna), fala UFO, boom SF, zmęczenie płaceniem za Europę |
 | Dylematy (4) | Lotnictwo kontra NACA, maszyna licząca, fundusz transatlantycki, uciekinier ze Wschodu |
 | Zmienne (8) | koniunktura, pula kadr, popyt na ropę, siła Wielkiej Brytanii, zaangażowanie USA, gorączka antykomunistyczna, napięcie w Korei, presja wyścigu |
 
@@ -202,9 +204,13 @@ Im więcej wątków, tym rzadszy świat w pełni historyczny: przy 12 etapach na
 - **Powiązań z frakcjami i Rejestrem.** Dylemat nie tworzy jeszcze wpisu Rejestru (Długu, Urazy). Potrzebny osobny skutek `registry`.
 - **Postaci tła poza kadrem** (decyzja 0013): osobny system, który może korzystać z tych samych warunków.
 
-## 11. Pytania do autora
+## 11. Odpowiedzi autora (7.11.2026)
 
-1. **Siła historii.** Czy 26% światów w pełni historycznych na dekadę przy czterech wątkach to dobry poziom? Docelowo wątków będzie kilkanaście.
-2. **Wiceprezydent 1952.** Gałąź `inny` ma tekst zastępczy. Kto z prawdziwych polityków epoki może być wiceprezydentem w alternatywie?
-3. **Kolejne wątki na lata 1954–1960.** Proponuję: Indochiny i Dien Bien Phu, Suez, Węgry 1956, Sputnik jako kotwica albo wątek, kryzys berliński 1958, U-2 1960. Które z nich chcesz jako kotwice?
-4. **Domyślne opcje dylematów.** Ustawiłem je jako „najbezpieczniejsza bierność” (np. odmowa zakupu maszyny liczącej). Czy wolisz, żeby bierność kosztowała więcej?
+1. **Siła historii:** zostaje (`HISTORICAL_BIAS_AT_ZERO = 3`).
+2. **Wiceprezydent 1952:** etap przeniesiony na konwencję (1952-Q3). Nixon jest gałęzią historyczną. Alternatywy: Henry Cabot Lodge Jr., William F. Knowland, Harold Stassen, Earl Warren, Alfred E. Driscoll, Dan Thornton, Arthur Langlie i Margaret Chase Smith jako zwrot akcji (ok. 1%). Każdy kandydat ustawia flagę `vp_<nazwisko>`. Lodge, Knowland i Smith mają też skutki (zaangażowanie USA, gorączka antykomunistyczna, koniec maccartyzmu).
+3. **Kolejne wątki:** autor chce kilkanaście więcej. Podział czasu na epoki opisuje decyzja kolejnej rundy (do ustalenia).
+4. **Bierność:** kosztuje, ale bywa wskazana. Wdrożone jako `inactionEffects` (punkt 4).
+
+Poprawki po serii symulacji:
+- po wycofaniu Brytyjczyków z Abadanu wątek wraca do etapu „los Mosaddegha”;
+- nowy wzorzec „nowy rocznik inżynierów” równoważy drenaż mózgów, który wcześniej potrafił wyzerować pulę kadr.

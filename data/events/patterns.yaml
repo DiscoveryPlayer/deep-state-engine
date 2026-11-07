@@ -37,6 +37,22 @@ patterns:
       Kilku najlepszych ludzi składa wypowiedzenia.
     source: wydarzenia 1951, nr 4
 
+  - id: nowy-rocznik
+    title: Nowy rocznik inżynierów
+    category: economic
+    chancePerQuarter: 0.08
+    chanceModifiers:
+      - { when: { var: pula_kadr, op: '<=', value: 3 }, mul: 2 }
+      - { when: { var: pula_kadr, op: '>=', value: 7 }, mul: 0 }
+    cooldownQuarters: 4
+    effects:
+      - { var: pula_kadr, add: 1 }
+    text: >-
+      Uczelnie techniczne wypuszczają rekordowy rocznik inżynierów, w tym wielu weteranów
+      studiujących dzięki ustawie o prawach żołnierzy. Działy kadr przemysłu i PACE
+      ustawiają się w kolejce.
+    source: przeciwwaga dla drenażu mózgów (seria symulacji 7.11.2026)
+
   - id: zimny-lut
     title: Zimny lut
     category: technical

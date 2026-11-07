@@ -6,13 +6,120 @@ summary: >-
   Pierwsze zderzenie Andersona z wielką polityką. Demokraci rządzą od 1933 roku, a Anderson
   został mianowany przez Trumana. Nowa administracja zechce przejrzeć jego programy.
 historicalNote: >-
-  Wybory 4 listopada 1952. Kotwica (decyzja 0013): wygrywa Eisenhower. Niepewne są
-  wiceprezydent i dokładne wyniki, w tym układ sił w Kongresie. Historycznie wiceprezydentem
-  został Richard Nixon, a republikanie przejęli obie izby nieznaczną większością.
-drivers: [antykomunizm, koniunktura]
+  Konwencja republikanów w Chicago (7–11 lipca 1952): Eisenhower zdobywa nominację w pierwszym
+  głosowaniu, po przejściu delegacji Minnesoty. Nie chciał sam narzucać konwencji nazwiska
+  zastępcy: przekazał Brownellowi listę młodszych polityków, a decyzję wypracowała narada
+  najważniejszych ludzi jego obozu, w której Dewey skierował dyskusję ku Nixonowi. Wybory
+  4 listopada 1952. Kotwica (decyzja 0013): wygrywa Eisenhower. Niepewne są wiceprezydent
+  i dokładne wyniki, w tym układ sił w Kongresie. Historycznie republikanie przejęli obie izby
+  nieznaczną większością. Lista alternatywnych kandydatów na wiceprezydenta: autor, 7.11.2026.
+drivers: [antykomunizm, koniunktura, zaangazowanie_usa]
 start:
   from: 1952-Q1
 stages:
+  - id: wiceprezydent
+    title: kandydat na wiceprezydenta
+    at: 1952-Q3
+    branches:
+      - id: nixon
+        title: Richard Nixon
+        historical: true
+        weight: 10
+        effects:
+          - { flag: vp_nixon }
+        text: >-
+          Konwencja w Chicago nominuje Eisenhowera, a narada jego sztabu wskazuje na zastępcę
+          Richarda Nixona, młodego senatora z Kalifornii, znanego z pogoni za komunistami
+          w administracji.
+      - id: lodge
+        title: Henry Cabot Lodge Jr.
+        weight: 0.5
+        modifiers:
+          - { when: { var: zaangazowanie_usa, op: '>=', value: 6 }, mul: 1.5 }
+        effects:
+          - { flag: vp_alternatywny }
+          - { flag: vp_lodge }
+          - { var: zaangazowanie_usa, add: 1 }
+        text: >-
+          Kandydatem na wiceprezydenta zostaje Henry Cabot Lodge Jr., senator z Massachusetts,
+          który namówił Eisenhowera do startu i prowadził jego kampanię przed konwencją.
+          Internacjonalista z bostońskiej arystokracji ma ucho przyszłego prezydenta.
+      - id: knowland
+        title: William F. Knowland
+        weight: 0.4
+        modifiers:
+          - { when: { var: antykomunizm, op: '>=', value: 8 }, mul: 2 }
+        effects:
+          - { flag: vp_alternatywny }
+          - { flag: vp_knowland }
+          - { var: antykomunizm, add: 1 }
+        text: >-
+          Kandydatem na wiceprezydenta zostaje William F. Knowland, senator z Kalifornii, którego
+          przeciwnicy nazywają „senatorem z Formozy”. Skrzydło azjatyckie partii dostaje swojego
+          człowieka tuż obok Białego Domu.
+      - id: stassen
+        title: Harold Stassen
+        weight: 0.3
+        effects:
+          - { flag: vp_alternatywny }
+          - { flag: vp_stassen }
+        text: >-
+          Kandydatem na wiceprezydenta zostaje Harold Stassen, były gubernator Minnesoty. To jego
+          delegacja przesądziła o nominacji Eisenhowera w pierwszym głosowaniu, a teraz dostaje
+          za to zapłatę.
+      - id: warren
+        title: Earl Warren
+        weight: 0.3
+        effects:
+          - { flag: vp_alternatywny }
+          - { flag: vp_warren }
+        text: >-
+          Kandydatem na wiceprezydenta zostaje Earl Warren, gubernator Kalifornii, który
+          w 1948 roku startował u boku Deweya. Popularny i umiarkowany, ma przyciągnąć wyborców
+          z Zachodu. Kandydata na sędziego Sądu Najwyższego Eisenhower będzie musiał kiedyś
+          szukać gdzie indziej.
+      - id: driscoll
+        title: Alfred E. Driscoll
+        weight: 0.3
+        effects:
+          - { flag: vp_alternatywny }
+          - { flag: vp_driscoll }
+        text: >-
+          Kandydatem na wiceprezydenta zostaje Alfred E. Driscoll, gubernator New Jersey i człowiek
+          Deweya. Wschodnie skrzydło partii pilnuje, żeby nowa administracja nie zapomniała, kto
+          ją wyniósł.
+      - id: thornton
+        title: Dan Thornton
+        weight: 0.3
+        effects:
+          - { flag: vp_alternatywny }
+          - { flag: vp_thornton }
+        text: >-
+          Kandydatem na wiceprezydenta zostaje Dan Thornton, gubernator Kolorado, ranczer
+          i przyjaciel Eisenhowera. Prasa wschodniego wybrzeża pyta, kim on właściwie jest.
+      - id: langlie
+        title: Arthur Langlie
+        weight: 0.2
+        effects:
+          - { flag: vp_alternatywny }
+          - { flag: vp_langlie }
+        text: >-
+          Kandydatem na wiceprezydenta zostaje Arthur Langlie, gubernator stanu Waszyngton
+          i dawny burmistrz Seattle, z opinią reformatora. Północny Zachód, z zakładami
+          lotniczymi, ma teraz swojego człowieka w Waszyngtonie.
+      - id: smith
+        title: Margaret Chase Smith
+        weight: 0.15
+        modifiers:
+          - { when: { var: antykomunizm, op: '<=', value: 5 }, mul: 2 }
+        effects:
+          - { flag: vp_alternatywny }
+          - { flag: vp_smith }
+          - { var: antykomunizm, add: -1 }
+        text: >-
+          Konwencja w Chicago zaskakuje wszystkich: kandydatką na wiceprezydenta zostaje Margaret
+          Chase Smith, senator z Maine, autorka „Deklaracji Sumienia” z czerwca 1950 roku przeciw
+          metodom McCarthy'ego. Jeśli Eisenhower wygra, będzie pierwszą kobietą na tym urzędzie.
   - id: wynik
     title: noc wyborcza
     at: 1952-Q4
@@ -48,23 +155,6 @@ stages:
         text: >-
           Eisenhower wygrywa miażdżąco, a republikanie zdobywają wyraźną większość w obu izbach.
           Nowa administracja ma mandat do głębokich zmian.
-  - id: wiceprezydent
-    title: wiceprezydent
-    at: 1953-Q1
-    branches:
-      - id: nixon
-        title: Richard Nixon wiceprezydentem
-        historical: true
-        weight: 10
-        text: Richard Nixon obejmuje urząd wiceprezydenta.
-      - id: inny
-        title: Wiceprezydent spoza historii
-        weight: 2
-        effects:
-          - { flag: vp_alternatywny }
-        text: >-
-          Wiceprezydentem zostaje polityk, którego historia nie zna na tym stanowisku.
-          [Kandydaci do ustalenia z autorem: wyłącznie prawdziwe postacie z epoki.]
   - id: przeglad
     title: przegląd programów
     at: 1953-Q2
@@ -86,6 +176,7 @@ stages:
         modifiers:
           - { when: { indicator: ZW, op: '>=', value: 65 }, mul: 2 }
           - { when: { flag: silny_mandat }, mul: 0.5 }
+          - { when: { flag: vp_lodge }, mul: 1.5 }
         text: >-
           Nowy sekretarz obrony uznaje PACE za instrument polityki sojuszniczej i potwierdza
           Andersona na stanowisku. Przegląd budżetu i tak nadejdzie.

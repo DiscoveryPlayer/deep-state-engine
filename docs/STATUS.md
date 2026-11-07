@@ -38,7 +38,7 @@
 - Stan w wersji 2 z migracją 1 → 2 (`state/migrate.ts`).
 - Treść `data/events/`: 4 wątki, 2 szablony, 16 wzorców, 4 dylematy, 8 zmiennych.
 - CLI `dse swiat` (z `--serie` do strojenia). 46 testów.
-- Opis: `docs/design/wydarzenia-swiata.md` (z pytaniami do autora w punkcie 11).
+- Opis: `docs/design/wydarzenia-swiata.md`; odpowiedzi autora z 7.11 wdrożone (punkt 11).
 
 ## Następne zadania
 
@@ -49,7 +49,7 @@
    - parser formatu ConfigNode,
    - ekstrakcja węzłów: `CareerLog`, `ProgramHandler`, `SpaceCenterManagement` (kompleksy, platformy, `launchSiteName`), `Confidence`, `UnlockCreditHandler`, `Funding`, `ResearchAndDevelopment`, `Reputation`,
    - Migawka i różnice między Migawkami.
-3. **Wydarzenia świata, ciąg dalszy:** wątki 1954–1960 (Indochiny, Suez, Węgry, Sputnik, Berlin, U-2) po odpowiedziach autora na pytania z `docs/design/wydarzenia-swiata.md` (punkt 11); skutek tworzący wpis Rejestru.
+3. **Wydarzenia świata, ciąg dalszy:** podział na epoki (GDD 4.4) i kilkanaście nowych wątków od 1954 roku (Indochiny, Suez, Węgry, Sputnik, Berlin, U-2 i propozycje autora); skutek tworzący wpis Rejestru.
 4. **Kampania pilotażowa** (zamiast prototypu papierowego, decyzja 0008): skrócony pakiet zasad dla czatu jako Mistrza Gry.
 5. **Prototyp weryfikacji Tristara, lot 2** (decyzja 0009): eksperyment Kerbalism i kontrakt CC — do testu u autora.
 6. **Faza 1C — dane referencyjne RP-1**, potem **1D — silnik kwartału bez AI** (z `advanceWorld` jako krokiem zamknięcia kwartału i Korektami w raporcie budżetowym).

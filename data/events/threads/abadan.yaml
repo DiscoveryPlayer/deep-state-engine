@@ -96,7 +96,7 @@ stages:
         effects:
           - { var: sila_wielkiej_brytanii, add: -2 }
           - { var: zaangazowanie_usa, add: 1 }
-        next: end
+        next: zamach
         text: >-
           Pod presją Waszyngtonu Brytyjczycy wycofują się z Abadanu. Upokorzenie Londynu będzie
           długo pamiętane w Radzie Atlantyckiej.

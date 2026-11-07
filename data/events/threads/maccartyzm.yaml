@@ -68,6 +68,8 @@ stages:
         title: Senat potępia McCarthy'ego
         historical: true
         weight: 10
+        modifiers:
+          - { when: { flag: vp_smith }, mul: 1.5 }
         effects:
           - { var: antykomunizm, add: -2 }
         text: >-
@@ -77,6 +79,7 @@ stages:
         weight: 2
         modifiers:
           - { when: { var: antykomunizm, op: '>=', value: 8 }, mul: 2 }
+          - { when: { flag: vp_knowland }, mul: 1.5 }
         effects:
           - { var: antykomunizm, add: 1 }
         delayQuarters: 4

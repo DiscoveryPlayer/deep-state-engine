@@ -1,5 +1,7 @@
 # Dylematy: zdarzenia, które czekają na decyzję Andersona na Biurku (decyzja 0015).
-# Jeśli Anderson nie zdecyduje przed terminem, silnik przyjmuje opcję domyślną.
+# Jeśli Anderson nie zdecyduje przed terminem, silnik przyjmuje opcję domyślną
+# i dolicza koszt bierności (inactionEffects). Opcja domyślna to zwykle „nie angażować się”:
+# świadomie wybrana bywa najrozsądniejsza, przegapiona kosztuje (odpowiedź autora z 7.11.2026).
 
 dilemmas:
   - id: lotnictwo-kontra-naca
@@ -31,7 +33,14 @@ dilemmas:
         text: >-
           PACE powołuje wspólny komitet obu stron, na wzór porozumień o samolotach badawczych.
           Kosztuje to wiele rozmów, ale nikt nie wychodzi upokorzony.
-    defaultOption: lotnictwo
+      - id: nie-angazowac
+        title: Nie mieszać się
+        text: >-
+          PACE nie zabiera głosu. Spór rozstrzyga Pentagon, na korzyść Lotnictwa. Żadna ze stron
+          nie ma do PACE pretensji, ale żadna też nie ma powodu do wdzięczności.
+    defaultOption: nie-angazowac
+    inactionEffects:
+      - { currency: KP, add: -1 }
     expiresAfterQuarters: 1
     source: wydarzenia 1951, nr 9
 
@@ -58,10 +67,12 @@ dilemmas:
         text: PACE dzierżawi czas maszyny. Taniej, ale w kolejce za innymi klientami.
       - id: odmowic
         title: Odmówić
-        effects:
-          - { faction: RN, disposition: -1 }
-        text: PACE zostaje przy suwakach logarytmicznych i zespołach rachmistrzów.
+        text: >-
+          PACE grzecznie dziękuje i zostaje przy suwakach logarytmicznych i zespołach rachmistrzów.
+          Pieniądze zostają w kasie.
     defaultOption: odmowic
+    inactionEffects:
+      - { faction: RN, disposition: -1 }
     expiresAfterQuarters: 1
     source: wydarzenia 1951, nr 15 (historycznie UNIVAC I, 1951)
 
@@ -92,6 +103,8 @@ dilemmas:
           - { currency: KP, add: -1 }
         text: PACE odmawia. Fundusz powstaje bez niej, a w Radzie Atlantyckiej pozostaje niesmak.
     defaultOption: odmowic
+    inactionEffects:
+      - { indicator: SO, add: -2 }
     expiresAfterQuarters: 1
     source: wydarzenia 1951, nr 20
 
@@ -124,5 +137,7 @@ dilemmas:
           - { indicator: NG, add: 1 }
         text: PACE nie chce mieć z nim nic wspólnego. Moskwa odnotowuje, że Zachód nie wykorzystał okazji.
     defaultOption: przekazac-bas
+    inactionEffects:
+      - { faction: RN, disposition: -1 }
     expiresAfterQuarters: 1
     source: wydarzenia 1951, nr 72

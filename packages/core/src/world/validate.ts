@@ -3,8 +3,8 @@
  * regionów i frakcji. Komunikaty po polsku, z nazwą pliku i miejscem.
  */
 import type { ContentProblem } from '../content/validate.ts';
-import type { Condition, Effect, StageContent, WorldContent } from './schema.ts';
-import { WORLD_CONTENT_PATHS } from './schema.ts';
+import type { Condition, Effect, StageContent, TemplateParamValue, WorldContent } from './schema.ts';
+import { PARAM_PLACEHOLDER, WORLD_CONTENT_PATHS } from './schema.ts';
 
 export function validateWorldContent(world: WorldContent, factionIds: ReadonlySet<string>): ContentProblem[] {
   const problems: ContentProblem[] = [];
@@ -97,7 +97,7 @@ export function validateWorldContent(world: WorldContent, factionIds: ReadonlySe
         checkCondition(b.requires, file, `${bw}.requires`);
         b.modifiers.forEach((m, i) => checkCondition(m.when, file, `${bw}.modifiers[${i}]`));
         checkEffects(b.effects, file, bw);
-        for (const m of b.text.matchAll(/\{([a-z0-9_]+)\}/g)) {
+        for (const m of b.text.matchAll(PARAM_PLACEHOLDER)) {
           if (!params.has(m[1]!)) add(file, bw, `tekst używa nieznanego parametru "{${m[1]}}"`);
         }
       }
@@ -118,7 +118,13 @@ export function validateWorldContent(world: WorldContent, factionIds: ReadonlySe
     if (!regions.has(tpl.region)) add(file, tpl.id, `nieznany region "${tpl.region}"`);
     checkCondition(tpl.conditions, file, `${tpl.id}.conditions`);
     tpl.chanceModifiers.forEach((m, i) => checkCondition(m.when, file, `${tpl.id}.chanceModifiers[${i}]`));
-    checkStages(tpl.stages, file, tpl.id, 'template', new Set(Object.keys(tpl.params)));
+    const placeholders = templatePlaceholders(tpl.params);
+    for (const text of [tpl.title, ...tpl.stages.map((st) => st.title)]) {
+      for (const m of text.matchAll(PARAM_PLACEHOLDER)) {
+        if (!placeholders.has(m[1]!)) add(file, tpl.id, `tytuł używa nieznanego parametru "{${m[1]}}"`);
+      }
+    }
+    checkStages(tpl.stages, file, tpl.id, 'template', placeholders);
   }
 
   for (const p of world.patterns) {
@@ -145,4 +151,22 @@ export function validateWorldContent(world: WorldContent, factionIds: ReadonlySe
   }
 
   return problems;
+}
+
+/**
+ * Dozwolone miejsca na parametry szablonu. {kraj} działa, gdy każda wartość jest tekstem albo
+ * ma formę `mian`; {kraj.dop} — gdy każda wartość jest odmianą z formą `dop`.
+ */
+function templatePlaceholders(params: Record<string, TemplateParamValue[]>): Set<string> {
+  const allowed = new Set<string>();
+  for (const [key, values] of Object.entries(params)) {
+    if (values.every((v) => typeof v === 'string' || v.mian !== undefined)) allowed.add(key);
+    const records = values.filter((v): v is Record<string, string> => typeof v !== 'string');
+    if (records.length !== values.length) continue;
+    const forms = new Set(Object.keys(records[0] ?? {}));
+    for (const form of forms) {
+      if (records.every((r) => r[form] !== undefined)) allowed.add(`${key}.${form}`);
+    }
+  }
+  return allowed;
 }

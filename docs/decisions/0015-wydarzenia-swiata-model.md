@@ -18,7 +18,7 @@ Autor przygotował plik 80 wydarzeń na rok 1951. Taki plik na każdy rok kampan
 4. Gałąź wybiera silnik przez `Rng` z ziarnem (zasady Z3 i GDD 33.3). AI tylko opisuje wynik.
 5. Stan świata jest ukryty. Do gracza trafiają wyłącznie publiczne wpisy dziennika i oczekujące dylematy, bez opcji domyślnej (zasada Z4).
 6. Wydarzenie świata nie tworzy faktów w KSP. Działa na świat poza PACE albo daje Korektę budżetu (decyzja 0012).
-7. Dylemat bez decyzji Andersona rozstrzyga się po terminie opcją domyślną.
+7. Dylemat bez decyzji Andersona rozstrzyga się po terminie opcją domyślną, a silnik dolicza koszt bierności (`inactionEffects`). Świadomy wybór tej samej opcji kosztu bierności nie ponosi.
 
 ## Stan kampanii: wersja 2
 

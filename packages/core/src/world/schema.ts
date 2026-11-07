@@ -185,6 +185,13 @@ export type ThreadContent = z.infer<typeof threadContentSchema>;
 export type StageContent = z.infer<typeof stageSchema>;
 export type BranchContent = z.infer<typeof branchSchema>;
 
+/** Wartość parametru szablonu: tekst albo formy (klucz `mian` to forma podstawowa). */
+export const templateParamValueSchema = z.union([z.string().min(1), z.record(id, z.string().min(1))]);
+export type TemplateParamValue = z.infer<typeof templateParamValueSchema>;
+
+/** Wzorzec miejsca na parametr w tekście: {kraj} albo {kraj.dop}. */
+export const PARAM_PLACEHOLDER = /\{([a-z0-9_]+(?:\.[a-z0-9_]+)?)\}/g;
+
 export const threadTemplateContentSchema = z
   .object({
     id,
@@ -194,7 +201,12 @@ export const threadTemplateContentSchema = z
     drivers: z.array(z.string().min(1)).default([]),
     visibility: visibility.default('public'),
     /** Parametry losowane przy uruchomieniu, np. kraj. */
-    params: z.record(id, z.array(z.string().min(1)).min(1)).default({}),
+    /**
+     * Parametry losowane przy starcie instancji. Wartość to tekst albo odmiana przez przypadki,
+     * np. { mian: Kuwejt, dop: Kuwejtu, miejsc: Kuwejcie }. W tekstach: {kraj} (mianownik)
+     * albo {kraj.dop}, {kraj.miejsc} itd.
+     */
+    params: z.record(id, z.array(templateParamValueSchema).min(1)).default({}),
     /** Kiedy szablon może się uruchomić. */
     conditions: conditionSchema.optional(),
     chancePerQuarter: z.number().min(0).max(1),
@@ -251,6 +263,12 @@ export const dilemmaContentSchema = z
     options: z.array(dilemmaOptionSchema).min(2),
     /** Opcja przyjmowana, gdy Anderson nie zdecyduje przed terminem. */
     defaultOption: id,
+    /**
+     * Koszt bierności: skutki doliczane TYLKO wtedy, gdy Anderson przegapi termin.
+     * Świadomy wybór tej samej opcji domyślnej ich nie ponosi — bierność bywa rozsądna,
+     * zaniedbanie nie (odpowiedź autora z 7.11.2026).
+     */
+    inactionEffects: z.array(effectSchema).default([]),
     expiresAfterQuarters: z.number().int().min(1).default(1),
     source: z.string().optional(),
   })

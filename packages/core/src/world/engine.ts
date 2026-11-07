@@ -17,9 +17,11 @@ import { Rng } from '../rng.ts';
 import type { GameState, ThreadInstance, WorldLogEntry, WorldState } from '../state/schema.ts';
 import { parseQuarterCode, quarterCode, quartersBetween, type Quarter } from '../time.ts';
 import { DIVERGENCE_MAX, applyEffects, evaluateCondition, shiftQuarter } from './conditions.ts';
+import { PARAM_PLACEHOLDER } from './schema.ts';
 import type {
   BranchContent,
   StageContent,
+  TemplateParamValue,
   ThreadContent,
   ThreadTemplateContent,
   WeightModifier,
@@ -95,7 +97,18 @@ function pickBranch(weighted: WeightedBranch[], rng: Rng): BranchContent | undef
 }
 
 function fill(text: string, params: Record<string, string>): string {
-  return text.replace(/\{([a-z0-9_]+)\}/g, (m, key: string) => params[key] ?? m);
+  return text.replace(PARAM_PLACEHOLDER, (m, key: string) => params[key] ?? m);
+}
+
+/** Zapisuje wylosowaną wartość parametru: forma podstawowa pod `key`, pozostałe pod `key.forma`. */
+function setParam(params: Record<string, string>, key: string, value: TemplateParamValue): void {
+  if (typeof value === 'string') {
+    params[key] = value;
+    return;
+  }
+  const forms = Object.keys(value).sort();
+  params[key] = value.mian ?? value[forms[0]!]!;
+  for (const form of forms) params[`${key}.${form}`] = value[form]!;
 }
 
 const later = (a: Quarter, b: Quarter) => (quartersBetween(a, b) > 0 ? b : a);
@@ -199,7 +212,7 @@ export function advanceWorld(input: GameState, content: WorldContent): WorldStep
       divergenceFactor(false, world.divergence[tpl.region] ?? 0);
     if (!rng.chance(Math.min(1, p))) continue;
     const params: Record<string, string> = {};
-    for (const key of Object.keys(tpl.params).sort()) params[key] = rng.pick(tpl.params[key]!);
+    for (const key of Object.keys(tpl.params).sort()) setParam(params, key, rng.pick(tpl.params[key]!));
     world.seq += 1;
     const instanceId = `${tpl.id}#${world.seq}`;
     const inst: ThreadInstance = {
@@ -334,6 +347,7 @@ function resolvePending(
   const option = dil?.options.find((o) => o.id === optionId);
   if (!dil || !option) throw new Error(`Dylemat "${pending.dilemma}" nie ma opcji "${optionId}".`);
   applyEffects(state, option.effects, content, `${dil.id}.${option.id}`);
+  if (byDefault) applyEffects(state, dil.inactionEffects, content, `${dil.id}.biernosc`);
   world.pendingDilemmas = world.pendingDilemmas.filter((p) => p.instanceId !== instanceId);
   log({
     quarter: quarterCode(state.quarter),
