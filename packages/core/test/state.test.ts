@@ -18,7 +18,7 @@ test('stan startowy: I kwartał 1951, wskaźniki z treści, zegar Cierpliwości 
   assert.deepEqual(s.quarter, { year: 1951, q: 1 });
   assert.equal(s.indicators.ZW, 55);
   assert.equal(s.organization.acronym, 'PACE');
-  assert.equal(s.campaign.rp1Version, '4.7.0.0');
+  assert.equal(s.campaign.rp1Version, '4.8.1.0');
   for (const f of Object.values(s.factions)) {
     const clock = s.clocks.find((c) => c.id === f.patienceClockId);
     assert.ok(clock, `brak zegara cierpliwości dla ${f.id}`);
