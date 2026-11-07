@@ -2,6 +2,17 @@
 
 Najnowsze na górze. Każdy wpis odpowiada jednemu pull requestowi.
 
+## 2026-11-07 — Dossier III: wątki świata 1951–1980
+
+- `docs/research/dossier-III-watki-swiata-1951-1980.md`:
+  - model poziomów pewności i rodzajów gałęzi (H/P/O/X/A);
+  - kotwice jako etapy;
+  - bezpieczniki szablonów;
+  - dylematy jako punkty decyzyjne;
+  - palety epok.
+- 12 kotwic, 99 wątków (blok A 1951–1960: 43, B 1961–1965: 25, C 1966–1972: 20, D 1973–1980: 11), 16 szablonów, 200 wzorców, przykładowe palety (odkrycia naukowe, wizyty).
+- Plan zmian w silniku i pytania do autora.
+
 ## 2026-11-07 — Wydarzenia świata (decyzja 0015)
 
 - Silnik wydarzeń świata w `@dse/core` (`world/`): wątki z etapami i gałęziami, etapy alternatywne, kotwice, szablony z parametrami, wzorce, dylematy z opcją domyślną, Rozbieżność regionów, strukturalne warunki i skutki, walidacja treści.
