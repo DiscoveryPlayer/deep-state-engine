@@ -1,0 +1,83 @@
+id: maccartyzm
+title: Maccartyzm
+kind: historical
+region: usa
+summary: >-
+  Senator Joseph McCarthy i jego naśladowcy szukają komunistów w rządzie, armii i nauce.
+  Dla PACE, z niemieckimi specjalistami i zagranicznymi członkami, to stałe zagrożenie.
+historicalNote: >-
+  Przemówienie w Wheeling (luty 1950), szczyt wpływów w latach 1952–1954, przesłuchania
+  w sprawie armii (wiosna 1954), potępienie przez Senat (2 grudnia 1954). Prawdziwa osoba
+  w zewnętrznym pierścieniu: tylko udokumentowane metody, bez wymyślonych występków.
+drivers: [antykomunizm]
+start:
+  from: 1951-Q1
+stages:
+  - id: nasilenie
+    title: fala przesłuchań
+    at: 1952-Q1
+    branches:
+      - id: szczyt
+        title: Przesłuchania rozszerzają się
+        historical: true
+        weight: 10
+        effects:
+          - { var: antykomunizm, add: 1 }
+          - { flag: maccartyzm_szczyt }
+        text: >-
+          Podkomisje Kongresu rozszerzają przesłuchania na kolejne agencje. Lojalność staje się
+          walutą, a podejrzenie wyrokiem.
+      - id: oslabienie
+        title: Fala słabnie wcześniej
+        weight: 2
+        modifiers:
+          - { when: { var: antykomunizm, op: '<=', value: 4 }, mul: 3 }
+        effects:
+          - { var: antykomunizm, add: -2 }
+        next: end
+        text: >-
+          Kilka głośnych pomyłek kompromituje łowców czarownic. Senat traci cierpliwość
+          szybciej, niż się spodziewano.
+  - id: cel_pace
+    title: pytania o PACE
+    at: 1953-Q2
+    branches:
+      - id: omija_pace
+        title: Komisja zajmuje się innymi
+        historical: true
+        weight: 8
+        text: Przesłuchania toczą się w Departamencie Stanu i w armii. PACE na razie unika uwagi.
+      - id: pace_na_celowniku
+        title: PACE na celowniku
+        weight: 3
+        modifiers:
+          - { when: { indicator: WF, op: '<=', value: 50 }, mul: 2 }
+          - { when: { var: antykomunizm, op: '>=', value: 8 }, mul: 2 }
+        effects:
+          - { indicator: WF, add: -5 }
+          - { faction: BAS, disposition: -1 }
+          - { flag: pace_przesluchanie }
+        text: >-
+          Podkomisja senacka żąda list niemieckich specjalistów PACE i pyta o „zagraniczne
+          wpływy” w organizacji. Biuro Analiz Specjalnych musi tłumaczyć się z każdej teczki.
+  - id: upadek
+    title: koniec ery
+    at: 1954-Q4
+    branches:
+      - id: potepienie
+        title: Senat potępia McCarthy'ego
+        historical: true
+        weight: 10
+        effects:
+          - { var: antykomunizm, add: -2 }
+        text: >-
+          Senat formalnie potępia senatora McCarthy'ego. Strach nie znika od razu, ale słabnie.
+      - id: przetrwanie
+        title: Fala trwa dalej
+        weight: 2
+        modifiers:
+          - { when: { var: antykomunizm, op: '>=', value: 8 }, mul: 2 }
+        effects:
+          - { var: antykomunizm, add: 1 }
+        delayQuarters: 4
+        text: Mimo krytyki przesłuchania trwają. Kolejne instytucje zaczynają kontrolować same siebie.

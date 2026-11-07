@@ -1,0 +1,63 @@
+# Szablon wątku: kryzys surowcowy. Abadan to historyczny przypadek tego mechanizmu;
+# szablon pozwala, żeby podobny kryzys wybuchł gdzie indziej i kiedy indziej,
+# gdy świat odjedzie od historii (Rozbieżność regionu zwiększa szansę uruchomienia).
+id: kryzys-surowcowy
+title: Kryzys naftowy w kraju {kraj}
+region: bliski_wschod
+summary: Spór o koncesje naftowe przeradza się w kryzys, który podnosi ceny paliw na Zachodzie.
+drivers: [popyt_na_rope, zaangazowanie_usa, sila_wielkiej_brytanii]
+params:
+  kraj: [Irak, Arabia Saudyjska, Kuwejt, Wenezuela, Indonezja]
+conditions:
+  all:
+    - { after: 1953-Q1 }
+    - { var: popyt_na_rope, op: '>=', value: 6 }
+chancePerQuarter: 0.03
+chanceModifiers:
+  - { when: { var: popyt_na_rope, op: '>=', value: 8 }, mul: 2 }
+cooldownQuarters: 12
+maxInstances: 2
+stages:
+  - id: napiecie
+    title: spór o koncesje
+    offset: 0
+    branches:
+      - id: porozumienie
+        title: Nowy podział zysków
+        weight: 5
+        next: end
+        text: Rząd w kraju {kraj} wywalcza podział zysków pół na pół. Kryzys gaśnie, zanim się rozpalił.
+      - id: nacjonalizacja
+        title: Nacjonalizacja
+        weight: 3
+        effects:
+          - { var: popyt_na_rope, add: 1 }
+          - correction: { units: -0.3, quarters: 2, reason: 'Niepewność dostaw ropy podnosi ceny paliw' }
+        text: Rząd w kraju {kraj} nacjonalizuje przemysł naftowy. Zachodnie koncerny wzywają swoje rządy do działania.
+  - id: reakcja
+    title: reakcja Zachodu
+    offset: 2
+    branches:
+      - id: embargo
+        title: Embargo
+        weight: 5
+        effects:
+          - { var: koniunktura, add: -1 }
+          - correction: { units: -0.5, quarters: 3, reason: 'Embargo na ropę podnosi ceny paliw' }
+        text: Zachodnie koncerny bojkotują ropę z kraju {kraj}. Ceny paliw rosną, a rokowania trwają.
+      - id: interwencja
+        title: Interwencja zbrojna
+        weight: 2
+        modifiers:
+          - { when: { var: sila_wielkiej_brytanii, op: '>=', value: 7 }, mul: 2 }
+        effects:
+          - { indicator: NG, add: -1 }
+          - { divergence: bliski_wschod, add: 1 }
+          - correction: { units: -0.8, quarters: 3, reason: 'Interwencja zbrojna podbija ceny paliw' }
+        text: Zachodnie wojska lądują w kraju {kraj}, żeby „chronić życie i mienie obywateli”. ONZ zbiera się na nadzwyczajnej sesji.
+      - id: kompromis
+        title: Kompromis
+        weight: 3
+        modifiers:
+          - { when: { var: zaangazowanie_usa, op: '>=', value: 6 }, mul: 2 }
+        text: Mediacja kończy się kompromisem. Ropa z kraju {kraj} wraca na rynek, droższa niż przedtem.

@@ -1,0 +1,128 @@
+# Dylematy: zdarzenia, które czekają na decyzję Andersona na Biurku (decyzja 0015).
+# Jeśli Anderson nie zdecyduje przed terminem, silnik przyjmuje opcję domyślną.
+
+dilemmas:
+  - id: lotnictwo-kontra-naca
+    title: Lotnictwo kontra NACA
+    conditions: { after: 1951-Q2 }
+    chancePerQuarter: 0.2
+    once: true
+    prompt: >-
+      Lotnictwo chce przejąć finansowanie programu samolotów doświadczalnych i prowadzić go
+      jako program wojskowy. Laboratoria NACA protestują: to one mają metody, tunele i ludzi.
+      Obie strony oczekują, że PACE rozstrzygnie spór.
+    options:
+      - id: lotnictwo
+        title: Poprzeć Lotnictwo
+        effects:
+          - { faction: DPO, disposition: 1 }
+          - { faction: RN, disposition: -1 }
+        text: PACE popiera Lotnictwo. Program przyspiesza, a naukowcy czują się zepchnięci na margines.
+      - id: naca
+        title: Poprzeć NACA
+        effects:
+          - { faction: RN, disposition: 1 }
+          - { faction: DPO, disposition: -1 }
+        text: PACE staje po stronie naukowców. Lotnictwo zapamięta, kto mu odmówił.
+      - id: wspolny-komitet
+        title: Wspólny komitet
+        effects:
+          - { currency: KP, add: -1 }
+        text: >-
+          PACE powołuje wspólny komitet obu stron, na wzór porozumień o samolotach badawczych.
+          Kosztuje to wiele rozmów, ale nikt nie wychodzi upokorzony.
+    defaultOption: lotnictwo
+    expiresAfterQuarters: 1
+    source: wydarzenia 1951, nr 9
+
+  - id: zakup-komputera
+    title: Maszyna licząca
+    conditions: { after: 1951-Q2 }
+    chancePerQuarter: 0.15
+    once: true
+    prompt: >-
+      Producent elektronicznej maszyny liczącej oferuje PACE egzemplarz, taki sam jak dla Biura
+      Spisu Ludności. Rada Naukowa jest zachwycona, a księgowi przerażeni ceną.
+    options:
+      - id: kupic
+        title: Kupić
+        effects:
+          - correction: { units: -2, quarters: 1, reason: 'Zakup elektronicznej maszyny liczącej' }
+          - { faction: RN, disposition: 1 }
+          - { var: pula_kadr, add: 1 }
+        text: PACE kupuje maszynę liczącą. Obliczenia trajektorii skracają się z tygodni do godzin.
+      - id: dzierzawa
+        title: Wydzierżawić czas maszyny
+        effects:
+          - correction: { units: -0.5, quarters: 4, reason: 'Dzierżawa czasu maszyny liczącej' }
+        text: PACE dzierżawi czas maszyny. Taniej, ale w kolejce za innymi klientami.
+      - id: odmowic
+        title: Odmówić
+        effects:
+          - { faction: RN, disposition: -1 }
+        text: PACE zostaje przy suwakach logarytmicznych i zespołach rachmistrzów.
+    defaultOption: odmowic
+    expiresAfterQuarters: 1
+    source: wydarzenia 1951, nr 15 (historycznie UNIVAC I, 1951)
+
+  - id: fundusz-transatlantycki
+    title: Fundusz transatlantycki
+    conditions: { after: 1951-Q3 }
+    chancePerQuarter: 0.08
+    cooldownQuarters: 12
+    prompt: >-
+      Sojusznicy proponują wspólny fundusz na badania wysokich warstw atmosfery. PACE miałaby
+      wnieść swoją część i zarządzać funduszem. Waszyngton patrzy, ile to będzie kosztować.
+    options:
+      - id: wplacic
+        title: Wpłacić i przewodzić
+        effects:
+          - correction: { units: -1, quarters: 2, reason: 'Wkład PACE do funduszu transatlantyckiego' }
+          - { currency: KP, add: 1 }
+        text: PACE wpłaca swój udział i obejmuje przewodnictwo funduszu. Europejczycy są wdzięczni.
+      - id: warunkowo
+        title: Wpłacić pod warunkiem kontraktów dla USA
+        effects:
+          - { indicator: ZW, add: 2 }
+          - { currency: KP, add: -1 }
+        text: PACE stawia warunek kontraktów dla amerykańskich firm. Waszyngton zadowolony, sojusznicy mniej.
+      - id: odmowic
+        title: Odmówić
+        effects:
+          - { currency: KP, add: -1 }
+        text: PACE odmawia. Fundusz powstaje bez niej, a w Radzie Atlantyckiej pozostaje niesmak.
+    defaultOption: odmowic
+    expiresAfterQuarters: 1
+    source: wydarzenia 1951, nr 20
+
+  - id: uciekinier
+    title: Uciekinier ze Wschodu
+    conditions: { after: 1952-Q1 }
+    chancePerQuarter: 0.04
+    cooldownQuarters: 12
+    prompt: >-
+      Inżynier z bloku wschodniego, który pracował przy rakietach, prosi o azyl i chce pracować
+      dla PACE. BAS chce go przesłuchać, Rada Naukowa chce go zatrudnić, a nikt nie wie,
+      czy nie jest podstawiony.
+    options:
+      - id: zatrudnic
+        title: Zatrudnić w PACE
+        effects:
+          - { faction: RN, disposition: 1 }
+          - { indicator: WF, add: -2 }
+          - { flag: uciekinier_w_pace }
+        text: Uciekinier dostaje przepustkę PACE. Jego wiedza jest bezcenna, o ile jest prawdziwa.
+      - id: przekazac-bas
+        title: Przekazać BAS
+        effects:
+          - { faction: BAS, disposition: 1 }
+        text: BAS zabiera uciekiniera na długie przesłuchania. PACE dostanie streszczenie, kiedyś.
+      - id: odeslac
+        title: Odmówić współpracy
+        effects:
+          - { faction: RN, disposition: -1 }
+          - { indicator: NG, add: 1 }
+        text: PACE nie chce mieć z nim nic wspólnego. Moskwa odnotowuje, że Zachód nie wykorzystał okazji.
+    defaultOption: przekazac-bas
+    expiresAfterQuarters: 1
+    source: wydarzenia 1951, nr 72

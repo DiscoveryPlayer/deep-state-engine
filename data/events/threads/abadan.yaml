@@ -1,0 +1,150 @@
+id: abadan
+title: Kryzys irański
+kind: historical
+region: bliski_wschod
+summary: >-
+  Iran nacjonalizuje przemysł naftowy, a największa rafineria świata w Abadanie staje.
+  Wielka Brytania broni swoich koncesji, USA wahają się między mediacją a operacją wywiadu.
+historicalNote: >-
+  Nacjonalizacja przemysłu naftowego i premierostwo Mosaddegha (marzec–maj 1951), embargo
+  i nacisk brytyjski, rozważany i niewykonany plan Buccaneer (zbrojne zajęcie Abadanu, 1951),
+  ewakuacja Brytyjczyków z Abadanu (jesień 1951), zamach stanu przygotowany przez CIA
+  i brytyjski wywiad (operacja Ajax/Boot, sierpień 1953). Daty do weryfikacji w etapie T3.
+drivers: [sila_wielkiej_brytanii, zaangazowanie_usa, popyt_na_rope]
+start:
+  from: 1951-Q1
+stages:
+  - id: nacjonalizacja
+    title: nacjonalizacja ropy
+    at: 1951-Q2
+    branches:
+      - id: mosaddegh
+        title: Mosaddegh premierem, ropa znacjonalizowana
+        historical: true
+        weight: 10
+        effects:
+          - { var: popyt_na_rope, add: 1 }
+          - { flag: iran_nacjonalizacja }
+        text: >-
+          Parlament w Teheranie nacjonalizuje przemysł naftowy, a premierem zostaje Mohammad
+          Mosaddegh. W Londynie mówi się o kradzieży, w Teheranie o niepodległości.
+  - id: rafineria
+    title: Abadan
+    at: 1951-Q4
+    branches:
+      - id: ewakuacja
+        title: Embargo i ewakuacja Abadanu
+        historical: true
+        weight: 10
+        effects:
+          - { var: koniunktura, add: -1 }
+          - correction: { units: -0.5, quarters: 4, reason: 'Droższe paliwo po zamknięciu rafinerii w Abadanie' }
+        next: zamach
+        text: >-
+          Brytyjczycy ewakuują personel z Abadanu, a rafineria staje. Embargo na irańską ropę
+          podnosi ceny paliw, także lotniczych.
+      - id: buccaneer
+        title: Plan Buccaneer wykonany
+        weight: 1
+        modifiers:
+          - { when: { var: sila_wielkiej_brytanii, op: '>=', value: 7 }, mul: 3 }
+          - { when: { var: popyt_na_rope, op: '>=', value: 7 }, add: 1 }
+          - { when: { var: zaangazowanie_usa, op: '<=', value: 3 }, mul: 2 }
+        effects:
+          - { indicator: NG, add: -1 }
+          - { var: sila_wielkiej_brytanii, add: -1 }
+          - { flag: abadan_wojna }
+          - correction: { units: -1, quarters: 4, reason: 'Walki w Zatoce Perskiej podbijają ceny paliw' }
+        next: wojna_w_zatoce
+        text: >-
+          Rząd brytyjski wykonuje plan Buccaneer: spadochroniarze i okręty zajmują Abadan.
+          Waszyngton i Paryż protestują, Moskwa grozi, a Rada Atlantycka zbiera się na
+          nadzwyczajnym posiedzeniu.
+      - id: mediacja
+        title: Udana mediacja USA
+        weight: 2
+        modifiers:
+          - { when: { var: zaangazowanie_usa, op: '>=', value: 7 }, mul: 2 }
+        effects:
+          - { flag: iran_mediacja }
+          - { var: zaangazowanie_usa, add: 1 }
+        next: zamach
+        text: >-
+          Amerykański wysłannik doprowadza do tymczasowego porozumienia: ropa znów płynie,
+          a spór o odszkodowania trafia do arbitrażu.
+  - id: wojna_w_zatoce
+    title: wojna w Zatoce
+    at: 1952-Q1
+    alternative: true
+    branches:
+      - id: okupacja
+        title: Brytyjska okupacja Chuzestanu
+        weight: 5
+        effects:
+          - { var: sila_wielkiej_brytanii, add: -1 }
+          - { divergence: europa, add: 1 }
+          - correction: { units: -0.5, quarters: 2, reason: 'Wielka Brytania tnie składkę na PACE, bo płaci za wojnę' }
+        next: end
+        text: >-
+          Brytyjczycy trzymają Abadan i pola naftowe, ale płacą za to krwią i pieniędzmi.
+          Londyn zapowiada cięcie składek na programy sojusznicze.
+      - id: wycofanie
+        title: Wycofanie pod presją USA
+        weight: 4
+        modifiers:
+          - { when: { var: zaangazowanie_usa, op: '>=', value: 6 }, mul: 2 }
+        effects:
+          - { var: sila_wielkiej_brytanii, add: -2 }
+          - { var: zaangazowanie_usa, add: 1 }
+        next: end
+        text: >-
+          Pod presją Waszyngtonu Brytyjczycy wycofują się z Abadanu. Upokorzenie Londynu będzie
+          długo pamiętane w Radzie Atlantyckiej.
+      - id: interwencja_zsrr
+        title: Moskwa wchodzi do gry
+        weight: 1
+        effects:
+          - { indicator: NG, add: -1 }
+          - { var: presja_wyscigu, add: 1 }
+          - { flag: iran_zsrr }
+        next: end
+        text: >-
+          Radzieckie dywizje stają przy granicy Iranu, a irańska lewica wzywa do „bratniej
+          pomocy”. Świat wstrzymuje oddech.
+  - id: zamach
+    title: los Mosaddegha
+    at: 1953-Q3
+    branches:
+      - id: obalony
+        title: Mosaddegh obalony
+        historical: true
+        weight: 10
+        modifiers:
+          - { when: { flag: iran_mediacja }, mul: 0.3 }
+        effects:
+          - { var: popyt_na_rope, add: -1 }
+          - { var: koniunktura, add: 1 }
+          - { flag: iran_zamach }
+        text: >-
+          Mosaddegh zostaje obalony, a szach wraca do pełni władzy. Ropa znów płynie przez nowe
+          konsorcjum. Na Zachodzie mało kto pyta, kto pomógł.
+      - id: przetrwal
+        title: Mosaddegh przetrwał
+        weight: 2
+        modifiers:
+          - { when: { flag: iran_mediacja }, mul: 3 }
+        effects:
+          - { var: popyt_na_rope, add: -1 }
+        text: >-
+          Mosaddegh utrzymuje się u władzy, a porozumienie naftowe, choć kruche, działa.
+          Teheran gra na dwa fronty, ale nie zrywa z Zachodem.
+      - id: zwrot_na_wschod
+        title: Zwrot na Wschód
+        weight: 1
+        effects:
+          - { indicator: NG, add: -1 }
+          - { flag: iran_zsrr }
+          - { divergence: zsrr, add: 1 }
+        text: >-
+          Nieudany zamach pcha Teheran w stronę Moskwy. Radzieccy doradcy pojawiają się
+          w ministerstwach, a mapa Bliskiego Wschodu zaczyna wyglądać inaczej niż w podręcznikach.

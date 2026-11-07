@@ -29,3 +29,13 @@
 | Wiedza Andersona | — | `PlayerView`, `toPlayerView()` | jedyna droga do interfejsu i AI |
 | Rejestr Korekt (dawniej `kspOffsets`) | — | faza 7 | zmiany zapisywane do pliku KSP |
 | Migawka | — | faza 1B | znormalizowany stan techniczny z KSP |
+| Wątek świata | — | `threads/<id>.yaml`, `world.threads[id]` | etapy z datami, gałąź historyczna i alternatywne (decyzja 0015) |
+| Etap alternatywny | — | `alternative: true` | wejście tylko przez `next` |
+| Kotwica | — | `kind: anchor` | jedna gałąź w każdym etapie |
+| Szablon wątku | — | `templates/<id>.yaml`, instancja `<id>#<n>` | parametry, np. `{kraj}` |
+| Wzorzec | — | `patterns.yaml`, `world.patternLog` | zdarzenie bez daty |
+| Dylemat | — | `dilemmas.yaml`, `world.pendingDilemmas` | bez decyzji: opcja domyślna |
+| Zmienne świata | — | `world.vars` | 0–10, ukryte przed graczem |
+| Rozbieżność | D | `world.divergence[region]` | 0–10, ukryta |
+| Korekta budżetu | — | `world.corrections` | jednostki robocze (decyzja 0012) |
+| Wiadomości ze świata | — | `PlayerView.worldNews` | tylko wpisy publiczne |

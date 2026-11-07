@@ -55,6 +55,16 @@ export interface PlayerView {
   directives: GameState['directives'];
   assessments: GameState['knowledge']['assessments'];
   chronicle: GameState['chronicle'];
+  /** Publiczne wpisy dziennika świata. Tajne wpisy, zmienne, flagi, Rozbieżność i stan wątków są ukryte. */
+  worldNews: { quarter: string; kind: string; title: string; text: string }[];
+  /** Dylematy czekające na decyzję Andersona. */
+  pendingDilemmas: {
+    instanceId: string;
+    title: string;
+    prompt: string;
+    options: { id: string; title: string }[];
+    expiresIn: string;
+  }[];
 }
 
 export function loyaltyBand(loyalty: number): LoyaltyBand {
@@ -113,6 +123,16 @@ export function toPlayerView(state: GameState): PlayerView {
     directives: state.directives.map((d) => ({ ...d })),
     assessments: state.knowledge.assessments.map((a) => ({ ...a })),
     chronicle: state.chronicle.map((c) => ({ ...c, tags: [...c.tags] })),
+    worldNews: state.world.log
+      .filter((e) => e.visibility === 'public')
+      .map((e) => ({ quarter: e.quarter, kind: e.kind, title: e.title, text: e.text })),
+    pendingDilemmas: state.world.pendingDilemmas.map((p) => ({
+      instanceId: p.instanceId,
+      title: p.title,
+      prompt: p.prompt,
+      options: p.options.map((o) => ({ ...o })),
+      expiresIn: p.expiresIn,
+    })),
   };
 }
 

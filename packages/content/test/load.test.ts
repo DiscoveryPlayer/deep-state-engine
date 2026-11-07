@@ -4,7 +4,7 @@ import { cp, mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createInitialState, serializeState, toPlayerView } from '@dse/core';
+import { createInitialState, quarterCode, serializeState, simulateWorld, toPlayerView } from '@dse/core';
 import { ContentLoadError, loadContent } from '../src/index.ts';
 
 const DATA_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '../../../data');
@@ -44,4 +44,36 @@ test('błąd w YAML daje komunikat z nazwą pliku i ścieżką pola', async () =
 test('brakujący plik jest zgłaszany', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'dse-content-'));
   await assert.rejects(loadContent(dir), /campaign\.yaml \[\(plik\)\]/);
+});
+
+test('treść świata z data/events wczytuje się i przechodzi dekadę symulacji', async () => {
+  const content = await loadContent(DATA_DIR);
+  const world = content.world;
+  assert.ok(world, 'brak data/events/world.yaml');
+  assert.deepEqual(world.threads.map((t) => t.id).sort(), ['abadan', 'korea', 'maccartyzm', 'wybory-1952']);
+  assert.ok(world.patterns.length >= 12);
+  assert.equal(world.dilemmas.length, 4);
+  for (const seed of ['PACE-1951', 'A', 'B', 'C', 'D']) {
+    const start = createInitialState(content, { id: 't', seed });
+    const { state } = simulateWorld(start, world, { to: '1960-Q4', decisions: 'random' });
+    assert.equal(quarterCode(state.quarter), '1961-Q1');
+    assert.ok(state.world.threads.korea?.history.length, 'wątek koreański się rozstrzygnął');
+    const view = JSON.stringify(toPlayerView(state));
+    for (const e of state.world.log.filter((x) => x.visibility === 'secret')) {
+      assert.ok(!view.includes(e.text), `tajny wpis w widoku gracza: ${e.ref}`);
+    }
+  }
+});
+
+test('błąd w pliku wątku daje komunikat z nazwą pliku', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'dse-content-'));
+  await cp(DATA_DIR, dir, { recursive: true });
+  const file = join(dir, 'events/threads/korea.yaml');
+  const original = await readFile(file, 'utf8');
+  await writeFile(file, original.replace('historical: true', 'historical: tak'));
+  await assert.rejects(loadContent(dir), (e: unknown) => {
+    assert.ok(e instanceof ContentLoadError);
+    assert.match(e.message, /events\/threads\/korea\.yaml/);
+    return true;
+  });
 });

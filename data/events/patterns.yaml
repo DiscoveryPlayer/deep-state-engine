@@ -1,0 +1,226 @@
+# Wzorce: zdarzenia bez daty, z warunkami (decyzja 0015). Ten sam wzorzec działa
+# w 1952 i w 1975 roku. Źródło: plik wydarzeń autora z 1951 roku (numery w polu source),
+# po scaleniu duplikatów i poprawkach z docs/research/analiza-pliku-wydarzen-1951.md.
+#
+# Zasada: wzorzec NIE fabrykuje faktów w KSP (nie niszczy pojazdów, nie zabija pilotów).
+# Dotyczy świata poza PACE albo daje Korektę, którą gracz stosuje sam.
+
+patterns:
+  - id: strajk-w-przemysle
+    title: Strajk w zakładach dostawcy
+    category: economic
+    region: usa
+    chancePerQuarter: 0.06
+    chanceModifiers:
+      - { when: { var: koniunktura, op: '>=', value: 7 }, mul: 1.5 }
+    cooldownQuarters: 4
+    effects:
+      - correction: { units: -0.3, quarters: 1, reason: 'Opóźnienia dostaw po strajku u dostawcy' }
+    text: >-
+      Związkowcy w zakładach jednego z dostawców PACE odchodzą od maszyn. Chodzi o płace,
+      nie o politykę, ale dostawy staną na kilka tygodni.
+    source: wydarzenia 1951, nr 1, 7, 18
+
+  - id: drenaz-mozgow
+    title: Drenaż mózgów
+    category: economic
+    chancePerQuarter: 0.05
+    chanceModifiers:
+      - { when: { var: pula_kadr, op: '<=', value: 3 }, mul: 2 }
+      - { when: { var: koniunktura, op: '>=', value: 7 }, mul: 1.5 }
+    cooldownQuarters: 4
+    effects:
+      - { var: pula_kadr, add: -1 }
+      - { faction: RN, disposition: -1 }
+    text: >-
+      Prywatny przemysł oferuje inżynierom PACE pensje, na które agencja nie może odpowiedzieć.
+      Kilku najlepszych ludzi składa wypowiedzenia.
+    source: wydarzenia 1951, nr 4
+
+  - id: zimny-lut
+    title: Zimny lut
+    category: technical
+    chancePerQuarter: 0.05
+    cooldownQuarters: 6
+    effects:
+      - correction: { units: -0.2, quarters: 1, reason: 'Wymiana partii wadliwej elektroniki' }
+    text: >-
+      Kontrola jakości wykrywa w partii elektroniki od dostawcy wadliwe luty, które pękają przy
+      wibracjach startowych. Cała seria idzie do wymiany.
+    source: wydarzenia 1951, nr 21
+
+  - id: wybuch-na-stanowisku
+    title: Wybuch na stanowisku prób u dostawcy
+    category: technical
+    chancePerQuarter: 0.03
+    cooldownQuarters: 8
+    effects:
+      - { indicator: PP, add: -2 }
+    text: >-
+      Na stanowisku prób silników u jednego z dostawców dochodzi do wybuchu. Prasa pyta,
+      czy rakiety są bezpieczne dla okolicznych mieszkańców.
+    source: wydarzenia 1951, nr 23, 36
+
+  - id: przelom-aerodynamiczny
+    title: Przełom w tunelu aerodynamicznym
+    category: technical
+    conditions: { after: 1952-Q3 }
+    chancePerQuarter: 0.08
+    maxTotal: 1
+    effects:
+      - { faction: RN, disposition: 1 }
+    text: >-
+      Badacz z laboratorium aerodynamicznego wykazuje, że opór przy prędkościach okołodźwiękowych
+      zależy od rozkładu przekroju całego samolotu. Rada Naukowa mówi o rewolucji w projektowaniu.
+    source: wydarzenia 1951, nr 22 (reguła pól, historycznie 1952)
+
+  - id: grypa
+    title: Epidemia grypy
+    category: social
+    chancePerQuarter: 0.02
+    cooldownQuarters: 16
+    effects:
+      - correction: { units: -0.3, quarters: 1, reason: 'Absencja chorobowa w zakładach i na poligonach' }
+    text: Epidemia grypy przetrzebia zespoły w zakładach i na poligonach. Harmonogramy się sypią.
+    source: wydarzenia 1951, nr 44
+
+  - id: wizyta-dygnitarza
+    title: Wizyta dygnitarza
+    category: political
+    chancePerQuarter: 0.05
+    cooldownQuarters: 4
+    effects:
+      - { indicator: PP, add: 2 }
+      - { currency: KP, add: 1 }
+    text: >-
+      Ważny gość z Waszyngtonu albo ze stolicy sojusznika chce zobaczyć start. Dobre zdjęcia,
+      dobre nagłówki i jeden więcej przyjaciel przy stole budżetowym.
+    source: wydarzenia 1951, nr 58
+
+  - id: weto-francji
+    title: Francja grozi wetem
+    category: political
+    region: europa
+    chancePerQuarter: 0.04
+    cooldownQuarters: 6
+    effects:
+      - { currency: KP, add: -1 }
+    text: >-
+      Delegacja francuska w Radzie Atlantyckiej zapowiada weto wobec wspólnego finansowania,
+      dopóki jej przemysł nie dostanie należnej części kontraktów.
+    source: wydarzenia 1951, nr 54
+
+  - id: przeciek-do-prasy
+    title: Przeciek do prasy
+    category: political
+    chancePerQuarter: 0.05
+    chanceModifiers:
+      - { when: { indicator: WF, op: '<=', value: 50 }, mul: 2 }
+    cooldownQuarters: 4
+    effects:
+      - { indicator: WF, add: -4 }
+    text: >-
+      Tygodnik ilustrowany publikuje szczegóły programu, który miał pozostać poufny. W BAS trwa
+      polowanie na źródło przecieku.
+    source: wydarzenia 1951, nr 65
+
+  - id: przesluchanie-kosztow
+    title: Przesłuchanie w sprawie kosztów
+    category: political
+    region: usa
+    chancePerQuarter: 0.04
+    chanceModifiers:
+      - { when: { var: koniunktura, op: '<=', value: 4 }, mul: 2 }
+    cooldownQuarters: 6
+    effects:
+      - { indicator: ZW, add: -3 }
+    text: >-
+      Komisja Kongresu wzywa przedstawicieli PACE, żeby wyjaśnili koszty programów samolotów
+      doświadczalnych. Kamery kronik filmowych już czekają.
+    source: wydarzenia 1951, nr 63
+
+  - id: wojna-podjazdowa-sluzb
+    title: Wojna podjazdowa Lotnictwa i Marynarki
+    category: political
+    chancePerQuarter: 0.05
+    cooldownQuarters: 6
+    effects:
+      - { faction: DPO, disposition: -1 }
+    text: >-
+      Lotnictwo i Marynarka spierają się o to, kto ma prowadzić program rakietowy. Obie Służby
+      oczekują, że PACE stanie po ich stronie.
+    source: 'wydarzenia 1951, nr 57 (precedens: „bunt admirałów” z 1949 roku)'
+
+  - id: incydent-rozpoznawczy
+    title: Incydent z samolotem rozpoznawczym
+    category: military
+    region: zsrr
+    chancePerQuarter: 0.04
+    chanceModifiers:
+      - { when: { var: presja_wyscigu, op: '>=', value: 5 }, mul: 1.5 }
+    cooldownQuarters: 6
+    effects:
+      - { indicator: NG, add: -1 }
+      - { var: presja_wyscigu, add: 1 }
+    text: >-
+      Radzieckie myśliwce przechwytują zachodni samolot rozpoznawczy nad Morzem Barentsa.
+      Moskwa protestuje, a Waszyngton milczy o celu lotu.
+    source: wydarzenia 1951, nr 68, 78
+
+  - id: kradziez-dokumentacji
+    title: Kradzież dokumentacji
+    category: military
+    chancePerQuarter: 0.03
+    cooldownQuarters: 8
+    visibility: secret
+    effects:
+      - { indicator: WF, add: -2 }
+      - { flag: wyciek_do_zsrr }
+    text: >-
+      BAS ustala, że kopie rysunków jednego z programów trafiły do radzieckiego wywiadu.
+      Sprawa jest tajna, a podejrzanych jest wielu.
+    source: wydarzenia 1951, nr 28
+
+  - id: fala-ufo
+    title: Fala obserwacji „latających talerzy”
+    category: social
+    region: usa
+    conditions:
+      all:
+        - { after: 1952-Q2 }
+        - { before: 1954-Q1 }
+    chancePerQuarter: 0.25
+    maxTotal: 1
+    effects:
+      - { indicator: PP, add: 1 }
+    text: >-
+      Radary nad Waszyngtonem pokazują niezidentyfikowane obiekty, a gazety piszą o latających
+      talerzach. Zainteresowanie niebem jeszcze nigdy nie było tak duże.
+    source: wydarzenia 1951, nr 38 (historycznie lipiec 1952)
+
+  - id: boom-science-fiction
+    title: Boom science fiction
+    category: social
+    chancePerQuarter: 0.04
+    cooldownQuarters: 8
+    effects:
+      - { indicator: PP, add: 2 }
+    text: >-
+      Film o locie na Księżyc bije rekordy w kinach, a dzieci budują rakiety z kartonu.
+      Poparcie dla programów kosmicznych rośnie.
+    source: wydarzenia 1951, nr 40
+
+  - id: zmeczenie-europa
+    title: Zmęczenie płaceniem za Europę
+    category: political
+    region: usa
+    chancePerQuarter: 0.04
+    chanceModifiers:
+      - { when: { var: koniunktura, op: '<=', value: 4 }, mul: 2 }
+    cooldownQuarters: 8
+    effects:
+      - { indicator: ZW, add: -2 }
+    text: >-
+      Kongresmeni z Środkowego Zachodu pytają, dlaczego amerykański podatnik ma płacić za
+      europejskie programy. PACE, jako organizacja międzynarodowa, jest łatwym celem.
+    source: wydarzenia 1951, łańcuch E

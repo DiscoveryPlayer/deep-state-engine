@@ -1,0 +1,91 @@
+id: wybory-1952
+title: Wybory prezydenckie 1952
+kind: historical
+region: usa
+summary: >-
+  Pierwsze zderzenie Andersona z wielką polityką. Demokraci rządzą od 1933 roku, a Anderson
+  został mianowany przez Trumana. Nowa administracja zechce przejrzeć jego programy.
+historicalNote: >-
+  Wybory 4 listopada 1952. Kotwica (decyzja 0013): wygrywa Eisenhower. Niepewne są
+  wiceprezydent i dokładne wyniki, w tym układ sił w Kongresie. Historycznie wiceprezydentem
+  został Richard Nixon, a republikanie przejęli obie izby nieznaczną większością.
+drivers: [antykomunizm, koniunktura]
+start:
+  from: 1952-Q1
+stages:
+  - id: wynik
+    title: noc wyborcza
+    at: 1952-Q4
+    branches:
+      - id: historyczny
+        title: Eisenhower wygrywa, republikanie przejmują Kongres
+        historical: true
+        weight: 10
+        effects:
+          - { flag: administracja_eisenhower }
+        text: >-
+          Dwight Eisenhower wygrywa zdecydowanie. Republikanie przejmują obie izby Kongresu
+          niewielką większością. Po dwudziestu latach w Białym Domu zmienia się gospodarz.
+      - id: kongres_podzielony
+        title: Eisenhower wygrywa, Kongres podzielony
+        weight: 3
+        modifiers:
+          - { when: { var: antykomunizm, op: '<=', value: 5 }, mul: 2 }
+        effects:
+          - { flag: administracja_eisenhower }
+          - { flag: kongres_podzielony }
+        text: >-
+          Eisenhower wygrywa, ale demokraci utrzymują jedną z izb. Każda ustawa budżetowa będzie
+          wymagała kompromisu.
+      - id: silny_mandat
+        title: Miażdżące zwycięstwo
+        weight: 2
+        modifiers:
+          - { when: { var: koniunktura, op: '<=', value: 4 }, mul: 2 }
+        effects:
+          - { flag: administracja_eisenhower }
+          - { flag: silny_mandat }
+        text: >-
+          Eisenhower wygrywa miażdżąco, a republikanie zdobywają wyraźną większość w obu izbach.
+          Nowa administracja ma mandat do głębokich zmian.
+  - id: wiceprezydent
+    title: wiceprezydent
+    at: 1953-Q1
+    branches:
+      - id: nixon
+        title: Richard Nixon wiceprezydentem
+        historical: true
+        weight: 10
+        text: Richard Nixon obejmuje urząd wiceprezydenta.
+      - id: inny
+        title: Wiceprezydent spoza historii
+        weight: 2
+        effects:
+          - { flag: vp_alternatywny }
+        text: >-
+          Wiceprezydentem zostaje polityk, którego historia nie zna na tym stanowisku.
+          [Kandydaci do ustalenia z autorem: wyłącznie prawdziwe postacie z epoki.]
+  - id: przeglad
+    title: przegląd programów
+    at: 1953-Q2
+    branches:
+      - id: przeglad_programow
+        title: Nowa administracja przegląda programy Trumana
+        historical: true
+        weight: 8
+        effects:
+          - { indicator: ZW, add: -5 }
+          - { flag: przeglad_programow }
+        text: >-
+          Biuro Budżetu nowej administracji zapowiada przegląd wszystkich programów odziedziczonych
+          po Trumanie. Dowódca Operacyjny PACE, mianowany przez poprzedniego prezydenta, musi
+          udowodnić, że jest potrzebny.
+      - id: kontynuacja
+        title: Administracja potwierdza Andersona
+        weight: 4
+        modifiers:
+          - { when: { indicator: ZW, op: '>=', value: 65 }, mul: 2 }
+          - { when: { flag: silny_mandat }, mul: 0.5 }
+        text: >-
+          Nowy sekretarz obrony uznaje PACE za instrument polityki sojuszniczej i potwierdza
+          Andersona na stanowisku. Przegląd budżetu i tak nadejdzie.

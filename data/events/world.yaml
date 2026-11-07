@@ -1,0 +1,79 @@
+# Świat: regiony i zmienne świata (decyzja 0015).
+#
+# Zmienne są UKRYTE przed graczem. Gracz widzi je pośrednio: w raportach, cenach,
+# depeszach i ocenach wywiadu. Na ekranie zostaje pięć wskaźników z GDD (zasada Z6).
+# Skala zmiennych 0–10, gdzie 5 to „normalnie”.
+
+regions:
+  - id: usa
+    title: Stany Zjednoczone
+  - id: europa
+    title: Europa Zachodnia
+  - id: bliski_wschod
+    title: Bliski Wschód
+  - id: azja
+    title: Azja i Pacyfik
+  - id: zsrr
+    title: ZSRR i blok wschodni
+  - id: swiat
+    title: Świat (sprawy globalne)
+
+variables:
+  - id: koniunktura
+    title: Koniunktura
+    min: 0
+    max: 10
+    initial: 6
+    description: >-
+      Stan gospodarki Zachodu (mnożnik EC z pliku wydarzeń 1951). Wpływa na wielkość budżetu,
+      ceny w przetargach i Korekty. Wojna w Korei na start podbija koniunkturę.
+  - id: pula_kadr
+    title: Pula kadr
+    min: 0
+    max: 10
+    initial: 5
+    description: >-
+      Dostępność inżynierów i naukowców (mnożnik PEL). Niska pula zwiększa ryzyko drenażu mózgów
+      i podnosi koszt zatrudnienia.
+  - id: popyt_na_rope
+    title: Popyt na ropę
+    min: 0
+    max: 10
+    initial: 6
+    description: Napędza kryzysy surowcowe (wątek Abadan i szablon kryzysu surowcowego).
+  - id: sila_wielkiej_brytanii
+    title: Siła i determinacja Wielkiej Brytanii
+    min: 0
+    max: 10
+    initial: 6
+    description: >-
+      Gospodarka, rząd i imperialne ambicje Londynu. Wysoka wartość sprzyja twardym gałęziom
+      (np. plan Buccaneer w Abadanie), ale każda wojna ją obniża.
+  - id: zaangazowanie_usa
+    title: Zaangażowanie USA za granicą
+    min: 0
+    max: 10
+    initial: 5
+    description: Skłonność Waszyngtonu do mediacji, pomocy i operacji wywiadu.
+  - id: antykomunizm
+    title: Gorączka antykomunistyczna
+    min: 0
+    max: 10
+    initial: 7
+    description: Siła maccartyzmu i nastrojów antykomunistycznych w USA.
+  - id: napiecie_korea
+    title: Napięcie wojny w Korei
+    min: 0
+    max: 10
+    initial: 7
+    description: Intensywność wojny koreańskiej; po rozejmie spada.
+  - id: presja_wyscigu
+    title: Presja wyścigu
+    min: 0
+    max: 10
+    initial: 2
+    description: >-
+      Odczuwana presja rywalizacji ze ZSRR (mnożnik RP). Rośnie z sukcesami radzieckimi;
+      później połączona z Bilansem Wyścigu.
+
+maxPendingDilemmas: 2
