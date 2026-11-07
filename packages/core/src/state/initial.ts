@@ -15,11 +15,12 @@ import {
   type GameState,
 } from './schema.ts';
 
-/** Ustawienia kampanii zatwierdzone 25–26.10.2026 (Plan Budowy, rozdz. 1). */
+/** Ustawienia kampanii: decyzje 0005 i 0007 (RP-1 4.8.1, ustawienia trudności autora). */
 export const DEFAULT_CAMPAIGN_SETTINGS: Omit<CampaignSettings, 'id' | 'seed'> = {
-  rp1Version: '4.7.0.0',
+  rp1Version: '4.8.1.0',
   rp1Difficulty: 'custom',
-  rp1DifficultyNotes: 'Normalny, z podniesionym startowym Confidence i kredytem odblokowań',
+  rp1DifficultyNotes:
+    'Własne: fundusze 50 000, nauka 20, Confidence 750, kredyt odblokowań 60 294, tempo budowy i badań 1,3 (decyzja 0007)',
   opponentMode: 'divergent',
   metaDifficulty: 'secret',
   integrationMode: 'honor',

@@ -3,9 +3,9 @@
 > Ten plik czyta się na początku każdej sesji pracy i aktualizuje na jej końcu.
 > Jest pamięcią projektu — historia czatu nią nie jest.
 
-**Ostatnia aktualizacja:** 26.10.2026
-**Bieżąca faza:** 1A — szkielet i model danych (Plan Budowy, rozdz. 4)
-**Następny kamień milowy:** M1 — „Silnik liczy prawdziwą karierę”
+**Ostatnia aktualizacja:** 7.11.2026
+**Bieżąca faza:** 1A domknięta; równolegle tor Treść: system wydarzeń świata (decyzja 0015)
+**Następny kamień milowy:** M1a — „DSE czyta karierę” (parser .sfs), potem M1
 
 ## Zrobione
 
@@ -26,27 +26,35 @@
 - 26 testów, w tym: determinizm, zapis bit w bit, brak wycieku warstwy ukrytej do widoku gracza.
 - Dokumenty: GDD v1.0, Dokument Decyzyjny v1.1, Plan Budowy, rejestr decyzji 0001–0006, słowniczek.
 
+### Domknięcie 1A i rundy pytań (1–7.11.2026)
+
+- Przejście na RP-1 4.8.1 (decyzja 0007).
+- Decyzje 0008–0014 z odpowiedzi autora; zestawienie w `docs/plan/rozstrzygniecia-2026-11.md`.
+- Dokumenty projektowe i badawcze w `docs/design/`, `docs/research/`, `docs/plan/`.
+
 ## Następne zadania
 
-1. **Faza 1B — parser .sfs.** Czeka na pliki zapisu RP-1 4.7 od autora (`samples/saves/`):
-   - świeża kariera (styczeń 1951),
-   - kariera po 2–3 miesiącach,
-   - kariera po pierwszym starcie z awarią.
+1. **Plan Budowy v3** — ostateczny plan na podstawie rozstrzygnięć (zastąpi `docs/PLAN_BUDOWY.md`).
+2. **Faza 1B — parser .sfs.** Zapisy RP-1 4.8.1 autora są już dostępne (kariera testowa „test-27-10”, 3 pliki) i trafią do `samples/saves/`.
    
    Zakres:
    - parser formatu ConfigNode,
    - ekstrakcja węzłów: `CareerLog`, `ProgramHandler`, `SpaceCenterManagement` (kompleksy, platformy, `launchSiteName`), `Confidence`, `UnlockCreditHandler`, `Funding`, `ResearchAndDevelopment`, `Reputation`,
    - Migawka i różnice między Migawkami.
-2. **Faza 0 — pakiet do prototypu papierowego** (może iść równolegle).
-3. **Faza 1C — silnik kwartału bez AI.**
+3. **Kampania pilotażowa** (zamiast prototypu papierowego, decyzja 0008): skrócony pakiet zasad dla czatu jako Mistrza Gry.
+4. **Prototyp weryfikacji Tristara, lot 2** (decyzja 0009): eksperyment Kerbalism i kontrakt CC — do testu u autora.
+5. **Faza 1C — dane referencyjne RP-1**, potem **1D — silnik kwartału bez AI**.
 
 ## Otwarte kwestie projektowe
 
-- **Korpus Astronautów:** czy roster z Biblii świata (Sterling, Thorne, Cross, Miller…) zastępuje Kowalczyka z GDD. Do decyzji autora.
-- **Leonard Haskell** (PRZ) — postać dodana w fazie 1A, bo Konsorcja potrzebują twarzy. Do zatwierdzenia.
-- **Kolizje nazw z Dokumentu Decyzyjnego 8.1** — do poprawy w Biblii świata przy przenoszeniu jej do `data/world/`.
+- **Lista pilotów w trzech klasach** i **nowa lista nazw** w miejsce kolizji z DD 8.1 (decyzja 0013) — do przygotowania z autorem.
+- **Haskell** — rola łącznika przemysłu przy PACE; postaci firm do dopisania przy katalogu przemysłu.
+- **Miejsca startu w pakiecie Sol** — lista z KSCSwitcher od autora (decyzja 0007).
+- **Sponsorzy programów (D4)** — autor chce rozwinąć ten filar w osobnej rozmowie.
+- **Dossier I „Próby w locie”** — raport z badań do przeniesienia do `docs/research/`.
 
 ## Uwagi środowiskowe (dla sesji Claude)
 
 - W sandboxie Claude rejestr npm jest zablokowany. `node_modules` składa się z dowiązań do `/opt/npm-tools/node_modules` — szczegóły w `CLAUDE.md`.
 - Brak `package-lock.json` jest celowy do pierwszego `npm install` u autora. Po nim plik blokady trafia do repozytorium.
+- Zmiany w repozytorium wprowadza Claude przez pull requesty; autor zatwierdza i scala. Każdy PR dopisuje wpis do `CHANGELOG.md`.

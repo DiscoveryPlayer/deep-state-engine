@@ -1,3 +1,5 @@
+> **Uwaga (7.11.2026):** to Plan Budowy 1.0. Wersja robocza 2.0 jest w [plan/plan-budowy-v2-projekt.md](plan/plan-budowy-v2-projekt.md), rozstrzygnięcia w [plan/rozstrzygniecia-2026-11.md](plan/rozstrzygniecia-2026-11.md). Ostateczny Plan Budowy v3 zastąpi ten plik. Wersja RP-1: 4.8.1 (decyzja 0007).
+
 # THE DEEP STATE ENGINE — Plan budowy aplikacji
 
 | | |

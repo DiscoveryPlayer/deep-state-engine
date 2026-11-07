@@ -2,12 +2,12 @@
 
 *Intermarium History*
 
-Meta-gra strategiczna nałożona na **Kerbal Space Program z modyfikacją RP-1 (wersja 4.7)**.
+Meta-gra strategiczna nałożona na **Kerbal Space Program z modyfikacją RP-1 (wersja 4.8.1)**.
 Grasz Eugene'em Andersonem, Dowódcą Operacyjnym **PACE** — *Pan-Atlantic Commission for
 Experimentation* — i prowadzisz zachodni program kosmiczny przez zimną wojnę, od 1951 roku.
 W KSP budujesz rakiety i latasz. Tutaj płacisz za to polityczną cenę.
 
-> Stan projektu: **faza 1A — szkielet**. Szczegóły w [docs/STATUS.md](docs/STATUS.md).
+> Stan projektu: **faza 1A domknięta**, w toku system wydarzeń świata i parser zapisów. Szczegóły w [docs/STATUS.md](docs/STATUS.md).
 
 ## Dokumenty
 
@@ -18,6 +18,10 @@ W KSP budujesz rakiety i latasz. Tutaj płacisz za to polityczną cenę.
 | [docs/PLAN_BUDOWY.md](docs/PLAN_BUDOWY.md) | Fazy robocze, architektura, sposób pracy |
 | [docs/STATUS.md](docs/STATUS.md) | Co jest zrobione, co jest następne |
 | [docs/decisions/](docs/decisions/) | Rejestr decyzji technicznych i projektowych |
+| [docs/plan/](docs/plan/) | Plan Budowy v2 (roboczy), pytania i rozstrzygnięcia |
+| [docs/design/](docs/design/) | Projekty systemów: przemysł i sponsorzy, wydarzenia świata |
+| [docs/research/](docs/research/) | Materiał źródłowy: dossier, analizy |
+| [CHANGELOG.md](CHANGELOG.md) | Dziennik zmian |
 | [docs/GLOSARIUSZ.md](docs/GLOSARIUSZ.md) | Pojęcia z gry i ich nazwy w kodzie |
 
 ## Uruchomienie na Twoim komputerze
@@ -55,7 +59,7 @@ packages/server       lokalny serwer (faza 2)
 packages/ui           interfejs w przeglądarce (faza 2)
 tools/cli             polecenia `npm run dse -- …`
 tools/sim             symulator kampanii bez KSP (faza 4)
-samples/saves         przykładowe zapisy RP-1 4.7 do testów parsera
+samples/saves         przykładowe zapisy RP-1 4.8.1 do testów parsera
 ```
 
 ## Treść gry
