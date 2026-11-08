@@ -49,10 +49,11 @@
    - parser formatu ConfigNode,
    - ekstrakcja węzłów: `CareerLog`, `ProgramHandler`, `SpaceCenterManagement` (kompleksy, platformy, `launchSiteName`), `Confidence`, `UnlockCreditHandler`, `Funding`, `ResearchAndDevelopment`, `Reputation`,
    - Migawka i różnice między Migawkami.
-3. **Wydarzenia świata, ciąg dalszy:** podział na epoki (GDD 4.4) i kilkanaście nowych wątków od 1954 roku (Indochiny, Suez, Węgry, Sputnik, Berlin, U-2 i propozycje autora); skutek tworzący wpis Rejestru.
-4. **Kampania pilotażowa** (zamiast prototypu papierowego, decyzja 0008): skrócony pakiet zasad dla czatu jako Mistrza Gry.
-5. **Prototyp weryfikacji Tristara, lot 2** (decyzja 0009): eksperyment Kerbalism i kontrakt CC — do testu u autora.
-6. **Faza 1C — dane referencyjne RP-1**, potem **1D — silnik kwartału bez AI** (z `advanceWorld` jako krokiem zamknięcia kwartału i Korektami w raporcie budżetowym).
+3. **Dossier III** (`docs/research/dossier-III-watki-swiata-1951-1980.md`) czeka na uwagi autora: pytania w części VI. Potem zmiany w silniku (`anchor`, `kind`, `decision`, bezpieczniki szablonów, `era`, palety) i zapis bloku A w YAML partiami po około 10 wątków.
+4. **Wydarzenia świata, ciąg dalszy:** zapis bloku A w YAML (blok A, potem 200 wzorców z paletami, szablony S03–S16, bloki B–D); skutek tworzący wpis Rejestru.
+5. **Kampania pilotażowa** (zamiast prototypu papierowego, decyzja 0008): skrócony pakiet zasad dla czatu jako Mistrza Gry.
+6. **Prototyp weryfikacji Tristara, lot 2** (decyzja 0009): eksperyment Kerbalism i kontrakt CC — do testu u autora.
+7. **Faza 1C — dane referencyjne RP-1**, potem **1D — silnik kwartału bez AI** (z `advanceWorld` jako krokiem zamknięcia kwartału i Korektami w raporcie budżetowym).
 
 ## Otwarte kwestie projektowe
 
