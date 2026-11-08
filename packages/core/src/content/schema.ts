@@ -5,6 +5,7 @@
  * Stan kampanii (packages/core/src/state) powstaje z treści i potem żyje własnym życiem.
  */
 import { z } from 'zod';
+import type { WorldContent } from '../world/schema.ts';
 
 const id = z
   .string()
@@ -154,6 +155,8 @@ export interface GameContent {
   traits: z.infer<typeof traitsContentSchema>;
   characters: CharacterContent[];
   registry: RegistryEntryContent[];
+  /** Treść świata: wątki, szablony, wzorce, dylematy (folder data/events/). Opcjonalna w testach. */
+  world?: WorldContent;
 }
 
 /** Pliki treści i ich schematy — wspólna lista dla loadera i testów. */

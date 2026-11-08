@@ -1,0 +1,111 @@
+id: korea
+title: Wojna w Korei
+kind: historical
+region: azja
+summary: >-
+  Wojna trwa od czerwca 1950 roku. Napędza budżety obronne i koniunkturę, podnosi ceny
+  materiałów i pochłania uwagę Waszyngtonu.
+historicalNote: >-
+  Operacja Ripper (marzec 1951), dymisja MacArthura (11 kwietnia 1951), rozmowy rozejmowe
+  od lipca 1951 (Kaesong, potem Panmundżom), walki o wzgórza (m.in. Heartbreak Ridge,
+  wrzesień–październik 1951), rozejm 27 lipca 1953.
+drivers: [antykomunizm, napiecie_korea, koniunktura]
+start:
+  from: 1951-Q1
+stages:
+  - id: ofensywa
+    title: wiosna 1951
+    at: 1951-Q2
+    branches:
+      - id: front_stabilny
+        title: Front stabilizuje się koło 38 równoleżnika
+        historical: true
+        weight: 10
+        effects:
+          - { var: koniunktura, add: 1 }
+          - correction: { units: -0.5, quarters: 4, reason: 'Wojna podnosi ceny materiałów strategicznych' }
+        text: >-
+          Kontrofensywa ONZ odzyskuje Seul, a prezydent odwołuje generała MacArthura. Front
+          zastyga w pobliżu 38 równoleżnika. Zamówienia wojskowe napędzają przemysł, ale metale
+          strategiczne drożeją.
+      - id: eskalacja
+        title: Eskalacja na Chiny
+        weight: 2
+        modifiers:
+          - { when: { var: antykomunizm, op: '>=', value: 8 }, add: 2 }
+        effects:
+          - { indicator: NG, add: -1 }
+          - { var: napiecie_korea, add: 2 }
+          - { var: koniunktura, add: 1 }
+          - { flag: korea_eskalacja }
+          - correction: { units: -1, quarters: 4, reason: 'Eskalacja wojny: niedobory i ceny materiałów' }
+        text: >-
+          MacArthur zostaje na stanowisku i dostaje zgodę na naloty za rzeką Jalu. Pekin i Moskwa
+          odpowiadają ostro. Waszyngton mówi o „wojnie, której nie wolno przegrać”.
+  - id: rozmowy
+    title: rozmowy rozejmowe
+    at: 1951-Q3
+    branches:
+      - id: rozmowy_i_walki
+        title: Rozmowy ruszają, walki o wzgórza trwają
+        historical: true
+        weight: 10
+        text: >-
+          W Kaesongu zaczynają się rozmowy o rozejmie. Na froncie trwają krwawe walki o pojedyncze
+          wzgórza, a gazety liczą straty tygodniowo.
+      - id: przelom
+        title: Szybki przełom w rozmowach
+        weight: 2
+        modifiers:
+          - { when: { flag: korea_eskalacja }, mul: 0 }
+        advanceNext: 4
+        text: >-
+          Delegacje porozumiewają się w sprawie linii demarkacyjnej szybciej, niż ktokolwiek
+          się spodziewał. Spór o jeńców wydaje się do rozwiązania.
+      - id: zerwane
+        title: Rozmowy zerwane
+        weight: 2
+        modifiers:
+          - { when: { flag: korea_eskalacja }, mul: 3 }
+        effects:
+          - { var: napiecie_korea, add: 1 }
+        delayQuarters: 2
+        text: >-
+          Rozmowy zostają zerwane po incydencie w strefie neutralnej. Obie strony szykują nowe
+          ofensywy.
+  - id: rozejm
+    title: rozejm
+    at: 1953-Q3
+    branches:
+      - id: panmundzom
+        title: Rozejm w Panmundżonie
+        historical: true
+        weight: 10
+        effects:
+          - { var: napiecie_korea, set: 2 }
+          - { var: koniunktura, add: -1 }
+          - { indicator: NG, add: 1 }
+        text: >-
+          W Panmundżonie podpisano rozejm. Wojna nie kończy się pokojem, tylko linią na mapie.
+          Kończy się też koniunktura zbrojeniowa, a Kongres zaczyna liczyć wydatki.
+      - id: wojna_trwa
+        title: Wojna przeciąga się
+        weight: 3
+        modifiers:
+          - { when: { var: napiecie_korea, op: '>=', value: 8 }, mul: 2 }
+        effects:
+          - { var: antykomunizm, add: 1 }
+        delayQuarters: 2
+        text: Rozmowy znów utknęły na sprawie jeńców. Front stoi, a straty rosną.
+      - id: grozba_atomowa
+        title: Groźba użycia broni atomowej
+        weight: 1
+        requires: { flag: korea_eskalacja }
+        effects:
+          - { indicator: NG, add: -2 }
+          - { var: presja_wyscigu, add: 2 }
+          - { flag: korea_grozba_atomowa }
+        delayQuarters: 1
+        text: >-
+          Waszyngton daje do zrozumienia, że nie wyklucza broni atomowej. Sojusznicy w Europie
+          są przerażeni, a Moskwa przyspiesza własne programy.

@@ -19,6 +19,23 @@ async function dse(...args: string[]) {
 test('waliduj: treść z data/ jest poprawna', async () => {
   const { stdout } = await dse('waliduj');
   assert.match(stdout, /Treść poprawna: 6 frakcji/);
+  assert.match(stdout, /Świat: \d+ regionów/);
+});
+
+test('swiat: symulacja dekady bez --prawda nie pokazuje tajnych wpisów ani znaczników historii', async () => {
+  const { stdout } = await dse('swiat', '--do', '1960-Q4', '--ziarno', 'PACE-1951');
+  assert.match(stdout, /── 1951-Q2/);
+  assert.match(stdout, /Wojna w Korei/);
+  assert.doesNotMatch(stdout, /TAJNE|zgodnie z historią|ROZEJŚCIE|Rozbieżność/);
+  const truth = await dse('swiat', '--do', '1960-Q4', '--ziarno', 'PACE-1951', '--prawda');
+  assert.match(truth.stdout, /zgodnie z historią/);
+  assert.match(truth.stdout, /Rozbieżność regionów/);
+});
+
+test('swiat --serie: statystyka wielu symulacji', async () => {
+  const { stdout } = await dse('swiat', '--serie', '20', '--do', '1955-Q4');
+  assert.match(stdout, /SERIA: 20 symulacji/);
+  assert.match(stdout, /Kryzys irański/);
 });
 
 test('nowa-kampania i stan: pełny obieg bez ujawniania warstwy ukrytej', async () => {
@@ -26,7 +43,7 @@ test('nowa-kampania i stan: pełny obieg bez ujawniania warstwy ukrytej', async 
   const file = join(dir, 'kampania.json');
   await dse('nowa-kampania', '--ziarno', 'PACE-1951', '--wyjscie', file);
   const saved = await readFile(file, 'utf8');
-  assert.match(saved, /"schemaVersion": 1/);
+  assert.match(saved, /"schemaVersion": 2/);
 
   const { stdout } = await dse('stan', file);
   assert.match(stdout, /PACE — Pan-Atlantic Commission for Experimentation/);

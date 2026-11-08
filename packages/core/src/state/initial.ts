@@ -5,8 +5,10 @@ import type { GameContent } from '../content/schema.ts';
 import { validateContentReferences } from '../content/validate.ts';
 import { Rng } from '../rng.ts';
 import { quarterCode, quarterOfDate } from '../time.ts';
+import { ensureWorldState } from '../world/engine.ts';
 import {
   STATE_SCHEMA_VERSION,
+  emptyWorldState,
   gameStateSchema,
   type CampaignSettings,
   type CharacterState,
@@ -143,6 +145,7 @@ export function createInitialState(content: GameContent, options: NewCampaignOpt
         tags: ['start'],
       },
     ],
+    world: content.world ? ensureWorldState(emptyWorldState(), content.world) : emptyWorldState(),
   };
 
   // Ostatnia linia obrony: stan startowy musi spełniać schemat stanu.
