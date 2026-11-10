@@ -49,11 +49,11 @@
    - parser formatu ConfigNode,
    - ekstrakcja węzłów: `CareerLog`, `ProgramHandler`, `SpaceCenterManagement` (kompleksy, platformy, `launchSiteName`), `Confidence`, `UnlockCreditHandler`, `Funding`, `ResearchAndDevelopment`, `Reputation`,
    - Migawka i różnice między Migawkami.
-3. **Dossier III** (`docs/research/dossier-III-watki-swiata-1951-1980.md`) czeka na uwagi autora: pytania w części VI. Potem zmiany w silniku (`anchor`, `kind`, `decision`, bezpieczniki szablonów, `era`, palety) i zapis bloku A w YAML partiami po około 10 wątków.
+3. **Wątki głębokie:** autor ma zatwierdzić standard z części VII Dossier III (decyzja 0016, punkt 7). Potem PR silnika (`anchor`, `kind`, `decision`, `sameQuarter`, `ongoing`, `reactions`, `rumor`, `offset` w wątkach, bezpieczniki szablonów, `era`, palety), Suez jako pierwszy wątek głęboki, potem blok A partiami po około 10 wątków.
 4. **Wydarzenia świata, ciąg dalszy:** zapis bloku A w YAML (blok A, potem 200 wzorców z paletami, szablony S03–S16, bloki B–D); skutek tworzący wpis Rejestru.
 5. **Kampania pilotażowa** (zamiast prototypu papierowego, decyzja 0008): skrócony pakiet zasad dla czatu jako Mistrza Gry.
 6. **Prototyp weryfikacji Tristara, lot 2** (decyzja 0009): eksperyment Kerbalism i kontrakt CC — do testu u autora.
-7. **Faza 1C — dane referencyjne RP-1**, potem **1D — silnik kwartału bez AI** (z `advanceWorld` jako krokiem zamknięcia kwartału i Korektami w raporcie budżetowym).
+7. **Faza 1C — dane referencyjne RP-1** (w tym `data/launch-sites.yaml` z `docs/design/miejsca-startu.md`), potem **1D — silnik kwartału bez AI** (z `advanceWorld` jako krokiem zamknięcia kwartału i Korektami w raporcie budżetowym).
 
 ## Otwarte kwestie projektowe
 

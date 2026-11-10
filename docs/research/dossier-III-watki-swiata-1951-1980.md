@@ -5,7 +5,8 @@
 Dossier zastępuje 30 rocznych plików wydarzeń. Opisuje świat jako bibliotekę **procesów**, czyli wątków, szablonów i wzorców, z których silnik składa każdą kampanię od nowa. Dokument ma dwie warstwy:
 - **część I** to model: poziomy pewności, rodzaje gałęzi, kotwice, szablony, dylematy, palety epok i zmiany w silniku;
 - **części II–V** to treść: 99 wątków w czterech blokach kalendarzowych, 16 szablonów, 200 wzorców i palety epok;
-- **część VI** to kolejność dalszych prac i pytania do autora.
+- **część VI** to kolejność dalszych prac, pytania do autora i jego odpowiedzi;
+- **część VII** opisuje wątek głęboki, czyli standard wątku w grze, na przykładzie Suezu.
 
 Z dossier będziemy pisać pliki YAML do `data/events/`, wątek po wątku. Daty historyczne są podane według stanu wiedzy. Przed zapisaniem wątku w YAML każdą datę etapu sprawdzamy jeszcze raz (pole `historicalNote`).
 
@@ -139,9 +140,9 @@ Lista jest celowo krótka. Wszystko inne może pójść inaczej.
 | K9 | ZSRR ma bombę wodorową przed 1956 rokiem | A07 | Otwarta jest tylko data (1953–1955) |
 | K10 | Chiny mają bombę atomową przed 1967 rokiem | B11 | Data otwarta (1962–1966) |
 | K11 | Konflikt arabsko-izraelski trwa przez cały okres gry | C06, D01 | Otwarte są wojny, daty i wyniki |
-| K12 | Brak wojny jądrowej między mocarstwami | wszystkie | **Do decyzji autora.** Bez tej kotwicy gałęzie typu „kryzys kubański → wojna” muszą mieć osobne zakończenie kampanii |
+| K12 | Brak wojny jądrowej między mocarstwami | wszystkie | **Przyjęta** (autor, 10.11.2026, decyzja 0016) |
 
-K8–K12 to moje propozycje. Każdą możesz skreślić.
+K8–K11 to moje propozycje, a K12 przyjął autor.
 
 ## 10. Zmiany w silniku wynikające z dossier
 
@@ -1905,14 +1906,14 @@ Pozostałe palety, do przygotowania przy zapisie wzorców:
 4. **Szablony S03–S16.**
 5. **Bloki B, C, D.** Później, bo pierwsza kampania i tak zaczyna się w 1951 roku, a do 1961 roku są miesiące gry.
 
-## 2. Pytania do autora
+## 2. Pytania do autora i odpowiedzi (10.11.2026, decyzja 0016)
 
-1. **K12: wojna jądrowa.** Czy wykluczamy ją kotwicą, czy dopuszczamy jako zakończenie kampanii (osobny epilog)?
-2. **Kandydaci fikcyjni od 1968 roku** (K7): kto? Potrzebna lista nazwisk i profili, tak jak przy pilotach.
-3. **Lista wątków:** które skreślasz, które dopisujesz? Proponuję potraktować tę listę jak menu.
-4. **Śmierci prawdziwych osób** (Dallas, rok 1968): czy dopuszczasz gałąź „przerwaną”, w której zamach się nie zdarza? Zostawiłem ją, bo historia jest otwarta, ale bez teorii spiskowych w tekstach.
-5. **Wątki polskie** (A25, C16, D09): czy chcesz je rozbudować ponad inne wątki, jako wyróżnik marki Intermarium?
-6. **Nowe zmienne świata** (część I, punkt 11): czy osiem nowych zmiennych to nie za dużo? Gracz ich nie widzi, ale autor treści musi je pamiętać.
+1. **K12, wojna jądrowa:** wykluczona kotwicą.
+2. **Kandydaci fikcyjni od 1968 roku:** postacie fikcyjne dodane do gry, tak jak piloci.
+3. **Lista wątków:** przyjęta. Uwaga autora, że trzy etapy to za mało i wydarzenie „przeleci”, prowadzi do standardu wątku głębokiego (część VII).
+4. **Gałęzie przerwane przy zamachach:** dozwolone.
+5. **Wątki polskie:** bez wyróżnienia. Interkosmos, czyli lot polskiego kosmonauty i polska aparatura, należy do modelu ZSRR.
+6. **Nowe zmienne:** do 10. Silnik obsługuje dowolną liczbę zmiennych z `world.yaml`.
 
 ## 3. Źródła i weryfikacja
 
@@ -1924,3 +1925,143 @@ Daty i przebiegi wydarzeń podane są według wiedzy historycznej autora dossier
 - Dokument Decyzyjny v1.1, punkty 4.3–4.6 (kanon przedświata, członkowie, poligony).
 - GDD v1.0, punkty 4.4 (epoki), 14–17 (Bilans Wyścigu, Model ZSRR, wywiad, NG), 23–24 (zdarzenia i kryzysy), 31.3 (Szok i Samozadowolenie).
 - `docs/research/analiza-pliku-wydarzen-1951.md`: plik wydarzeń autora z 1951 roku.
+
+---
+
+# Część VII. Wątek głęboki: standard i przykład
+
+*Dopisane 10.11.2026 po uwadze autora: „zastanawiam się, czy tylko takie 3 fazy wystarczą… dane wydarzenie po prostu przeleci”.*
+
+## 1. Skąd 3–5 etapów w części II
+
+Karty w części II to **szkielet**, czyli punkty zwrotne, w których historia może skręcić. Służą do wyboru wątków, a nie są ich ostatecznym kształtem. Gdyby wątek w grze miał tylko 3 etapy, Suez rzeczywiście „przeleciałby” w trzech depeszach. Właściwy wątek musi być **gęsty**: trwać przez kilka kwartałów, wracać na Biurko, wywoływać reakcje, zostawiać ślady na lata i czasem docierać do Andersona najpierw jako plotka.
+
+## 2. Siedem warstw wątku głębokiego
+
+| Warstwa | Co daje graczowi | Mechanika | Stan silnika |
+|---|---|---|---|
+| **1. Punkty zwrotne** | Historia może skręcić | etapy z gałęziami H/P/O/X/A | **jest** |
+| **2. Depesze** | Wydarzenie trwa, a nie przelatuje: co kwartał nowe wieści | etapy z jedną gałęzią, w kilku krokach w jednym kwartale | etapy są; **brakuje** kilku etapów jednego wątku w tym samym kwartale (`sameQuarter`) |
+| **3. Sytuacja trwająca** | Dopóki kanał jest zamknięty, co kwartał płacisz | `ongoing`: skutki naliczane w każdym kwartale fazy, widoczne na Biurku jako „sytuacja” | **brakuje** |
+| **4. Reakcje stron** | Londyn, Paryż, Moskwa, Kongres i frakcje PACE odpowiadają po swojemu | `reactions`: kilka krótkich tekstów i skutków przy jednym etapie, bez rozgałęzień | **brakuje** (dziś jeden tekst na gałąź) |
+| **5. Pogłoski wywiadu** | Wydarzenie przychodzi najpierw jako niepewna Ocena wywiadowcza (kod A–F, GDD 16), a dopiero potem jako fakt. Pogłoska bywa fałszywa | `rumor`: etap ma zapowiedź z kodem pewności kwartał wcześniej | **brakuje** |
+| **6. Punkty decyzyjne** | Anderson zabiera głos, a jego wybór zmienia wagi gałęzi | `decision` (część I, punkt 5) | **brakuje** |
+| **7. Echa** | Skutki wracają po latach w innych wątkach | flagi czytane przez inne wątki i krótkie wątki-echa startujące od flagi, z etapami przesuniętymi od startu | flagi **są**; etapy z `offset` w wątkach **brakuje** (dziś tylko w szablonach) |
+
+**Docelowa gęstość:**
+
+| Blok | Punkty zwrotne | Wszystkie etapy (z depeszami) | Decyzje | Echa |
+|---|---|---|---|---|
+| A (1951–1960) | 3–6 | **8–15** | 1–3 | 2–4 |
+| B (1961–1965) | 2–4 | 5–10 | 1–2 | 1–3 |
+| C (1966–1972) | 2–3 | 4–8 | 0–2 | 1–2 |
+| D (1973–1980) | 1–3 | 3–6 | 0–1 | 0–2 |
+
+Dla bloku A to około 500 etapów, czyli na każdy kwartał gry przypada średnio kilkanaście wieści z wątków, do tego wzorce i dylematy. Powstanie więcej materiału, niż gracz zdąży przeczytać, i dobrze: zobaczy go tylko część, bo resztę odfiltruje mgła wojny i widoczność.
+
+## 3. Przykład: Kryzys sueski jako wątek głęboki
+
+Ten sam wątek co A27, rozpisany w pełni. W nawiasach kwadratowych podana jest warstwa.
+
+### Faza I: preludium (1955-Q4 – 1956-Q2)
+
+| Kwartał | Etap | Gałęzie / treść | Warstwa |
+|---|---|---|---|
+| 1955-Q4 | **Broń z bloku** | H Egipt kupuje broń w Czechosłowacji (umowa z września 1955) · A Egipt kupuje na Zachodzie (cały wątek słabnie ×0,3) | [1] |
+| 1956-Q1 | *Pogłoska BAS:* „Kair rozmawia z Moskwą o finansowaniu tamy” | kod C, prawdziwa przy H | [5] |
+| 1956-Q2 | **Wycofanie Brytyjczyków ze strefy Kanału** (czerwiec 1956, zgodnie z umową z 1954) | jedna gałąź: depesza | [2] |
+### Faza II: nacjonalizacja (1956-Q3)
+
+| Kwartał | Etap | Gałęzie / treść | Warstwa |
+|---|---|---|---|
+| 1956-Q3 | **Tama asuańska** (19.07) | H USA i Wielka Brytania wycofują finansowanie · A finansują (wątek kończy się X) | [1] |
+| 1956-Q3 | **Naser nacjonalizuje Kanał** (26.07) | H · X kompromis w sprawie tamy | [1] |
+| 1956-Q3 | **Reakcje** | Londyn: „Naser to nowy Mussolini” · Paryż: Kair wspiera powstańców w Algierii · Waszyngton: chłodno · Moskwa: poparcie · Kongres: „nie nasza wojna” · DPO: plany ewakuacji · BLZ: ceny paliwa lotniczego | [4] |
+| 1956-Q3 | **Sytuacja: Kanał w rękach Egiptu** | `ongoing`: Korekta (frachty i ubezpieczenia), dopóki trwa faza II–III | [3] |
+| 1956-Q3 | **Konferencja londyńska** (22 państwa, sierpień) | jedna gałąź: depesza | [2] |
+| 1956-Q3 | **Decyzja 1:** Londyn i Paryż proszą PACE o samoloty transportowe do „ewakuacji obywateli” | tak: Dług Londynu i Paryża, ZW −, wzrasta waga A „USA popierają” · nie: uraza Paryża · bierność: Rada Atlantycka −1 SO | [6] |
+| 1956-Q3 | *Pogłoska BAS:* „Francuscy oficerowie widziani w Tel Awiwie” (zmowa z Sèvres, październik) | kod B–C; prawdziwa przy H w fazie III | [5] |
+
+### Faza III: wojna (1956-Q4)
+
+| Kwartał | Etap | Gałęzie / treść | Warstwa |
+|---|---|---|---|
+| 1956-Q4 | **Atak Izraela** (29.10) i **ultimatum** (30.10) | H · X Izrael rezygnuje (wątek przechodzi do „pokoju zbrojnego”) | [1] |
+| 1956-Q4 | **Interwencja** (lądowanie 5–6.11) | H interwencja i wycofanie pod presją USA · A USA popierają sojuszników · A ZSRR wysyła „ochotników” | [1] |
+| 1956-Q4 | **Listy Bułganina** (5.11): groźba „rakietami” wobec Londynu i Paryża | jedna gałąź: pierwszy szantaż rakietowy w historii, `presja_wyscigu` +1, RN i DPO ożywieni | [2] |
+| 1956-Q4 | **Atak na funta i presja USA** | H rozejm 6/7.11 · O walki trwają tydzień dłużej | [1] |
+| 1956-Q4 | **Węgry w cieniu Suezu** | powiązanie: zwiększa wagę H w A26 (świat patrzy gdzie indziej) | [7] |
+| 1956-Q4 | **Sytuacja: Rada Atlantycka sparaliżowana** | `ongoing`: SO −1 i KP − co kwartał, aż do fazy IV | [3] |
+| 1956-Q4 | **Decyzja 2:** stanowisko Andersona w Radzie | poprzeć USA (ZW +, Wielka Brytania i Francja −) · poprzeć sojuszników (ZW −2, Dług Londynu i Paryża) · wstrzymać się (SO −, wszyscy chłodni) | [6] |
+
+### Faza IV: następstwa (1957-Q1 – 1957-Q2)
+
+| Kwartał | Etap | Gałęzie / treść | Warstwa |
+|---|---|---|---|
+| 1957-Q1 | **Eden odchodzi** (9.01), premierem zostaje Macmillan | H · A Butler (rzadko) | [1] |
+| 1957-Q1 | **Racjonowanie benzyny w Europie** (Wielka Brytania od grudnia 1956 do maja 1957) | `ongoing`: Korekta dla składek europejskich przez 2 kw. | [3] |
+| 1957-Q1 | **Doktryna Eisenhowera** | start A29 | [7] |
+| 1957-Q2 | **Kanał otwarty ponownie** (kwiecień 1957) | H · O (+2 kw.) | [1] |
+
+### Echa (1957–1960)
+
+| Kiedy | Echo | Gdzie działa |
+|---|---|---|
+| 1957-Q1 | **Konferencja bermudzka:** Macmillan i Eisenhower naprawiają „specjalne relacje” | A06 (porozumienie z 1958 roku, waga H ×1,5) |
+| 1957-Q1 | „Europa będzie waszą zemstą” (Adenauer do Molleta, 6.11.1956) | A32 (traktaty rzymskie, waga H ×1,3) |
+| 1957-Q2 | **Oszczędności po Suezie** | A30 (Biała Księga Sandysa, waga gałęzi „ostrzejsza” ×1,5) |
+| 1958–1960 | **Francuska nieufność wobec USA** | A33 (`ambicja_francji` +1; bomba wcześniej, waga P ×1,5), B13 |
+
+**Jak to wygląda dla gracza:** przez sześć kwartałów, od jesieni 1955 do wiosny 1957, Suez pojawia się na Biurku 14 razy:
+- dwa razy jako pogłoska,
+- cztery razy jako depesza,
+- dwa razy jako sytuacja trwająca, która co kwartał kosztuje,
+- dwa razy jako decyzja,
+- reszta to punkty zwrotne i reakcje stron.
+
+Potem wraca jeszcze w czterech echach w innych wątkach.
+
+## 4. Szkic YAML z nowymi polami
+
+```yaml
+- id: wojna
+  title: wojna
+  at: 1956-Q4
+  rumor:                       # [5] kwartał wcześniej BAS przynosi Ocenę wywiadowczą
+    quartersBefore: 1
+    code: B                    # pewność źródła (GDD 16)
+    text: Francuscy oficerowie widziani w Tel Awiwie. Paryż i Londyn milczą.
+  decision:                    # [6] Anderson decyduje PRZED losowaniem gałęzi
+    prompt: Rada Atlantycka głosuje nad wezwaniem do rozejmu. Jak głosuje PACE?
+    options:
+      - id: z-usa
+        title: Poprzeć Waszyngton
+        effects: [{ indicator: ZW, add: 3 }]
+        weights: { usa-popieraja: { mul: 0.5 } }
+      - id: z-sojusznikami
+        title: Poprzeć Londyn i Paryż
+        effects: [{ indicator: ZW, add: -4 }]
+        weights: { usa-popieraja: { mul: 1.5 } }
+    defaultOption: wstrzymac
+  ongoing:                     # [3] co kwartał, dopóki wątek jest w tej fazie
+    until: nastepstwa
+    effects: [{ indicator: SO, add: -1 }]
+    title: Rada Atlantycka sparaliżowana
+  reactions:                   # [4] kilka głosów bez rozgałęzień
+    - { actor: Moskwa, text: 'Bułganin grozi „rakietami” Londynowi i Paryżowi.', effects: [{ var: presja_wyscigu, add: 1 }] }
+    - { actor: DPO, text: 'Dyrektoriat pyta, czy radzieckie groźby rakietowe są wiarygodne.' }
+  branches: [ … ]
+```
+
+## 5. Zmiany w silniku dla wątków głębokich
+
+| Zmiana | Co robi | Skala |
+|---|---|---|
+| `sameQuarter: true` przy etapie | kolejny etap rozstrzyga się w tym samym kwartale (kilka depesz naraz) | mała |
+| `ongoing` | skutki co kwartał w fazie; „sytuacje” w widoku gracza | średnia |
+| `reactions` | głosy stron przy etapie, w dzienniku jako osobne wpisy | mała |
+| `rumor` | wpis Oceny wywiadowczej kwartał wcześniej; przy gałęzi X albo A pogłoska okazuje się fałszywa (wywiad, GDD 16) | średnia |
+| `decision` | punkt decyzyjny przed losowaniem, odpowiedź zmienia wagi | średnia |
+| `offset` w wątkach startujących od flagi | wątki-echa i wątki reaktywne | mała |
+
+Proponuję wprowadzić te zmiany razem z tymi z części I (punkt 10) w jednym PR silnika, a Suez zapisać jako pierwszy wątek głęboki w YAML i sprawdzić go serią symulacji.

@@ -2,6 +2,14 @@
 
 Najnowsze na górze. Każdy wpis odpowiada jednemu pull requestowi.
 
+## 2026-11-10 — Odpowiedzi do Dossier III, wątki głębokie, miejsca startu (decyzja 0016)
+
+- Dossier III w wersji 1.1:
+  - odpowiedzi autora: K12 przyjęta, kandydaci fikcyjni, gałęzie przerwane przy zamachach, Interkosmos w modelu ZSRR, do 10 nowych zmiennych;
+  - nowa część VII: wątek głęboki (siedem warstw, docelowa gęstość) i pełny przykład Kryzysu sueskiego ze szkicem YAML i listą zmian w silniku.
+- `docs/design/miejsca-startu.md`: 31 miejsc z instalacji autora (KSCSwitcher). 15 dla PACE i Zachodu, 6 dla bloku wschodniego i Chin, 10 poza okresem gry. Korekta DD 4.6 (Andøya jest dostępna).
+- Decyzja 0016.
+
 ## 2026-11-07 — Dossier III: wątki świata 1951–1980
 
 - `docs/research/dossier-III-watki-swiata-1951-1980.md`:
