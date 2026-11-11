@@ -7,6 +7,7 @@ import {
   beginQuarter,
   closeQuarter,
   createInitialState,
+  launchSiteProblem,
   performDeskAction,
   recordKspSnapshot,
   settleCorrection,
@@ -16,6 +17,7 @@ import {
   type GameContent,
   type GameState,
   type KspSnapshot,
+  type LaunchSite,
 } from '../src/index.ts';
 import { fixtureContent } from './fixture.ts';
 
@@ -166,4 +168,73 @@ test('determinizm pętli kwartału', () => {
     return JSON.stringify(s);
   };
   assert.equal(play(), play());
+});
+
+const sites: LaunchSite[] = [
+  { id: 'us_cape_canaveral', name: 'Cape Canaveral', country: 'US', role: 'west', from: '1950-Q3', host: 'USA' },
+  {
+    id: 'fr_hammaguir',
+    name: 'Hammaguir',
+    country: 'FR',
+    role: 'west',
+    from: '1952-Q2',
+    until: '1967-Q2',
+    host: 'Francja',
+  },
+  { id: 'kz_baikonur', name: 'Bajkonur', country: 'KZ', role: 'east', from: '1957-Q1', host: 'ZSRR' },
+  { id: 'nz_mahia', name: 'Mahia', country: 'NZ', role: 'out_of_period', from: '2017-Q1', host: 'Nowa Zelandia' },
+];
+
+test('miejsca startu: strona, okres działania i miejsca spoza listy', () => {
+  const q = (year: number, quarter: 1 | 2 | 3 | 4) => ({ year, q: quarter });
+  assert.equal(launchSiteProblem(sites, 'us_cape_canaveral', q(1951, 1)), null);
+  assert.match(launchSiteProblem(sites, 'fr_hammaguir', q(1951, 1))!, /jeszcze nie działa/);
+  assert.equal(launchSiteProblem(sites, 'fr_hammaguir', q(1967, 2)), null, 'ostatni kwartał jeszcze dozwolony');
+  assert.match(launchSiteProblem(sites, 'fr_hammaguir', q(1967, 3))!, /nie jest już dostępne/);
+  assert.match(launchSiteProblem(sites, 'kz_baikonur', q(1960, 1))!, /drugiej strony/);
+  assert.match(launchSiteProblem(sites, 'nz_mahia', q(1960, 1))!, /po okresie gry/);
+  assert.match(launchSiteProblem(sites, 'xx_nieznane', q(1960, 1))!, /nie jest na liście/);
+});
+
+test('migawka KSP: start z miejsca drugiej strony trafia do Kroniki jako naruszenie', () => {
+  const clean = recordKspSnapshot(start(), snapshot, sites);
+  assert.equal(clean.warnings.length, 0);
+  const cheat = recordKspSnapshot(
+    start(),
+    { ...snapshot, launchesInQuarter: [{ vessel: 'Wostok', date: '1951-03-10', site: 'kz_baikonur' }] },
+    sites,
+  );
+  assert.equal(cheat.warnings.length, 1);
+  assert.match(cheat.warnings[0]!, /Wostok/);
+  assert.ok(cheat.state.chronicle.some((c) => c.tags.includes('naruszenie')));
+});
+
+test('raport kwartału liczy zmiany od otwarcia kwartału, razem z akcjami Biurka', () => {
+  const opened = start();
+  const opening = opened.desk.opening;
+  const acted = performDeskAction(opened, content(), { action: 'lobbing' }).state;
+  assert.notEqual(acted.indicators.ZW, opening.ZW, 'lobbing zmienił Zaufanie Waszyngtonu');
+  const { report, state } = closeQuarter(acted, content());
+  assert.deepEqual(report.before, { ZW: opening.ZW, SO: opening.SO, PP: opening.PP, WF: opening.WF, NG: opening.NG });
+  assert.deepEqual(
+    state.desk.opening,
+    { ...report.after, KP: state.currencies.KP },
+    'nowy kwartał ma nowy punkt odniesienia',
+  );
+});
+
+test('bilans lotów: kontrakty i awarie z migawki zmieniają wskaźniki przy zamknięciu kwartału', () => {
+  const c = content();
+  const plain = closeQuarter(start(), c);
+  const flown = closeQuarter(recordKspSnapshot(start(), { ...snapshot, contractsCompleted: 5, failures: 3 }).state, c);
+  // Te same ziarna i ta sama treść: różnica to wyłącznie bilans lotów (+3 PP za kontrakty, −2 PP za awarie).
+  assert.equal(flown.report.after.PP - plain.report.after.PP, 1);
+  assert.equal(flown.report.after.ZW - plain.report.after.ZW, 1);
+  assert.ok(flown.report.notes.some((n) => /ukończone kontrakty \(5\)/.test(n)));
+  assert.ok(flown.report.notes.some((n) => /awarie w locie \(3\)/.test(n)));
+
+  // Następny kwartał liczy tylko przyrost względem poprzedniej migawki.
+  const next = recordKspSnapshot(flown.state, { ...snapshot, date: '1951-06-20', contractsCompleted: 5, failures: 3 });
+  const quiet = closeQuarter(next.state, c);
+  assert.ok(!quiet.report.notes.some((n) => /Bilans lotów/.test(n)));
 });

@@ -308,3 +308,71 @@ test('migracja 2 → 3: instancje wątków dostają pola wątków głębokich', 
   assert.deepEqual(migrated.world.threads.kanal!.rumors, []);
   assert.equal(migrated.status, 'active');
 });
+
+/** Świat z jednym wątkiem o trzech etapach; środkowy etap konfiguruje test. */
+function threeStageWorld(middle: Record<string, unknown>): WorldContent {
+  const w = deepWorld();
+  return {
+    ...w,
+    templates: [],
+    threads: [
+      threadContentSchema.parse({
+        id: 'proba',
+        title: 'Próba',
+        kind: 'historical',
+        region: 'bliski_wschod',
+        summary: 's',
+        historicalNote: 'h',
+        start: { from: '1951-Q1' },
+        stages: [
+          {
+            id: 'pierwszy',
+            title: 'pierwszy',
+            at: '1951-Q1',
+            branches: [{ id: 'hist', title: 'H', historical: true, weight: 1, text: 'Pierwszy.' }],
+          },
+          { id: 'srodkowy', title: 'środkowy', at: '1951-Q2', ...middle },
+          {
+            id: 'ostatni',
+            title: 'ostatni',
+            at: '1951-Q3',
+            branches: [{ id: 'hist', title: 'H', historical: true, weight: 1, text: 'Ostatni.' }],
+          },
+        ],
+      }),
+    ],
+  };
+}
+
+test('gałąź „minor”: wariant szczegółu nie podnosi Rozbieżności regionu', () => {
+  const variant = (minor: boolean) =>
+    threeStageWorld({
+      branches: [
+        { id: 'hist', title: 'H', historical: true, weight: 0, text: 'Historycznie.' },
+        { id: 'inaczej', title: 'I', weight: 1, minor, text: 'Inaczej.' },
+      ],
+    });
+  const quiet = run(start(variant(true)), variant(true), 2);
+  assert.equal(quiet.world.threads.proba!.history.at(-1)!.branch, 'inaczej');
+  assert.equal(quiet.world.divergence.bliski_wschod, 0);
+  const loud = run(start(variant(false)), variant(false), 2);
+  assert.equal(loud.world.divergence.bliski_wschod, 1);
+});
+
+test('etap bez dostępnej gałęzi jest pomijany po cichu, a wątek idzie dalej', () => {
+  const w = threeStageWorld({
+    branches: [
+      { id: 'hist', title: 'H', historical: true, weight: 1, text: 'A.', requires: { flag: 'nigdy' } },
+      { id: 'inna', title: 'I', weight: 1, text: 'B.', requires: { flag: 'tez_nigdy' } },
+    ],
+  });
+  assert.deepEqual(validateWorldContent(w, new Set(['DPO'])), []);
+  const s = run(start(w), w, 3);
+  assert.deepEqual(
+    s.world.threads.proba!.history.map((h) => h.stage),
+    ['pierwszy', 'ostatni'],
+  );
+  assert.equal(s.world.threads.proba!.status, 'ended');
+  assert.equal(s.world.log.filter((e) => e.kind === 'thread').length, 2, 'pominięty etap nie zostawia depeszy');
+  assert.equal(s.world.divergence.bliski_wschod, 0);
+});

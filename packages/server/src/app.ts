@@ -95,7 +95,11 @@ export function createApp(options: AppOptions): Server {
     },
     view: toPlayerView(state),
     actions: availableDeskActions(state, content),
-    factions: content.factions.map((f) => ({ id: f.id, name: f.name, summary: f.summary })),
+    factions: content.factions.map((f) => {
+      const live = state.factions[f.id];
+      const agenda = live?.agendaKnown ? f.agendas.find((a) => a.id === live.agenda) : undefined;
+      return { id: f.id, name: f.name, summary: f.summary, agendaTitle: agenda?.title ?? null };
+    }),
     launchSites: content.launchSites ?? [],
     messages,
   });
@@ -154,7 +158,7 @@ export function createApp(options: AppOptions): Server {
       }
       case 'ksp': {
         const body = parseBody(kspBody, await readJson(req));
-        const path = body.path.replace(/^"(.*)"$/, '$1');
+        const path = body.path.trim().replace(/^"(.*)"$/, '$1');
         if (!/\.sfs$/i.test(path)) throw new HttpError(400, 'Wskaż plik zapisu KSP z rozszerzeniem .sfs.');
         let career;
         try {
@@ -192,6 +196,7 @@ export function createApp(options: AppOptions): Server {
   async function respond(req: IncomingMessage, res: ServerResponse): Promise<void> {
     const url = new URL(req.url ?? '/', 'http://localhost');
     try {
+      assertLocalHost(req);
       if (url.pathname.startsWith('/api/')) {
         if (req.method !== 'GET') assertSameOrigin(req);
         send(res, 200, await handleApi(req, url));
@@ -230,12 +235,19 @@ function requireWorld(content: GameContent) {
   return content.world;
 }
 
+/**
+ * Każde żądanie musi być skierowane do adresu lokalnego. Chroni to przed stroną, która podstawia
+ * własną nazwę domeny pod 127.0.0.1 (DNS rebinding) i próbuje czytać kampanię.
+ */
+function assertLocalHost(req: IncomingMessage): void {
+  if (!/^(127\.0\.0\.1|localhost)(:\d+)?$/.test(req.headers.host ?? ''))
+    throw new HttpError(403, 'Serwer przyjmuje tylko połączenia lokalne.');
+}
+
 /** Żądania zmieniające stan przyjmujemy tylko z naszej własnej strony. */
 function assertSameOrigin(req: IncomingMessage): void {
   const origin = req.headers.origin;
   const host = req.headers.host ?? '';
-  if (!/^(127\.0\.0\.1|localhost)(:\d+)?$/.test(host))
-    throw new HttpError(403, 'Serwer przyjmuje tylko połączenia lokalne.');
   if (origin !== undefined && origin !== `http://${host}`)
     throw new HttpError(403, 'Żądanie z obcej strony zostało odrzucone.');
   if (!(req.headers['content-type'] ?? '').startsWith('application/json'))

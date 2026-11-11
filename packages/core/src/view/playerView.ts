@@ -87,6 +87,8 @@ export interface PlayerView {
   reports: GameState['reports'];
   /** Akcje Biurka wykonane w bieżącym kwartale. */
   deskLog: { action: string; summary: string }[];
+  /** Wskaźniki i Kapitał Polityczny z otwarcia bieżącego kwartału (sprzed jego wydarzeń). */
+  quarterStart: GameState['desk']['opening'];
   /** Ostatnia migawka kariery KSP albo null. */
   ksp: GameState['ksp']['snapshots'][number] | null;
   status: GameState['status'];
@@ -183,6 +185,7 @@ export function toPlayerView(state: GameState): PlayerView {
     deskLog: state.desk.log
       .filter((r) => r.quarter === quarterCode(state.quarter))
       .map((r) => ({ action: r.action, summary: r.summary })),
+    quarterStart: { ...state.desk.opening },
     ksp: state.ksp.snapshots.at(-1) ?? null,
     status: state.status,
   };

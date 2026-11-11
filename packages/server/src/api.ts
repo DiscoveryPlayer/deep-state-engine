@@ -8,6 +8,8 @@ export interface FactionInfo {
   id: string;
   name: string;
   summary: string;
+  /** Nazwa bieżącej Agendy, jeśli Anderson ją poznał (inaczej null). */
+  agendaTitle: string | null;
 }
 
 export interface DeskPayload {

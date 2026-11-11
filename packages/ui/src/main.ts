@@ -24,6 +24,8 @@ interface AppState {
   tab: TabId;
   newsQuarter: string;
   openStation: string | null;
+  /** Opcja wskazana w sprawie do decyzji; czeka na zatwierdzenie drugim kliknięciem. */
+  armed: { instanceId: string; optionId: string } | null;
   busy: boolean;
   notices: { id: number; kind: 'info' | 'error'; text: string }[];
   dialog: 'settings' | 'close' | 'campaigns' | null;
@@ -37,6 +39,7 @@ const state: AppState = {
   tab: 'biurko',
   newsQuarter: '',
   openStation: null,
+  armed: null,
   busy: false,
   notices: [],
   dialog: null,
@@ -150,9 +153,9 @@ function topBar(p: DeskPayload): HTMLElement {
   );
 }
 
-function meter(id: 'ZW' | 'SO' | 'PP' | 'WF', value: number, previous: number | undefined): HTMLElement {
+function meter(id: 'ZW' | 'SO' | 'PP' | 'WF', value: number, previous: number): HTMLElement {
   const level = value < 25 ? 'bad' : value < 40 ? 'warn' : 'ok';
-  const delta = previous === undefined ? 0 : value - previous;
+  const delta = value - previous;
   return h(
     'div',
     { class: `meter meter-${level}`, title: `${INDICATOR_NAMES[id]}: ${value} na 100` },
@@ -176,22 +179,22 @@ function meter(id: 'ZW' | 'SO' | 'PP' | 'WF', value: number, previous: number | 
     ),
     delta === 0
       ? null
-      : h('span', { class: `meter-delta ${delta > 0 ? 'up' : 'down'}` }, `${signed(delta)} od zeszłego kwartału`),
+      : h('span', { class: `meter-delta ${delta > 0 ? 'up' : 'down'}` }, `${signed(delta)} od początku kwartału`),
   );
 }
 
 function statusRow(p: DeskPayload): HTMLElement {
   const { indicators, currencies, budget } = p.view;
-  const before = p.view.reports.at(-1)?.before;
+  const before = p.view.quarterStart;
   const upcoming = budget.upcoming.reduce((s, i) => s + i.units, 0);
   const unsettled = budget.ledger.filter((e) => !e.settled).length;
   return h(
     'section',
     { class: 'status', 'aria-label': 'Wskaźniki' },
-    meter('ZW', indicators.ZW, before?.ZW),
-    meter('SO', indicators.SO, before?.SO),
-    meter('PP', indicators.PP, before?.PP),
-    meter('WF', indicators.WF, before?.WF),
+    meter('ZW', indicators.ZW, before.ZW),
+    meter('SO', indicators.SO, before.SO),
+    meter('PP', indicators.PP, before.PP),
+    meter('WF', indicators.WF, before.WF),
     h(
       'div',
       { class: 'readout', title: 'Napięcie Geopolityczne: od 5 (odprężenie) do 1 (krawędź)' },
@@ -310,7 +313,7 @@ function stations(p: DeskPayload): HTMLElement {
                       : 'nieznana',
                   ),
                   h('dt', null, 'Agenda'),
-                  h('dd', null, f.agenda ?? 'nieznana — poznasz ją na Spotkaniu'),
+                  h('dd', null, info?.agendaTitle ?? f.agenda ?? 'nieznana, poznasz ją na Spotkaniu'),
                 ),
               )
             : null,
@@ -349,21 +352,69 @@ function decisions(p: DeskPayload): HTMLElement {
             h(
               'div',
               { class: 'options' },
-              d.options.map((o, i) =>
-                h(
+              d.options.map((o, i) => {
+                const armed = state.armed?.instanceId === d.instanceId && state.armed.optionId === o.id;
+                return h(
                   'button',
                   {
-                    class: 'option',
+                    class: `option${armed ? ' is-armed' : ''}`,
                     disabled: state.busy,
-                    onClick: () => void run(() => api.decide(campaignId(), d.instanceId, o.id)),
+                    'aria-pressed': armed,
+                    'data-focus': `opcja-${d.instanceId}-${o.id}`,
+                    onClick: () => {
+                      state.armed = armed ? null : { instanceId: d.instanceId, optionId: o.id };
+                      render();
+                    },
                   },
                   h('span', { class: 'option-key', 'aria-hidden': 'true' }, keys[i] ?? '?'),
                   h('span', null, o.title),
-                ),
-              ),
+                );
+              }),
             ),
+            confirmRow(d),
           ),
         ),
+  );
+}
+
+/** Decyzji nie da się cofnąć, więc wybór opcji trzeba zatwierdzić osobnym przyciskiem. */
+function confirmRow(d: DeskPayload['view']['pendingDilemmas'][number]): HTMLElement | null {
+  const armed = state.armed;
+  const option = armed?.instanceId === d.instanceId ? d.options.find((o) => o.id === armed.optionId) : undefined;
+  if (!armed || !option) return null;
+  return h(
+    'div',
+    { class: 'confirm' },
+    h('p', null, `Wybrano: ${option.title}. Tej decyzji nie da się cofnąć.`),
+    h(
+      'div',
+      { class: 'confirm-actions' },
+      h(
+        'button',
+        {
+          class: 'btn btn-primary',
+          disabled: state.busy,
+          'data-focus': `zatwierdz-${d.instanceId}`,
+          onClick: () => {
+            state.armed = null;
+            void run(() => api.decide(campaignId(), d.instanceId, option.id));
+          },
+        },
+        'Zatwierdź decyzję',
+      ),
+      h(
+        'button',
+        {
+          class: 'btn',
+          disabled: state.busy,
+          onClick: () => {
+            state.armed = null;
+            render();
+          },
+        },
+        'Jeszcze się zastanowię',
+      ),
+    ),
   );
 }
 

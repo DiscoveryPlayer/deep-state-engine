@@ -10,6 +10,11 @@ export function h<K extends keyof HTMLElementTagNameMap>(
 ): HTMLElementTagNameMap[K] {
   const el = document.createElement(tag);
   for (const [key, val] of Object.entries(props ?? {})) {
+    // Stany ARIA to napisy "true" i "false", a nie atrybuty logiczne HTML.
+    if (key.startsWith('aria-') && typeof val === 'boolean') {
+      el.setAttribute(key, String(val));
+      continue;
+    }
     if (val === null || val === undefined || val === false) continue;
     if (typeof val === 'function') el.addEventListener(key.replace(/^on/, '').toLowerCase(), val);
     else if (key === 'class') el.className = String(val);

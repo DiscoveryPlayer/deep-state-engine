@@ -29,6 +29,16 @@ const PP_HIGH = 70;
  */
 const PP_DRIFT_HIGH = 55;
 const PP_DRIFT_LOW = 45;
+/**
+ * Bilans lotów z migawek KSP (reguła tymczasowa, decyzja 0017 punkt 7). Porównuje migawkę
+ * zamykanego kwartału z poprzednią: ukończone kontrakty to sukces widoczny w prasie i w Kongresie,
+ * awarie w locie to złe nagłówki. Zastąpi ją rozliczanie Dyrektyw i kart lotów (GDD 14).
+ */
+const FLIGHT_CONTRACT_PP = 1;
+const FLIGHT_CONTRACT_PP_MAX = 3;
+const FLIGHT_CONTRACT_ZW = 1;
+const FLIGHT_FAILURE_PP = 1;
+const FLIGHT_FAILURE_PP_MAX = 2;
 /** Nastawienie frakcji, od którego zegar Cierpliwości rośnie albo się cofa (GDD 7.1). */
 const DISPOSITION_ANGRY = -2;
 const DISPOSITION_CONTENT = 2;
@@ -51,6 +61,7 @@ export interface QuarterStepResult {
 export function beginQuarter(input: GameState, content: GameContent): QuarterStepResult {
   let state = structuredClone(input);
   let entries: WorldLogEntry[] = [];
+  state.desk.opening = { ...state.indicators, KP: state.currencies.KP };
   if (content.world) {
     const step = advanceWorld(state, content.world);
     state = step.state;
@@ -116,8 +127,8 @@ export function closeQuarter(input: GameState, content: GameContent): CloseQuart
   if (input.status !== 'active') throw new QuarterError('Kampania jest zakończona — nie można zamknąć kwartału.');
   const state = structuredClone(input);
   const q = quarterCode(state.quarter);
-  const before = { ...state.indicators };
-  const kpBefore = state.currencies.KP;
+  // Raport obejmuje cały kwartał: wydarzenia świata, akcje Biurka i samo zamknięcie.
+  const { KP: kpBefore, ...before } = state.desk.opening;
   const notes: string[] = [];
 
   // 1. Korekty budżetu.
@@ -127,7 +138,9 @@ export function closeQuarter(input: GameState, content: GameContent): CloseQuart
   state.budget.ledger.push({ quarter: q, units, unitFunds, items, settled: units === 0 });
   if (units !== 0) {
     const funds = unitFunds === null ? '' : ` (około ${Math.round(units * unitFunds)} funduszy w KSP)`;
-    notes.push(`Korekta budżetu kwartału: ${units > 0 ? '+' : ''}${units.toFixed(1)} jedn.${funds}.`);
+    notes.push(
+      `Korekta budżetu kwartału: ${units > 0 ? '+' : '−'}${Math.abs(units).toFixed(1).replace('.', ',')} jedn.${funds}.`,
+    );
   }
 
   // 2. Frakcje: zegary Cierpliwości i eskalacja (GDD 7.1).
@@ -166,9 +179,27 @@ export function closeQuarter(input: GameState, content: GameContent): CloseQuart
   if (state.indicators.PP > PP_DRIFT_HIGH) state.indicators.PP -= 1;
   else if (state.indicators.PP < PP_DRIFT_LOW) state.indicators.PP += 1;
 
-  // 4. Migawka KSP: przypomnienie w trybie Honorowym.
-  if (!state.ksp.snapshots.some((s) => s.quarter === q)) {
+  // 4. Migawka KSP: bilans lotów albo przypomnienie w trybie Honorowym.
+  const current = state.ksp.snapshots.find((s) => s.quarter === q);
+  if (!current) {
     notes.push('Brak migawki kariery KSP za ten kwartał — fakty z lotów nie zostały wczytane.');
+  } else {
+    const previous = state.ksp.snapshots.filter((s) => s.quarter < q).at(-1);
+    const contracts = Math.max(0, current.contractsCompleted - (previous?.contractsCompleted ?? 0));
+    const failures = Math.max(0, current.failures - (previous?.failures ?? 0));
+    if (contracts > 0) {
+      const pp = Math.min(FLIGHT_CONTRACT_PP_MAX, contracts * FLIGHT_CONTRACT_PP);
+      state.indicators.PP = clamp(state.indicators.PP + pp, 0, 100);
+      state.indicators.ZW = clamp(state.indicators.ZW + FLIGHT_CONTRACT_ZW, 0, 100);
+      notes.push(
+        `Bilans lotów: ukończone kontrakty (${contracts}). Poparcie Publiczne +${pp}, Zaufanie Waszyngtonu +${FLIGHT_CONTRACT_ZW}.`,
+      );
+    }
+    if (failures > 0) {
+      const pp = Math.min(FLIGHT_FAILURE_PP_MAX, failures * FLIGHT_FAILURE_PP);
+      state.indicators.PP = clamp(state.indicators.PP - pp, 0, 100);
+      notes.push(`Bilans lotów: awarie w locie (${failures}). Poparcie Publiczne −${pp}.`);
+    }
   }
 
   const newsCount = state.world.log.filter((e) => e.quarter === q && e.visibility === 'public').length;

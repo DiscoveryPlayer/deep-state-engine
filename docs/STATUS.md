@@ -3,9 +3,9 @@
 > Ten plik czyta się na początku każdej sesji pracy i aktualizuje na jej końcu.
 > Jest pamięcią projektu — historia czatu nią nie jest.
 
-**Ostatnia aktualizacja:** 7.11.2026
-**Bieżąca faza:** 1A domknięta; równolegle tor Treść: system wydarzeń świata (decyzja 0015)
-**Następny kamień milowy:** M1a — „DSE czyta karierę” (parser .sfs), potem M1
+**Ostatnia aktualizacja:** 11.11.2026
+**Bieżący plaster:** 1 „Da się grać: 1951–1955” gotowy (PR do zatwierdzenia); następny to plaster 2 „Pilotaż i poprawki”
+**Plan:** [Plan Budowy v3](PLAN_BUDOWY.md) (zastąpił wersje 1.0 i 2.0)
 
 ## Zrobione
 
@@ -40,31 +40,51 @@
 - CLI `dse swiat` (z `--serie` do strojenia). 46 testów.
 - Opis: `docs/design/wydarzenia-swiata.md`; odpowiedzi autora z 7.11 wdrożone (punkt 11).
 
+### Dossier III i miejsca startu (7–10.11.2026, decyzja 0016)
+
+- `docs/research/dossier-III-watki-swiata-1951-1980.md` (wersja 1.1): 12 kotwic, 99 wątków, 16 szablonów, 200 wzorców, standard wątku głębokiego.
+- `docs/design/miejsca-startu.md`: 31 miejsc z instalacji autora.
+
+### Plaster 1: „Da się grać: 1951–1955” (11.11.2026, decyzja 0017)
+
+- **Silnik wątków głębokich:** kotwice jako etapy, depesze w tym samym kwartale, pogłoski wywiadu, decyzje etapów z wagami, reakcje stron, sytuacje trwające, wątki-echa, gałęzie `minor`, bezpieczniki szablonów, warunek epoki.
+- **Pętla kwartału** (`packages/core/src/turn`): `beginQuarter`, `closeQuarter`, pięć akcji Biurka, księga Korekt, raport kwartału, bilans lotów (tymczasowy), zakończenia ZW 0 i SO 0.
+- **Stan w wersji 3** z migracją 2 → 3.
+- **Odczyt KSP** (`packages/ksp-bridge`): parser ConfigNode, Migawka kariery, przypisanie startów do miejsc, kontrola miejsc startu. Dane testowe: przycięty zapis autora w `samples/saves/`.
+- **Serwer** (`packages/server`): API kampanii, zapis atomowy, kopie przed zamknięciem kwartału, zabezpieczenia przed obcymi stronami. `npm start` albo `Uruchom-DSE.bat`.
+- **Interfejs** (`packages/ui`): pasek z osią kwartałów, wskaźniki, stanowiska frakcji, widoki Biurko, Depesze, Wywiad, Budżet, Ludzie, Loty (KSP), Kronika; sprawy do decyzji z potwierdzeniem; ustawienia (motyw, tekst, układ, kontrast, animacje); układ sprawdzony od 320 do 2560 pikseli szerokości.
+- **Treść:** 24 wątki 1951–1955, 2 szablony, 35 wzorców, 6 dylematów, 15 zmiennych świata, 31 miejsc startu.
+- **Testy:** 81. Rozgrywka próbna przez API i w przeglądarce do 1956 roku.
+
 ## Następne zadania
 
-1. **Plan Budowy v3** — ostateczny plan na podstawie rozstrzygnięć (zastąpi `docs/PLAN_BUDOWY.md`).
-2. **Faza 1B — parser .sfs.** Zapisy RP-1 4.8.1 autora są już dostępne (kariera testowa „test-27-10”, 3 pliki) i trafią do `samples/saves/`.
-   
-   Zakres:
-   - parser formatu ConfigNode,
-   - ekstrakcja węzłów: `CareerLog`, `ProgramHandler`, `SpaceCenterManagement` (kompleksy, platformy, `launchSiteName`), `Confidence`, `UnlockCreditHandler`, `Funding`, `ResearchAndDevelopment`, `Reputation`,
-   - Migawka i różnice między Migawkami.
-3. **Wątki głębokie:** autor ma zatwierdzić standard z części VII Dossier III (decyzja 0016, punkt 7). Potem PR silnika (`anchor`, `kind`, `decision`, `sameQuarter`, `ongoing`, `reactions`, `rumor`, `offset` w wątkach, bezpieczniki szablonów, `era`, palety), Suez jako pierwszy wątek głęboki, potem blok A partiami po około 10 wątków.
-4. **Wydarzenia świata, ciąg dalszy:** zapis bloku A w YAML (blok A, potem 200 wzorców z paletami, szablony S03–S16, bloki B–D); skutek tworzący wpis Rejestru.
-5. **Kampania pilotażowa** (zamiast prototypu papierowego, decyzja 0008): skrócony pakiet zasad dla czatu jako Mistrza Gry.
-6. **Prototyp weryfikacji Tristara, lot 2** (decyzja 0009): eksperyment Kerbalism i kontrakt CC — do testu u autora.
-7. **Faza 1C — dane referencyjne RP-1** (w tym `data/launch-sites.yaml` z `docs/design/miejsca-startu.md`), potem **1D — silnik kwartału bez AI** (z `advanceWorld` jako krokiem zamknięcia kwartału i Korektami w raporcie budżetowym).
+Kolejność według Planu Budowy v3, rozdział 5.
+
+1. **Pilotaż autora 1951–1955** na prawdziwej karierze. Notatki: co bolało, co nudziło, co było niejasne.
+2. **Plaster 2:** poprawki z pilotażu, różnice między Migawkami w raporcie kwartału, wybór pliku zapisu z listy, skutek `registry`, kolejne akcje Biurka.
+3. **Tor Treść:** blok A, lata 1956–1960 (19 wątków: Suez jako pierwszy, potem Węgry, Sputnik, Rok Geofizyczny, NASA, U-2), kolejne wzorce i szablony S03–S16.
+4. **Plaster 3 „Loty mają znaczenie”:** Dyrektywy z weryfikacją, programy testowe i karty lotów (Tristar), Rozkaz Kwartalny, Teczka Pojazdu, dane RP-1.
+
+## Do sprawdzenia przy pilotażu
+
+- **Bilans lotów** (decyzja 0017, punkt 7): liczby są tymczasowe i nie pochodzą z GDD.
+- **Dryf Poparcia Publicznego** i nasycenie konferencji prasowej (decyzja 0017, punkt 6).
+- **Skutki wydarzeń świata dla Nastawienia frakcji** (`faction … disposition` w gałęziach, na przykład po próbie bomby wodorowej): czy nie są zbyt częste.
+- **Siła historii:** w serii 300 kampanii gałąź historyczna wygrywa w większości etapów w ponad 90% przypadków. Decyzje Andersona przesuwają wagi, ale świat rzadko zbacza daleko.
+- **Napięcie Geopolityczne** w rozgrywkach próbnych dochodziło w 1955 roku do odprężenia (poziom 5). Do oceny, czy to nie za wcześnie.
 
 ## Otwarte kwestie projektowe
 
 - **Lista pilotów w trzech klasach** i **nowa lista nazw** w miejsce kolizji z DD 8.1 (decyzja 0013) — do przygotowania z autorem.
+- **Kandydaci fikcyjni na prezydenta** od 1968 roku (decyzja 0016) — razem z systemem postaci.
 - **Haskell** — rola łącznika przemysłu przy PACE; postaci firm do dopisania przy katalogu przemysłu.
-- **Miejsca startu w pakiecie Sol** — lista z KSCSwitcher od autora (decyzja 0007).
 - **Sponsorzy programów (D4)** — autor chce rozwinąć ten filar w osobnej rozmowie.
 - **Dossier I „Próby w locie”** — raport z badań do przeniesienia do `docs/research/`.
+- **Pull requesty #3–#5:** ich zawartość jest w całości w PR plastra 1. PR #5 można zamknąć po scaleniu.
 
 ## Uwagi środowiskowe (dla sesji Claude)
 
 - W sandboxie Claude rejestr npm jest zablokowany. `node_modules` składa się z dowiązań do `/opt/npm-tools/node_modules` — szczegóły w `CLAUDE.md`.
 - Brak `package-lock.json` jest celowy do pierwszego `npm install` u autora. Po nim plik blokady trafia do repozytorium.
 - Zmiany w repozytorium wprowadza Claude przez pull requesty; autor zatwierdza i scala. Każdy PR dopisuje wpis do `CHANGELOG.md`.
+- Interfejs sprawdza się na zrzutach ekranu z Chromium (Playwright jest w sandboxie, nie jest zależnością projektu).

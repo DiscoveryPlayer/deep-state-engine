@@ -262,14 +262,19 @@ export const deskActionRecordSchema = z.object({
   summary: z.string().min(1),
 });
 
+const indicatorSnapshot = z.object({ ZW: z.number(), SO: z.number(), PP: z.number(), WF: z.number(), NG: z.number() });
+
 export const deskStateSchema = z.object({
   /** Akcje Biurka wykonane w kampanii (dziennik). */
   log: z.array(deskActionRecordSchema),
   /** Dodatkowa Uwaga Dowódcy na następny kwartał (po Odpoczynku). */
   restBonus: z.number().int().min(0).max(2),
+  /**
+   * Wskaźniki i Kapitał Polityczny z chwili otwarcia kwartału, sprzed jego wydarzeń.
+   * Od nich raport kwartału i interfejs liczą zmianę „od początku kwartału”.
+   */
+  opening: indicatorSnapshot.extend({ KP: z.number() }),
 });
-
-const indicatorSnapshot = z.object({ ZW: z.number(), SO: z.number(), PP: z.number(), WF: z.number(), NG: z.number() });
 
 /** Raport z zamknięcia kwartału: fakty silnika, z których powstaje skrót sekretarza. */
 export const quarterReportSchema = z.object({

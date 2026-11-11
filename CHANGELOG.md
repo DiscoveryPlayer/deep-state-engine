@@ -2,6 +2,20 @@
 
 Najnowsze na górze. Każdy wpis odpowiada jednemu pull requestowi.
 
+## 2026-11-11 — Plaster 1: da się grać, 1951–1955 (decyzja 0017, Plan Budowy v3)
+
+- **Silnik wątków głębokich** (`@dse/core`, `world/`): etapy-kotwice, depesze w tym samym kwartale, pogłoski wywiadu, decyzje etapów z wagami gałęzi, reakcje stron, sytuacje trwające, wątki-echa, gałęzie `minor`, pominięcie etapu bez dostępnej gałęzi, bezpieczniki szablonów, warunek epoki.
+- **Pętla kwartału** (`turn/`): otwarcie i zamknięcie kwartału, pięć akcji Biurka (Spotkanie, Lobbing, Konferencja prasowa, Zlecenie wywiadowcze, Odpoczynek), księga Korekt w jednostkach, raport liczony od otwarcia kwartału, dryf Poparcia Publicznego, tymczasowy bilans lotów, zakończenia przy ZW 0 i SO 0.
+- **Stan kampanii w wersji 3** z migracją 2 → 3.
+- **Odczyt zapisów KSP** (`@dse/ksp-bridge`): parser ConfigNode, Migawka kariery RP-1 4.8.1, przypisanie startów do miejsc przez identyfikator kompleksu, kontrola miejsc startu (`data/launch-sites.yaml`, 31 miejsc). Start z niedozwolonego miejsca trafia do Kroniki jako naruszenie.
+- **Serwer** (`@dse/server`): lokalne API na 127.0.0.1:4780, zapis atomowy, kopie przed zamknięciem kwartału, kontrola nagłówków `Host` i `Origin`, polityka CSP.
+- **Interfejs** (`@dse/ui`): konsola w stylu Houston z kolorystyką MAGI, motyw ciemny i jasny, ustawienia tekstu, układu, kontrastu i animacji; siedem widoków; decyzje z potwierdzeniem; układ odporny na powiększenie (sprawdzony od 320 do 2560 pikseli).
+- **Treść 1951–1955:** 24 wątki głębokie, 15 zmiennych świata (`napiecie_korea` → `napiecie_azja`), 35 wzorców (było 17), 6 dylematów (było 4).
+- **Uruchamianie:** `npm start` i `Uruchom-DSE.bat` dla Windows.
+- **Dokumenty:** Plan Budowy v3 (wersje 1.0 i 2.0 w `docs/plan/`), decyzja 0017, słowniczek, `docs/design/wydarzenia-swiata.md` (punkt 12), README z instrukcją uruchomienia.
+- Zawiera też zmiany z PR #3, #4 i #5, które nie trafiły wcześniej do `main`.
+- Testy: 81 (było 46).
+
 ## 2026-11-10 — Odpowiedzi do Dossier III, wątki głębokie, miejsca startu (decyzja 0016)
 
 - Dossier III w wersji 1.1:

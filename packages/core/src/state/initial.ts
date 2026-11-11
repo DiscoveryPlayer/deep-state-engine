@@ -147,7 +147,7 @@ export function createInitialState(content: GameContent, options: NewCampaignOpt
     ],
     world: content.world ? ensureWorldState(emptyWorldState(), content.world) : emptyWorldState(),
     budget: { ledger: [] },
-    desk: { log: [], restBonus: 0 },
+    desk: { log: [], restBonus: 0, opening: { ...content.campaign.indicators, KP: content.campaign.currencies.KP } },
     reports: [],
     ksp: { snapshots: [] },
     status: 'active',

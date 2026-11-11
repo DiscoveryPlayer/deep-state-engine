@@ -445,7 +445,7 @@ patterns:
     title: Oferta pokojowa Moskwy
     category: political
     region: zsrr
-    conditions: { var: kurs_kremla, op: '<=', value: 5 }
+    conditions: { var: kurs_kremla, op: '<=', value: 6 }
     chancePerQuarter: 0.08
     cooldownQuarters: 8
     effects:

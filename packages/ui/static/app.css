@@ -373,7 +373,8 @@ label {
 
 .status {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  /* Osiem pól w jednym rzędzie; węższe okno dzieli je równo na 4 + 4, potem 2 w rzędzie. */
+  grid-template-columns: repeat(8, minmax(0, 1fr));
   border-block-end: 0.0625rem solid var(--line);
   background: var(--panel);
 }
@@ -505,6 +506,7 @@ label {
 }
 .main {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr);
   min-inline-size: 0;
   min-block-size: 0;
@@ -617,8 +619,8 @@ label {
   gap: 0.15rem;
   padding: 0.4rem var(--pad) 0;
   border-block-end: 0.0625rem solid var(--line);
-  overflow-x: auto;
-  scrollbar-width: thin;
+  /* Zakładki zawijają się do drugiego rzędu; żadna nie chowa się za krawędzią. */
+  flex-wrap: wrap;
 }
 .tab {
   flex: none;
@@ -720,7 +722,7 @@ label {
 }
 .deltas {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
   gap: 0.4rem;
 }
 .deltas li {
@@ -918,6 +920,22 @@ label {
   opacity: 0.5;
   cursor: not-allowed;
 }
+.option.is-armed {
+  border-color: var(--amber);
+  background: color-mix(in srgb, var(--amber) 18%, var(--panel));
+}
+.confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-block-start: 0.6rem;
+  border-block-start: 0.0625rem solid var(--line);
+}
+.confirm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
 .option-key {
   display: grid;
   place-items: center;
@@ -1110,11 +1128,33 @@ label {
 
 /* ── Mniej miejsca: węższe okno, większe powiększenie albo większy tekst ── */
 
+/* Wskaźniki w dwóch równych rzędach, zanim pola zrobią się za ciasne. */
+@container shell (max-width: 84em) {
+  .status {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
 /* Średnio: stanowiska przechodzą nad obszar pracy jako pasek. */
 @container shell (max-width: 74em) {
+  /* Mniej miejsca także w pionie: strona przewija się w całości, bez okienek w okienku. */
+  .shell {
+    display: block;
+    block-size: auto;
+  }
+  .panel {
+    overflow: visible;
+  }
+  /* Sprawy do decyzji i zamknięcie kwartału zostają w zasięgu wzroku podczas przewijania. */
+  .rail {
+    position: sticky;
+    inset-block-start: 0;
+    max-block-size: 100dvh;
+  }
   .work {
     grid-template-columns: minmax(0, 1fr) minmax(16rem, 21rem);
-    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    align-items: start;
   }
   .stations {
     grid-column: 1 / -1;
@@ -1131,28 +1171,26 @@ label {
     clip-path: inset(50%);
   }
   .stations ul {
-    flex-direction: row;
-    flex-wrap: wrap;
-  }
-  .station {
-    flex: 1 1 11rem;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   .station.is-open {
-    flex-basis: 100%;
+    grid-column: 1 / -1;
   }
 }
 
 /* Wąsko: jedna kolumna, strona przewija się w całości, sprawy do decyzji idą na górę. */
 @container shell (max-width: 50em) {
-  .shell {
-    display: block;
-    block-size: auto;
-  }
   .work {
     display: flex;
     flex-direction: column;
   }
+  .stations ul {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
   .rail {
+    position: static;
+    max-block-size: none;
     order: -1;
     border-inline-start: 0;
     border-block-end: 0.0625rem solid var(--line);
@@ -1178,5 +1216,12 @@ label {
   }
   .brand-name {
     display: none;
+  }
+}
+
+/* Bardzo wąsko (powiększenie 400%): wskaźniki po dwa w rzędzie. */
+@container shell (max-width: 34em) {
+  .status {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

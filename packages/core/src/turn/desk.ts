@@ -187,10 +187,12 @@ export function performDeskAction(
   switch (request.action) {
     case 'spotkanie': {
       const f = state.factions[request.target!]!;
-      const name = content.factions.find((x) => x.id === f.id)?.name ?? f.id;
+      const def = content.factions.find((x) => x.id === f.id);
+      const name = def?.name ?? f.id;
       if (!f.agendaKnown) {
         f.agendaKnown = true;
-        summary = `Spotkanie: ${name}. Anderson poznaje Agendę frakcji: ${f.agenda}`;
+        const agenda = def?.agendas.find((a) => a.id === f.agenda)?.title ?? f.agenda;
+        summary = `Spotkanie: ${name}. Anderson poznaje Agendę frakcji: ${agenda}.`;
       } else {
         f.disposition = clamp(f.disposition + 1, -3, 3);
         const clock = state.clocks.find((c) => c.id === f.patienceClockId);

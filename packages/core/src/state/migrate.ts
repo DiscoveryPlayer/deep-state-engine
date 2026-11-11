@@ -30,7 +30,11 @@ const STEPS: Record<number, (s: RawState) => RawState> = {
       schemaVersion: 3,
       world,
       budget: { ledger: [] },
-      desk: { log: [], restBonus: 0 },
+      desk: {
+        log: [],
+        restBonus: 0,
+        opening: { ...(s.indicators as object), KP: (s.currencies as { KP: number }).KP },
+      },
       reports: [],
       ksp: { snapshots: [] },
       status: 'active',

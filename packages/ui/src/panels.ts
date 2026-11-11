@@ -65,7 +65,7 @@ function deskPanel(p: DeskPayload, state: PanelState, on: PanelActions): HTMLEle
         : h(
             'select',
             { 'aria-label': `Cel akcji: ${a.title}`, disabled: !a.enabled || state.busy },
-            h('option', { value: '' }, a.target === 'faction' ? 'Wybierz frakcję…' : 'Wybierz temat…'),
+            h('option', { value: '' }, a.target === 'faction' ? 'Frakcja…' : 'Temat…'),
             a.targets.map((t) => h('option', { value: t.id, disabled: !t.enabled }, t.label)),
           );
     const cost = [`${a.ud} UD`, a.kp > 0 ? `${a.kp} KP` : null].filter(Boolean).join(' i ');
