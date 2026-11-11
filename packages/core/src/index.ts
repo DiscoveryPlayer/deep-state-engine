@@ -17,4 +17,6 @@ export * from './world/conditions.ts';
 export * from './world/engine.ts';
 export * from './world/simulate.ts';
 export * from './world/validate.ts';
+export * from './turn/desk.ts';
+export * from './turn/quarter.ts';
 export * from './view/playerView.ts';

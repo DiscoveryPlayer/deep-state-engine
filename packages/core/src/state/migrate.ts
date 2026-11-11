@@ -13,6 +13,29 @@ type RawState = Record<string, unknown> & { schemaVersion: number };
 const STEPS: Record<number, (s: RawState) => RawState> = {
   /** 1 → 2: dodany stan świata. Zmienne i Rozbieżność uzupełni silnik z treści przy pierwszym kwartale. */
   1: (s) => ({ ...s, schemaVersion: 2, world: emptyWorldState() }),
+  /**
+   * 2 → 3: wątki głębokie, budżet, Biurko, raporty, migawki KSP, status kampanii (decyzja 0017).
+   * Istniejące instancje wątków dostają puste listy pogłosek i decyzji.
+   */
+  2: (s) => {
+    const world = { ...((s.world ?? emptyWorldState()) as Record<string, unknown>) };
+    const threads: Record<string, unknown> = {};
+    for (const [id, inst] of Object.entries((world.threads ?? {}) as Record<string, Record<string, unknown>>)) {
+      threads[id] = { rumors: [], asked: [], decisions: {}, ...inst };
+    }
+    world.threads = threads;
+    world.situations ??= [];
+    return {
+      ...s,
+      schemaVersion: 3,
+      world,
+      budget: { ledger: [] },
+      desk: { log: [], restBonus: 0 },
+      reports: [],
+      ksp: { snapshots: [] },
+      status: 'active',
+    };
+  },
 };
 
 export class StateMigrationError extends Error {

@@ -7,7 +7,12 @@
  *   - szablony wątków (te same mechanizmy z parametrami, na świat po rozejściu z historią),
  *   - wzorce (zdarzenia bez daty, z warunkami),
  *   - dylematy (zdarzenia czekające na decyzję Andersona),
- *   - kotwice (wątki z jedną gałęzią w każdym etapie — rzeczy pewne).
+ *   - kotwice (etapy z jedną gałęzią — rzeczy pewne).
+ *
+ * Wątek głęboki (decyzje 0016 i 0017) ma siedem warstw: punkty zwrotne (gałęzie),
+ * depesze (etapy z jedną gałęzią, także kilka w kwartale), sytuacje trwające (`ongoing`),
+ * reakcje stron (`reactions`), pogłoski wywiadu (`rumor`), decyzje Andersona (`decision`)
+ * i echa (flagi oraz wątki reaktywne).
  *
  * Warunki i skutki są USTRUKTURYZOWANE (obiekty YAML), a nie wyrażeniami tekstowymi:
  * zod sprawdza je przy wczytaniu, a silnik nie musi niczego parsować ani wykonywać.
@@ -20,6 +25,9 @@ const quarterCode = z.string().regex(/^\d{4}-Q[1-4]$/, 'kod kwartału, np. 1951-
 
 export const INDICATOR_IDS = ['ZW', 'SO', 'PP', 'WF', 'NG'] as const;
 export type IndicatorId = (typeof INDICATOR_IDS)[number];
+
+export const ERA_IDS = ['I', 'II', 'III', 'IV'] as const;
+export type EraId = (typeof ERA_IDS)[number];
 
 export const COMPARISON_OPS = ['<', '<=', '>', '>=', '==', '!='] as const;
 export type ComparisonOp = (typeof COMPARISON_OPS)[number];
@@ -35,7 +43,8 @@ export type ComparisonOp = (typeof COMPARISON_OPS)[number];
  *   after / before           — okno czasu (after: od kwartału włącznie, before: przed kwartałem),
  *   flag                     — flaga świata ustawiona przez wcześniejszy skutek,
  *   stage                    — wątek przeszedł etap: "wątek.etap",
- *   branch                   — w etapie wybrano gałąź: "wątek.etap.gałąź".
+ *   branch                   — w etapie wybrano gałąź: "wątek.etap.gałąź",
+ *   era                      — epoka kampanii (GDD 4.4), np. { era: II, op: '>=' }.
  */
 export type Condition =
   | { all: Condition[] }
@@ -48,7 +57,8 @@ export type Condition =
   | { before: string }
   | { flag: string }
   | { stage: string }
-  | { branch: string };
+  | { branch: string }
+  | { era: EraId; op: ComparisonOp };
 
 const op = z.enum(COMPARISON_OPS);
 
@@ -69,6 +79,7 @@ export const conditionSchema: z.ZodType<Condition> = z.lazy(() =>
         branch: z.string().regex(/^[a-z0-9_-]+\.[a-z0-9_-]+\.[a-z0-9_-]+$/, 'odwołanie do gałęzi: "wątek.etap.gałąź"'),
       })
       .strict(),
+    z.object({ era: z.enum(ERA_IDS), op }).strict(),
   ]),
 );
 
@@ -123,12 +134,46 @@ export const weightModifierSchema = z
 
 export type WeightModifier = z.infer<typeof weightModifierSchema>;
 
+/** Rodzaje gałęzi (Dossier III, część I, punkt 2). */
+export const BRANCH_KINDS = ['historical', 'accelerated', 'delayed', 'interrupted', 'alternative'] as const;
+export type BranchKind = (typeof BRANCH_KINDS)[number];
+
+/** Głos jednej ze stron przy etapie: osobna depesza bez rozgałęzienia. */
+export const reactionSchema = z
+  .object({
+    /** Kto mówi, np. „Londyn”, „Moskwa”, „DPO”. */
+    actor: z.string().min(1),
+    text: z.string().min(1),
+    effects: z.array(effectSchema).default([]),
+    visibility: visibility.optional(),
+  })
+  .strict();
+
+/**
+ * Sytuacja trwająca: skutki naliczane co kwartał (od kwartału po starcie), dopóki wątek
+ * nie przejdzie etapu `until`, nie skończy się albo nie minie `maxQuarters`.
+ */
+export const ongoingSchema = z
+  .object({
+    title: z.string().min(1),
+    text: z.string().min(1),
+    effects: z.array(effectSchema).min(1),
+    /** Etap, po którego rozstrzygnięciu sytuacja wygasa. Brak = do końca wątku albo `maxQuarters`. */
+    until: z.string().optional(),
+    maxQuarters: z.number().int().min(1).max(40).default(8),
+  })
+  .strict();
+
 export const branchSchema = z
   .object({
     id,
     title: z.string().min(1),
     /** Gałąź zgodna z historią. Rozbieżność regionu działa na wagi gałęzi historycznych i pozostałych. */
     historical: z.boolean().default(false),
+    /** Jawny rodzaj gałęzi. Brak = silnik wyprowadza go z mechaniki (funkcja branchKind). */
+    kind: z.enum(BRANCH_KINDS).optional(),
+    reactions: z.array(reactionSchema).default([]),
+    ongoing: ongoingSchema.optional(),
     weight: z.number().min(0),
     modifiers: z.array(weightModifierSchema).default([]),
     /** Gałąź dostępna tylko przy spełnionym warunku. */
@@ -146,6 +191,50 @@ export const branchSchema = z
   })
   .strict();
 
+export const RELIABILITY_CODES = ['A', 'B', 'C', 'D', 'E', 'F'] as const;
+export const ASSESSMENT_SOURCES = ['open', 'sigint', 'humint', 'imint_air', 'imint_sat', 'allies'] as const;
+
+/**
+ * Pogłoska wywiadu: zanim etap się rozstrzygnie, do Andersona trafia Ocena wywiadowcza
+ * (GDD 16.2). Pogłoska mówi to, co wywiad UWAŻA — jeśli wypadnie inna gałąź, okaże się fałszywa.
+ */
+export const rumorSchema = z
+  .object({
+    quartersBefore: z.number().int().min(1).max(4).default(1),
+    reliability: z.enum(RELIABILITY_CODES).default('C'),
+    credibility: z.number().int().min(1).max(6).default(3),
+    source: z.enum(ASSESSMENT_SOURCES).default('humint'),
+    topic: z.string().min(1).optional(),
+    text: z.string().min(1),
+  })
+  .strict();
+
+const weightShift = z.object({ mul: z.number().min(0).optional(), add: z.number().optional() }).strict();
+
+export const decisionOptionSchema = z
+  .object({
+    id,
+    title: z.string().min(1),
+    effects: z.array(effectSchema).default([]),
+    text: z.string().min(1),
+    /** Jak wybór zmienia wagi gałęzi etapu: identyfikator gałęzi → mnożnik albo dodatek. */
+    weights: z.record(id, weightShift).default({}),
+  })
+  .strict();
+
+/** Punkt decyzyjny etapu: Anderson decyduje PRZED losowaniem gałęzi. */
+export const stageDecisionSchema = z
+  .object({
+    title: z.string().min(1).optional(),
+    prompt: z.string().min(1),
+    options: z.array(decisionOptionSchema).min(2),
+    defaultOption: id,
+    inactionEffects: z.array(effectSchema).default([]),
+    /** Ile kwartałów przed etapem sprawa trafia na Biurko. */
+    quartersBefore: z.number().int().min(1).max(4).default(1),
+  })
+  .strict();
+
 export const stageSchema = z
   .object({
     id,
@@ -155,6 +244,12 @@ export const stageSchema = z
     offset: z.number().int().min(0).optional(),
     /** Etap spoza historii (osiągalny tylko przez gałąź alternatywną) — nie potrzebuje gałęzi historycznej. */
     alternative: z.boolean().default(false),
+    /** Kotwica: rzecz pewna. Etap ma dokładnie jedną gałąź, historyczną. */
+    anchor: z.boolean().default(false),
+    /** Etap rozstrzyga się w tym samym kwartale co poprzedni (kilka depesz naraz). */
+    sameQuarter: z.boolean().default(false),
+    rumor: rumorSchema.optional(),
+    decision: stageDecisionSchema.optional(),
     branches: z.array(branchSchema).min(1),
   })
   .strict();
@@ -163,8 +258,14 @@ export const threadContentSchema = z
   .object({
     id,
     title: z.string().min(1),
-    /** historical — wątek z historii z gałęziami; anchor — kotwica, w każdym etapie jedna gałąź. */
-    kind: z.enum(['historical', 'anchor']),
+    /**
+     * historical — wątek z historii: etapy mają daty (`at`) i gałąź historyczną.
+     * reactive — wątek-echo albo wątek reaktywny: startuje od warunku (zwykle flagi),
+     *   etapy liczą się od startu (`offset`), a Rozbieżność nie rośnie sama.
+     */
+    kind: z.enum(['historical', 'reactive']),
+    /** Naraz w regionie trwa najwyżej jeden wątek albo szablon z danej grupy. */
+    exclusiveGroup: id.optional(),
     region: id,
     summary: z.string().min(1),
     /** Co się wydarzyło naprawdę (dla autora treści i dla narratora). */
@@ -184,6 +285,17 @@ export const threadContentSchema = z
 export type ThreadContent = z.infer<typeof threadContentSchema>;
 export type StageContent = z.infer<typeof stageSchema>;
 export type BranchContent = z.infer<typeof branchSchema>;
+export type StageDecision = z.infer<typeof stageDecisionSchema>;
+
+/** Rodzaj gałęzi: jawny (`kind`) albo wyprowadzony z mechaniki. */
+export function branchKind(branch: BranchContent): BranchKind {
+  if (branch.kind) return branch.kind;
+  if (branch.historical) return 'historical';
+  if (branch.delayQuarters !== undefined) return 'delayed';
+  if (branch.advanceNext !== undefined) return 'accelerated';
+  if (branch.next === 'end') return 'interrupted';
+  return 'alternative';
+}
 
 /** Wartość parametru szablonu: tekst albo formy (klucz `mian` to forma podstawowa). */
 export const templateParamValueSchema = z.union([z.string().min(1), z.record(id, z.string().min(1))]);
@@ -213,6 +325,10 @@ export const threadTemplateContentSchema = z
     chanceModifiers: z.array(weightModifierSchema).default([]),
     cooldownQuarters: z.number().int().min(0).default(8),
     maxInstances: z.number().int().min(1).default(3),
+    /** Wątki historyczne, które są przypadkami tego szablonu. Dopóki któryś trwa, szablon milczy. */
+    historicalInstances: z.array(id).default([]),
+    /** Naraz w regionie trwa najwyżej jeden wątek albo szablon z danej grupy. */
+    exclusiveGroup: id.optional(),
     stages: z.array(stageSchema).min(1),
   })
   .strict();

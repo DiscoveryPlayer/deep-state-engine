@@ -4,6 +4,7 @@
  */
 import type { GameState, WorldState } from '../state/schema.ts';
 import { parseQuarterCode, quartersBetween, quarterCode, type Quarter } from '../time.ts';
+import { ERA_IDS } from './schema.ts';
 import type { ComparisonOp, Condition, Effect, WorldContent } from './schema.ts';
 
 export function compare(a: number, op: ComparisonOp, b: number): boolean {
@@ -47,6 +48,7 @@ export function evaluateCondition(cond: Condition, state: GameState): boolean {
     const [thread, stage] = cond.stage.split('.') as [string, string];
     return threadHistoryMatches(world, thread, stage);
   }
+  if ('era' in cond) return compare(ERA_IDS.indexOf(state.organization.era), cond.op, ERA_IDS.indexOf(cond.era));
   const [thread, stage, branch] = cond.branch.split('.') as [string, string, string];
   return threadHistoryMatches(world, thread, stage, branch);
 }

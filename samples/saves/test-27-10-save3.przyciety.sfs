@@ -1,0 +1,476 @@
+// Zapis kariery testowej autora (RP-1 4.8.1), przycięty do scenariuszy czytanych przez DSE.
+GAME
+{
+	version = 1.12.5
+	Title = test-27-10 (CAREER)
+	Description = No description available.
+	Mode = CAREER
+	Status = 1
+	Seed = 1212080215
+	ROCSeed = 1874919866
+	scene = 5
+	editor = VAB
+	flag = Squad/FlagsAgency/NA-AXO flag2
+	launchID = 2
+	defaultVABLaunchSite = LaunchPad
+	defaultSPHLaunchSite = Runway
+	modded = True
+	versionFull = 1.12.5.3190 (WindowsPlayer x64)
+	versionCreated = 1.12.5.3190 (WindowsPlayer x64)
+	_modVersions = Scale_Redist=3.3.2|ModuleManager=4.2.3|ClickThroughBlocker=2.1.10|0Harmony=2.2.1|HarmonyInstallChecker=2.2.1|Unity.Burst.Unsafe=1.0.0|Unity.Mathematics=1.0.0|Microsoft.Extensions.FileSystemGlobbing=6.0.21|System.IO.Compression=4.6.57|System.Runtime.CompilerServices.Unsafe=4.700.20|System.Runtime=4.0.0|Unity.Burst=1.7.4|System.IO.Compression.FileSystem=4.6.57|Unity.Collections=0.8.0|Unity.Jobs=0.2.9|KSPBurst=1.7.4|SerializationFix=1.0.1|BlendshapeModelLoader=1.6.4|TexturesUnlimited=1.6.4|ToolbarControl=0.1.9|Kopernicus.Parser=1.0.0|ModularFlightIntegrator=1.2.10|KSPTextureLoader.Burst=0.0.0|SharpDX=4.2.0|SharpDX.Direct3D11=4.2.0|SharpDX.DXGI=4.2.0|KSPTextureLoader=1.0.38|Kopernicus=1.12.247|BurstPQS=1.0.29|AdvancedPQSTools=1.6.1|SolverEngines=3.13.1|AJE=2.20.0|AnimatedDecouplers=1.4.2|ASETPropsIdentifier=1.5.0|Astrogator=1.0.2|AtmosphereAutopilot.UI=1.0.0|AtmosphereAutopilot=1.6.1|B9PartSwitch=2.21.0|B9-PWings-Fork=0.46.1|BDAnimationModules=0.6.7|RNModules=1.2.1|PlanetsideExplorationTechnologies=1.0.0|WearableProps=1.0.0|BlastFX=0.1.1|CustomPreLaunchChecks=1.8.1|KerbalKonstructs=1.12.3|BurstPQS.KerbalKonstructs=1.0.29|BurstPQS.Kopernicus=1.0.29|ParallaxContinued=1.0.0|BurstPQS.ParallaxContinued=1.0.29|CameraControllerNext=1.0.12|Chatterer=0.9.99|CCK=5.1.0|Shabby=0.4.2|ConformalDecals=0.4.2|Unity.TextMeshPro=2.1.6|ContractConfigurator=2.13.4|KerKonConConExt=2.0.0|Contrails=0.0.0|ContrailsUI=0.0.0|SimpleBoiloff=0.2.1|CustomBarnKit=1.1.22|CustomParachuteMessage=1.0.0|DeployableEngines=2.2.0|DepthMask=1.1.3|DistantObject=0.0.0|KSPe.Light.DOE=2.5.5|DMModuleScienceAnimateGeneric=0.23.0|DockingCamKURS=1.3.9|DockingFunctions=1.0.11|DynamicBatteryStorage=1.0.0|EasyVesselSwitch=2.3.7852|KSPDev_Utils.2.6-EVS=2.6.0|EditorExtensionsRedux=3.4.7|EngineGroupController=1.0.0|UnityGUIFramework=1.0.0|Atmosphere=3.2.2|CelestialShadows=3.2.2|CityLights=3.2.2|EVEManager=3.2.2|PartFX=3.2.2|PQSManager=3.2.2|ShaderLoader=3.2.2|Terrain=3.2.2|TextureConfig=3.2.2|Utils=3.2.2|_BuildManager=3.2.2|FerramAerospaceResearch.Base=0.16.1|FerramAerospaceResearch=0.16.1|ferramGraph=1.3.0|FireflyAPI=1.0.0|Firefly=1.0.6|FireflyInstallChecker=1.0.0|Firespitter=7.3.7660|FlyByWireSASMode=1.2.0|FMRSContinued=1.2.9|FP_DockingSndFX=2.1.12|FreeIva=0.2.20|HangerExtenderExtended=3.6.1|HabTech2=1.0.0|HUDReplacer=1.4.2|HullcamVDSContinued=0.2.2|IRConnectionSystem=1.0.13|JanitorsCloset=0.4.1|JSIAdvTransparentPods=0.1.24|MechJeb2=2.15.2|MechJebLib=1.0.0|RasterPropMonitor=1.1.0|MechJebRPM=1.1.0|KAS-API-v2=2.0.7239|KAS=1.12.8285|KSPDev_Utils.2.7=2.7.0|KerbalChangelog=1.4.2|0_MultipleModuleInPartAPI=1.0.0|KSPCommunityFixes=1.41.1|Kerbalism=3.43.0|KerbalJointReinforcement=3.8.7|Renamer=1.7.0|DeployableAeroSurfaces=1.0.0|HyperEdit=1.5.8|KIS=1.29.8039|KSPDev_Utils.2.6=2.6.7847|MiniAVC-V2=2.0.0|KronalUtils=1.0.0|KSCSwitcher=2.2.0|KSPCommunityPartModules=0.5.1|KSPTethers=1.1.0|KSPWheel=0.0.0|LunarTransferPlanner=0.0.0|IRSurfaceSampler=1.0.1|InfernalRoboticsNext=3.1.22|alglib=1.0.0|MechJebLibBindings=1.0.0|Mirage=0.5.1|AvionicsSystems=1.3.7|MoonSharp.Interpreter=2.0.0|StardustUtilities=0.0.0|MouseAimFlightRedux=1.6.0|DockingPortAlignmentIndicator=6.13.1|DockingPortAlignmentIndicator.Unity=6.13.1|DPAI_RPM=6.13.1|ModuleDockingNodeNamed=6.13.1|NearFutureElectrical=1.0.0|NearFutureExploration=0.4.0|NFPropUtils=1.0.0|NearFuturePropulsion=0.9.0|NearFutureSolar=0.4.0|NearFutureUtils=0.0.0|FinalFrontier=1.0.0|PatchManager=0.0.17|PlanetShine=0.2.6|ROUtils=1.2.0|ProceduralFairings=6.8.0|ProceduralParts=2.8.0|RCSBuildAid=1.0.6|RealAntennas=2.12.0|RealChute=1.4.9059|RealFuels=15.16.1|RealHeat=5.1.0|RealismOverhaul=18.0.0|ROInstallChecker=1.1.0|RecoveryController=0.0.4|Restock=1.0.0|RetractableLiftingSurface=0.2.1|ROLib=2.1.0|ROEngines=2.16.1|ROHeatshields=1.3.0|ROLoadingImages=1.0.0|RP0=4.8.1|CC_RP0=1.11.0|ClearInputLocks=1.0.0|RP0InstallChecker=1.0.0|RP1FullThrust=1.0.0|RSSTimeFormatter=1.12.0|DisablePrincipiaOrbitAnalysis=1.0.0|OrbitPlotter=1.0.0|ParallaxAltFade=1.0.0|SCANsat.Unity=21.3.0|SCANsat=21.3.0|SCANmechjeb=21.3.0|scatterer=0.908.0|ShipManifest=6.0.8|SMInterface=6.0.3|CLSInterfaces=2.0.1|SimpleAdjustableFairings=1.12.0|Telecom=1.0.0|KerbalSlingshotter=1.1.8|SmokeScreen=2.8.14|KSP_Log=1.2.0|ButtonManager=1.0.2|KSP_ColorPicker=1.1.1|KSP_PartHighlighter=1.1.1|SpaceTuxUtility=1.0.2|VesselModuleSave=1.0.2|KSPSteamCtrlr=0.0.1|StagedAnimation=1.0.0|Waterfall=0.11.0|StarshipExpansionProject=3.3.2|HabUtils=1.0.0|StockAlarmClockDisabler=1.0.0|SXTContinued=0.3.31|SystemHeat=0.9.1|TestFlightAPI=2.2.0|TestFlight=2.2.0|TestFlightContracts=2.2.0|TestFlightCore=2.2.0|TextureReplacer=4.5.3|Thunderbolt=1.2.1|ThunderboltEVE=1.2.1|TiltEm=2.0.1|TooManyOrbits=1.1.7|Trajectories=2.4.5|KerbalAlarmClock=3.14.2|TransferWindowPlanner=1.9.1|TweakScaleSafetyNet=3.3.2|TUFX=1.1.1|Scale=3.3.2|TweakScale_Waterfall=3.3.2|VABOrganizer=0.0.0|VaporCones=1.0.0|VaporVent=1.1.12|GroundBlastFx=1.1.0|VolumetricExplosions=0.0.0|WasdEditorCameraContinued=0.7.3|WaypointManager=2.8.4|KerbalActuators=1.0.0|WingtipVortex=1.5.0|Deferred=1.3.5
+	SCENARIO
+	{
+		name = LastKSC
+		scene = 8
+	}
+	SCENARIO
+	{
+		name = Funding
+		scene = 7, 8, 5, 6
+		funds = 31939.472774420214
+	}
+	SCENARIO
+	{
+		name = ResearchAndDevelopment
+		scene = 7, 8, 5, 6
+		sci = 8
+	}
+	SCENARIO
+	{
+		name = Reputation
+		scene = 7, 8, 5, 6
+		rep = 4.99110889
+	}
+	SCENARIO
+	{
+		name = CareerLog
+		scene = 6, 7, 5, 8
+		CurPeriodStart = 5097600
+		NextPeriodStart = 7776000
+		LoadedSaveVersion = 1
+		Scenario = 
+		_periodDict
+		{
+			version = 3
+			Keys
+			{
+				key = 0
+				key = 2678400
+				key = 5097600
+			}
+			Values
+			{
+				LogPeriod
+				{
+					StartUT = 0
+					EndUT = 2678400
+					CurrentFunds = 32508.55506437373
+					CurrentSci = 8
+					CurrentUnlockCredit = 8249.702151108173
+					RnDQueueLength = 2
+					ProgramFunds = 7521.4980891067535
+					OtherFundsEarned = 3000
+					ScienceEarned = 0
+					SalaryEngineers = 634.8842160050267
+					SalaryResearchers = 2398.5779384363827
+					SalaryCrew = 0
+					LaunchFees = 0
+					VesselPurchase = 745.28976440429688
+					VesselRecovery = 0
+					LCMaintenance = 148.23085802909037
+					FacilityMaintenance = 989.92248888887752
+					MaintenanceFees = 2055.2858572168561
+					TrainingFees = 0
+					ToolingFees = 53465.443542480469
+					EntryCosts = 18
+					SpentUnlockCredit = 53483.443542480469
+					ConstructionFees = 8671.6166256666183
+					HiringResearchers = 9000
+					HiringEngineers = 7800
+					OtherFees = 0
+					SubsidySize = 2139.8430834744258
+					SubsidyPaidOut = 2116.3296506952706
+					RepFromPrograms = 0
+					NumEngineers = 26
+					NumResearchers = 40
+					EfficiencyEngineers = 0.10000009506426355
+					FundsGainMult = 1.0499999523162842
+					NumNautsKilled = 0
+					Confidence = 250
+					Reputation = 0
+				}
+				LogPeriod
+				{
+					StartUT = 2678400
+					EndUT = 5097600
+					CurrentFunds = 32136.99115308062
+					CurrentSci = 8
+					CurrentUnlockCredit = 9630.0357240034591
+					RnDQueueLength = 2
+					ProgramFunds = 6690.9537448883057
+					OtherFundsEarned = 0
+					ScienceEarned = 0
+					SalaryEngineers = 996.90758042436698
+					SalaryResearchers = 2300.5559548254632
+					SalaryCrew = 0
+					LaunchFees = 0
+					VesselPurchase = 0
+					VesselRecovery = 0
+					LCMaintenance = 178.2860058807027
+					FacilityMaintenance = 896.29660000000058
+					MaintenanceFees = 2407.0161399841372
+					TrainingFees = 0
+					ToolingFees = 0
+					EntryCosts = 0
+					SpentUnlockCredit = 0
+					ConstructionFees = 4438.5296211242676
+					HiringResearchers = 0
+					HiringEngineers = 0
+					OtherFees = 0
+					SubsidySize = 1963.719259093348
+					SubsidyPaidOut = 1965.0300328823796
+					RepFromPrograms = 0
+					NumEngineers = 26
+					NumResearchers = 40
+					EfficiencyEngineers = 0.1153371347630999
+					FundsGainMult = 1.0499999523162842
+					NumNautsKilled = 0
+					Confidence = 250
+					Reputation = 0
+				}
+				LogPeriod
+				{
+					StartUT = 5097600
+					EndUT = 7776000
+					CurrentFunds = 0
+					CurrentSci = 0
+					CurrentUnlockCredit = 0
+					RnDQueueLength = 0
+					ProgramFunds = 2030.4916670086677
+					OtherFundsEarned = 0
+					ScienceEarned = 0
+					SalaryEngineers = 303.71807770604227
+					SalaryResearchers = 705.4099027123624
+					SalaryCrew = 0
+					LaunchFees = 20.675921234727866
+					VesselPurchase = 70.674346923828125
+					VesselRecovery = 2.6680443286895752
+					LCMaintenance = 64.217449996312084
+					FacilityMaintenance = 274.8276980967367
+					MaintenanceFees = 734.85279167543251
+					TrainingFees = 0
+					ToolingFees = 0
+					EntryCosts = 0
+					SpentUnlockCredit = 0
+					ConstructionFees = 1359.7690814733505
+					HiringResearchers = 0
+					HiringEngineers = 0
+					OtherFees = 2.4289480159777668
+					SubsidySize = 0
+					SubsidyPaidOut = 613.32035047713362
+					RepFromPrograms = 0
+					NumEngineers = 0
+					NumResearchers = 0
+					EfficiencyEngineers = 0
+					FundsGainMult = 0
+					NumNautsKilled = 0
+					Confidence = 0
+					Reputation = 0
+				}
+			}
+		}
+		_contractDict
+		{
+			version = 0
+			ContractEvent
+			{
+				InternalName = BreakSoundBarrier
+				DisplayName = Break the Sound Barrier (Crewed)
+				RepChange = 0
+				Type = Accept
+				UT = 71.840000000002846
+			}
+			ContractEvent
+			{
+				InternalName = first_FirstFlight
+				DisplayName = First Launch
+				RepChange = 0
+				Type = Accept
+				UT = 71.840000000002846
+			}
+			ContractEvent
+			{
+				InternalName = KarmanLine
+				DisplayName = Karman Line
+				RepChange = 0
+				Type = Accept
+				UT = 71.840000000002846
+			}
+			ContractEvent
+			{
+				InternalName = first_FirstFlight
+				DisplayName = First Launch
+				RepChange = 5
+				Type = Complete
+				UT = 5516935.1399967093
+			}
+		}
+		_launchedVessels
+		{
+			version = 0
+			LaunchEvent
+			{
+				VesselName = Solstice 1
+				VesselUID = e80e515fd7684555942b47adf6f69f22
+				LaunchID = 9aa8e455ecc846f1b64d2cc5fc24d0f0
+				BuiltAt = VAB
+				LCID = 431a6666a82f47bc8579e617c45e0d4b
+				LCModID = 431a6666a82f47bc8579e617c45e0d4b
+				UT = 5516928.5999968555
+			}
+		}
+		_failures
+		{
+			version = 0
+			FailureEvent
+			{
+				VesselUID = e80e515fd7684555942b47adf6f69f22
+				LaunchID = 9aa8e455ecc846f1b64d2cc5fc24d0f0
+				Part = WAC-Corporal
+				Type = Failed to ignite
+				UT = 5516930.4799968135
+			}
+		}
+		_lcs
+		{
+			version = 0
+			LCLogItem
+			{
+				Name = Solstice LC - 1
+				MassMax = 1
+				MassOrig = 1
+				SizeMax = 3,14,3
+				LcType = Pad
+				IsHumanRated = False
+				ID = 431a6666-a82f-47bc-8579-e617c45e0d4b
+				ModID = 431a6666-a82f-47bc-8579-e617c45e0d4b
+				ModCost = 3244.1900495018549
+			}
+			LCLogItem
+			{
+				Name = Scythe LC - 1
+				MassMax = 18
+				MassOrig = 18
+				SizeMax = 6,18,5
+				LcType = Pad
+				IsHumanRated = False
+				ID = 3e3123c5-6600-4eb0-9cb5-f5cb67d503ac
+				ModID = 3e3123c5-6600-4eb0-9cb5-f5cb67d503ac
+				ModCost = 11859.357837410336
+			}
+			LCLogItem
+			{
+				Name = Hangar
+				MassMax = 3.40282347E+38
+				MassOrig = 3.40282347E+38
+				SizeMax = 40,10,40
+				LcType = Hangar
+				IsHumanRated = True
+				ID = 65ba741a-0326-4cb9-b53d-0a9c7126d3d1
+				ModID = 6c6470e1-e903-44b2-b67a-9fe48c325f4e
+				ModCost = 1991.170801544765
+			}
+		}
+		_facilityConstructions
+		{
+			version = 0
+		}
+		_lpConstructions
+		{
+			version = 0
+		}
+		_facilityConstructionEvents
+		{
+			version = 0
+			FacilityConstructionEvent
+			{
+				Facility = LaunchComplex
+				State = Started
+				FacilityID = 431a6666-a82f-47bc-8579-e617c45e0d4b
+				UT = 76.260000000001966
+			}
+			FacilityConstructionEvent
+			{
+				Facility = LaunchComplex
+				State = Started
+				FacilityID = 3e3123c5-6600-4eb0-9cb5-f5cb67d503ac
+				UT = 76.260000000001966
+			}
+			FacilityConstructionEvent
+			{
+				Facility = LaunchComplex
+				State = Started
+				FacilityID = 6c6470e1-e903-44b2-b67a-9fe48c325f4e
+				UT = 76.260000000001966
+			}
+			FacilityConstructionEvent
+			{
+				Facility = LaunchComplex
+				State = Completed
+				FacilityID = 6c6470e1-e903-44b2-b67a-9fe48c325f4e
+				UT = 199461.28000000038
+			}
+			FacilityConstructionEvent
+			{
+				Facility = LaunchComplex
+				State = Completed
+				FacilityID = 431a6666-a82f-47bc-8579-e617c45e0d4b
+				UT = 2672697.6799998917
+			}
+		}
+		_techEvents
+		{
+			version = 0
+		}
+		_leaderEvents
+		{
+			version = 0
+		}
+	}
+	SCENARIO
+	{
+		name = Confidence
+		scene = 6, 7, 5, 8
+		confidence = 250
+		confidenceEarned = 0
+	}
+	SCENARIO
+	{
+		name = SpaceCenterManagement
+		scene = 6, 7, 5, 8
+		enabledForSave = True
+		SciPointsTotal = -1
+		IsSimulatedFlight = False
+		ExperimentalPartsEnabled = True
+		DisableFailuresInSim = True
+		Researchers = 40
+		Applicants = 0
+		AlarmId = 
+		AlarmUT = 0
+		ErroredDuringOnLoad = False
+		StarterLCBuilding = True
+		HiredStarterApplicants = True
+		StartedProgram = True
+		AcceptedContract = True
+		DontShowFirstRunAgain = False
+		LoadedSaveVersion = 9
+		IsFirstStart = False
+		KSCs
+		{
+			version = 0
+			LCSpaceCenter
+			{
+				KSCName = us_cape_canaveral
+				Engineers = 26
+				ActiveLaunchComplexIndex = 1
+				LaunchComplexes
+				{
+					version = 0
+					LaunchComplex
+					{
+						LCName = Hangar
+						id = 65ba741a-0326-4cb9-b53d-0a9c7126d3d1
+						modID = 6c6470e1-e903-44b2-b67a-9fe48c325f4e
+						Engineers = 16
+						IsRushing = False
+						operational = True
+						ActiveLaunchPadIndex = 0
+					}
+					LaunchComplex
+					{
+						LCName = Solstice LC - 1
+						id = 431a6666-a82f-47bc-8579-e617c45e0d4b
+						modID = 431a6666-a82f-47bc-8579-e617c45e0d4b
+						Engineers = 10
+						IsRushing = False
+						operational = True
+						ActiveLaunchPadIndex = 0
+					}
+					LaunchComplex
+					{
+						LCName = Scythe LC - 1
+						id = 3e3123c5-6600-4eb0-9cb5-f5cb67d503ac
+						modID = 3e3123c5-6600-4eb0-9cb5-f5cb67d503ac
+						Engineers = 0
+						IsRushing = False
+						operational = False
+						ActiveLaunchPadIndex = 0
+					}
+				}
+			}
+		}
+	}
+	SCENARIO
+	{
+		name = ProgramHandler
+		scene = 6, 7, 5, 8
+		LoadedSaveVersion = 3
+		ActivatedStrategies
+		{
+			EarlyXPlanes = -1
+			SuborbRocketResearch = -1
+		}
+		ACTIVEPROGRAM
+		{
+			name = EarlyXPlanes
+			nominalDurationYears = 9
+			fracElapsed = 0.020543647400524567
+			fundingCurve = BimodalBackloaded
+			acceptedUT = 57.780000000003433
+			deadlineUT = 284018457.77999991
+			objectivesCompletedUT = 0
+			completedUT = 0
+			lastPaymentUT = 5834831.6448611133
+			totalFunding = 839999.96185302734
+			fundsPaidOut = 12588.431741884833
+			repPenaltyAssessed = 0
+			speed = Normal
+			repDeltaOnCompletePerYearEarly = 130
+			repPenaltyPerYearLate = 130
+			repToConfidence = -1
+			slots = 2
+		}
+		ACTIVEPROGRAM
+		{
+			name = SuborbRocketResearch
+			nominalDurationYears = 6
+			fracElapsed = 0.030815471100786578
+			fundingCurve = SlowRampup
+			acceptedUT = 57.780000000003433
+			deadlineUT = 189345657.78
+			objectivesCompletedUT = 0
+			completedUT = 0
+			lastPaymentUT = 5834831.6448611133
+			totalFunding = 220499.98998641968
+			fundsPaidOut = 3654.511716043789
+			repPenaltyAssessed = 0
+			speed = Normal
+			repDeltaOnCompletePerYearEarly = 45
+			repPenaltyPerYearLate = 45
+			repToConfidence = -1
+			slots = 2
+		}
+		DISABLEDPROGRAMS
+		{
+		}
+	}
+	FLIGHTSTATE
+	{
+		version = 1.12.5
+		UT = 5834832.3648610972
+		activeVessel = 0
+		mapViewFiltering = -1026
+		commNetUIModeTracking = Network
+		commNetUIModeFlight = Path
+	}
+}

@@ -1,6 +1,6 @@
 {
   "name": "deep-state-engine",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "The Deep State Engine — meta-gra strategiczna nad KSP RP-1 (Intermarium History)",
   "type": "module",
@@ -12,17 +12,19 @@
     "node": ">=22.12"
   },
   "scripts": {
-    "typecheck": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json && tsc -p packages/ui/tsconfig.json",
     "test": "tsx --test \"packages/*/test/**/*.test.ts\" \"tools/*/test/**/*.test.ts\"",
     "check": "npm run typecheck && npm test",
     "dse": "tsx tools/cli/src/main.ts",
-    "format": "prettier --write \"packages/*/{src,test}/**/*.ts\" \"tools/*/{src,test}/**/*.ts\"",
-    "format:check": "prettier --check \"packages/*/{src,test}/**/*.ts\" \"tools/*/{src,test}/**/*.ts\""
+    "format": "prettier --write \"packages/*/{src,test}/**/*.ts\" \"tools/*/{src,test}/**/*.ts\" \"packages/ui/static/*.css\"",
+    "format:check": "prettier --check \"packages/*/{src,test}/**/*.ts\" \"tools/*/{src,test}/**/*.ts\"",
+    "start": "tsx packages/server/src/main.ts"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
     "tsx": "^4.20.0",
     "typescript": "^6.0.0",
-    "prettier": "^3.6.0"
+    "prettier": "^3.6.0",
+    "esbuild": "^0.28.0"
   }
 }

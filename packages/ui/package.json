@@ -2,9 +2,9 @@
   "name": "@dse/ui",
   "version": "0.1.0",
   "private": true,
-  "description": "Interfejs przeglądarkowy: Biurko, Teczki, Rejestr, Zegary (faza 2).",
+  "description": "Interfejs przeglądarkowy: sala kontroli PACE (bez bibliotek, składany przez esbuild przy starcie serwera).",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/main.ts"
   }
 }

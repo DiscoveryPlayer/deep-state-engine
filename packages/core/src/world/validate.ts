@@ -67,7 +67,7 @@ export function validateWorldContent(world: WorldContent, factionIds: ReadonlySe
     stages: readonly StageContent[],
     file: string,
     owner: string,
-    mode: 'historical' | 'anchor' | 'template',
+    mode: 'historical' | 'reactive' | 'template',
     params: ReadonlySet<string>,
   ) => {
     const stageIds = new Set<string>();
@@ -77,12 +77,39 @@ export function validateWorldContent(world: WorldContent, factionIds: ReadonlySe
     }
     for (const s of stages) {
       const where = `${owner}.${s.id}`;
-      if (mode !== 'template' && !s.at) add(file, where, 'etap wątku historycznego potrzebuje daty "at"');
+      if (mode === 'historical' && !s.at && !s.sameQuarter)
+        add(file, where, 'etap wątku historycznego potrzebuje daty "at" (albo "sameQuarter")');
       if (mode !== 'historical' && s.alternative) add(file, where, '"alternative" ma sens tylko w wątku historycznym');
-      if (mode === 'template' && s.at) add(file, where, 'etap szablonu używa "offset", nie "at"');
-      if (mode === 'anchor' && s.branches.length !== 1) add(file, where, 'kotwica ma dokładnie jedną gałąź w etapie');
-      if (mode === 'historical' && !s.alternative && !s.branches.some((b) => b.historical))
-        add(file, where, 'etap wątku historycznego potrzebuje gałęzi historycznej');
+      if (mode !== 'historical' && s.at) add(file, where, 'etap szablonu i wątku reaktywnego używa "offset", nie "at"');
+      if (s.anchor && (s.branches.length !== 1 || !s.branches[0]!.historical))
+        add(file, where, 'kotwica ma dokładnie jedną gałąź, historyczną');
+      if (s.anchor && s.decision) add(file, where, 'kotwica nie może mieć punktu decyzyjnego');
+      if (mode === 'historical' && !s.alternative && s.branches.filter((b) => b.historical).length !== 1)
+        add(file, where, 'etap wątku historycznego potrzebuje dokładnie jednej gałęzi historycznej');
+      if (s.sameQuarter && s === stages[0]) add(file, where, 'pierwszy etap nie może mieć "sameQuarter"');
+      if (s.sameQuarter && (s.rumor || s.decision))
+        add(file, where, 'etap "sameQuarter" nie może mieć pogłoski ani decyzji (nie ma na nie czasu)');
+      if (s.rumor) {
+        for (const m of s.rumor.text.matchAll(PARAM_PLACEHOLDER)) {
+          if (!params.has(m[1]!)) add(file, where, `pogłoska używa nieznanego parametru "{${m[1]}}"`);
+        }
+      }
+      if (s.decision) {
+        const optionIds = new Set<string>();
+        const branchIdsOfStage = new Set(s.branches.map((b) => b.id));
+        for (const o of s.decision.options) {
+          if (optionIds.has(o.id)) add(file, `${where}.decision.${o.id}`, 'powtórzony identyfikator opcji');
+          optionIds.add(o.id);
+          checkEffects(o.effects, file, `${where}.decision.${o.id}`);
+          for (const b of Object.keys(o.weights)) {
+            if (!branchIdsOfStage.has(b))
+              add(file, `${where}.decision.${o.id}`, `wagi wskazują nieistniejącą gałąź "${b}"`);
+          }
+        }
+        if (!optionIds.has(s.decision.defaultOption))
+          add(file, `${where}.decision`, `opcja domyślna "${s.decision.defaultOption}" nie istnieje`);
+        checkEffects(s.decision.inactionEffects, file, `${where}.decision.biernosc`);
+      }
       if (!s.branches.some((b) => b.requires === undefined))
         add(file, where, 'co najmniej jedna gałąź musi być dostępna bez warunku "requires"');
       const branchIds = new Set<string>();
@@ -97,6 +124,25 @@ export function validateWorldContent(world: WorldContent, factionIds: ReadonlySe
         checkCondition(b.requires, file, `${bw}.requires`);
         b.modifiers.forEach((m, i) => checkCondition(m.when, file, `${bw}.modifiers[${i}]`));
         checkEffects(b.effects, file, bw);
+        b.reactions.forEach((x, i) => checkEffects(x.effects, file, `${bw}.reactions[${i}]`));
+        if (b.ongoing) {
+          checkEffects(b.ongoing.effects, file, `${bw}.ongoing`);
+          if (b.ongoing.until !== undefined && !stageIds.has(b.ongoing.until))
+            add(file, `${bw}.ongoing`, `"until" wskazuje nieistniejący etap "${b.ongoing.until}"`);
+        }
+        if (b.kind !== undefined) {
+          const mismatch =
+            (b.kind === 'historical') !== b.historical ||
+            (b.kind === 'delayed' && b.delayQuarters === undefined) ||
+            (b.kind === 'accelerated' && b.advanceNext === undefined) ||
+            (b.kind === 'interrupted' && b.next !== 'end');
+          if (mismatch)
+            add(
+              file,
+              bw,
+              `rodzaj gałęzi "${b.kind}" nie zgadza się z mechaniką (historical, delayQuarters, advanceNext, next: end)`,
+            );
+        }
         for (const m of b.text.matchAll(PARAM_PLACEHOLDER)) {
           if (!params.has(m[1]!)) add(file, bw, `tekst używa nieznanego parametru "{${m[1]}}"`);
         }
@@ -109,6 +155,8 @@ export function validateWorldContent(world: WorldContent, factionIds: ReadonlySe
     claim(t.id, file);
     if (!regions.has(t.region)) add(file, t.id, `nieznany region "${t.region}"`);
     checkCondition(t.start.conditions, file, `${t.id}.start`);
+    if (t.kind === 'reactive' && !t.start.conditions)
+      add(file, t.id, 'wątek reaktywny potrzebuje warunku startu ("start.conditions")');
     checkStages(t.stages, file, t.id, t.kind, new Set());
   }
 
@@ -118,6 +166,9 @@ export function validateWorldContent(world: WorldContent, factionIds: ReadonlySe
     if (!regions.has(tpl.region)) add(file, tpl.id, `nieznany region "${tpl.region}"`);
     checkCondition(tpl.conditions, file, `${tpl.id}.conditions`);
     tpl.chanceModifiers.forEach((m, i) => checkCondition(m.when, file, `${tpl.id}.chanceModifiers[${i}]`));
+    for (const h of tpl.historicalInstances) {
+      if (!threadStages.has(h)) add(file, tpl.id, `"historicalInstances" wskazuje nieistniejący wątek "${h}"`);
+    }
     const placeholders = templatePlaceholders(tpl.params);
     for (const text of [tpl.title, ...tpl.stages.map((st) => st.title)]) {
       for (const m of text.matchAll(PARAM_PLACEHOLDER)) {

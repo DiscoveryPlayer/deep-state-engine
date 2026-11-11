@@ -11,8 +11,12 @@
 import { z } from 'zod';
 import { factionIdSchema, registryTypeSchema } from '../content/schema.ts';
 
-/** Wersja 2: dodany stan świata `world` (decyzja 0015, migracja w migrate.ts). */
-export const STATE_SCHEMA_VERSION = 2 as const;
+/**
+ * Wersja 2: dodany stan świata `world` (decyzja 0015).
+ * Wersja 3: wątki głębokie (sytuacje, pogłoski, decyzje etapów), budżet, Biurko, raporty,
+ * migawki KSP i status kampanii (decyzja 0017). Migracje w migrate.ts.
+ */
+export const STATE_SCHEMA_VERSION = 3 as const;
 
 const quarterSchema = z.object({
   year: z.number().int().min(1900).max(2100),
@@ -154,11 +158,19 @@ export const threadInstanceSchema = z.object({
   /** Kiedy silnik sprawdzi bieżący etap. */
   nextCheck: qcode.nullable(),
   history: z.array(z.object({ quarter: qcode, stage: z.string(), branch: z.string(), historical: z.boolean() })),
+  /** Etapy, dla których pogłoska wywiadu już wyszła. */
+  rumors: z.array(z.string()),
+  /** Etapy, których punkt decyzyjny trafił już na Biurko. */
+  asked: z.array(z.string()),
+  /** Decyzje Andersona w etapach: etap → opcja. */
+  decisions: z.record(z.string(), z.string()),
 });
 
 export const worldLogEntrySchema = z.object({
   quarter: qcode,
-  kind: z.enum(['thread', 'template', 'pattern', 'dilemma']),
+  kind: z.enum(['thread', 'template', 'pattern', 'dilemma', 'reaction', 'situation']),
+  /** Dla reakcji: kto mówi. */
+  actor: z.string().optional(),
   /** Odwołanie: "wątek.etap.gałąź", identyfikator wzorca albo dylematu. */
   ref: z.string().min(1),
   title: z.string().min(1),
@@ -177,6 +189,22 @@ export const pendingDilemmaSchema = z.object({
   defaultOption: z.string().min(1),
   raisedIn: qcode,
   expiresIn: qcode,
+  /** Dla punktu decyzyjnego etapu: instancja wątku i etap. Brak = dylemat samodzielny. */
+  source: z.object({ thread: z.string().min(1), stage: z.string().min(1) }).optional(),
+});
+
+/** Sytuacja trwająca (skutki co kwartał). Treść skutków silnik bierze z gałęzi wątku. */
+export const situationSchema = z.object({
+  id: z.string().min(1),
+  /** Instancja wątku, etap i gałąź, z której pochodzi sytuacja. */
+  thread: z.string().min(1),
+  stage: z.string().min(1),
+  branch: z.string().min(1),
+  title: z.string().min(1),
+  text: z.string().min(1),
+  startedIn: qcode,
+  until: z.string().nullable(),
+  remaining: z.number().int().min(0),
 });
 
 export const correctionEntrySchema = z.object({
@@ -203,10 +231,83 @@ export const worldStateSchema = z.object({
   templateLog: z.record(z.string(), z.object({ count: z.number().int().min(0), last: qcode })),
   dilemmaLog: z.record(z.string(), z.object({ count: z.number().int().min(0), last: qcode })),
   pendingDilemmas: z.array(pendingDilemmaSchema),
+  situations: z.array(situationSchema),
   corrections: z.array(correctionEntrySchema),
   log: z.array(worldLogEntrySchema),
   /** Licznik do identyfikatorów instancji (szablony, dylematy). */
   seq: z.number().int().min(0),
+});
+
+// ── Budżet, Biurko, raporty, KSP (decyzja 0017) ─────────────────────────────
+
+export const budgetLedgerEntrySchema = z.object({
+  quarter: qcode,
+  /** Suma Korekt kwartału w jednostkach (decyzja 0012). */
+  units: z.number(),
+  /** Wartość jednostki w funduszach KSP w chwili rozliczenia; null, gdy brak migawki kariery. */
+  unitFunds: z.number().nullable(),
+  items: z.array(z.object({ reason: z.string().min(1), source: z.string().min(1), units: z.number() })),
+  /** Tryb Honorowy: czy gracz potwierdził zastosowanie Korekty w KSP. */
+  settled: z.boolean(),
+});
+
+export const budgetStateSchema = z.object({
+  ledger: z.array(budgetLedgerEntrySchema),
+});
+
+export const deskActionRecordSchema = z.object({
+  quarter: qcode,
+  action: z.string().min(1),
+  target: z.string().optional(),
+  summary: z.string().min(1),
+});
+
+export const deskStateSchema = z.object({
+  /** Akcje Biurka wykonane w kampanii (dziennik). */
+  log: z.array(deskActionRecordSchema),
+  /** Dodatkowa Uwaga Dowódcy na następny kwartał (po Odpoczynku). */
+  restBonus: z.number().int().min(0).max(2),
+});
+
+const indicatorSnapshot = z.object({ ZW: z.number(), SO: z.number(), PP: z.number(), WF: z.number(), NG: z.number() });
+
+/** Raport z zamknięcia kwartału: fakty silnika, z których powstaje skrót sekretarza. */
+export const quarterReportSchema = z.object({
+  quarter: qcode,
+  before: indicatorSnapshot,
+  after: indicatorSnapshot,
+  kpBefore: z.number(),
+  kpAfter: z.number(),
+  /** Liczba publicznych wiadomości ze świata w tym kwartale. */
+  newsCount: z.number().int().min(0),
+  /** Uwagi silnika po polsku, np. „Poparcie Publiczne poniżej 40: Zaufanie Waszyngtonu −2”. */
+  notes: z.array(z.string()),
+  correctionUnits: z.number(),
+});
+
+/** Migawka kariery KSP (pakiet @dse/ksp-bridge). Fakty z KSP są nienaruszalne. */
+export const kspSnapshotSchema = z.object({
+  quarter: qcode,
+  file: z.string().min(1),
+  title: z.string(),
+  /** Czas uniwersalny w sekundach od 1.01.1951 i data kalendarzowa. */
+  ut: z.number().min(0),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  funds: z.number(),
+  reputation: z.number(),
+  confidence: z.number(),
+  science: z.number(),
+  engineers: z.number().int().min(0),
+  researchers: z.number().int().min(0),
+  /** Miesięczne wynagrodzenia z ostatniego pełnego okresu dziennika kariery. */
+  monthlySalaries: z.number().min(0),
+  launchSite: z.string(),
+  launches: z.number().int().min(0),
+  failures: z.number().int().min(0),
+  contractsCompleted: z.number().int().min(0),
+  programs: z.array(z.object({ name: z.string(), status: z.enum(['active', 'completed']) })),
+  /** Starty w kwartale migawki. */
+  launchesInQuarter: z.array(z.object({ vessel: z.string(), date: z.string(), site: z.string().nullable() })),
 });
 
 export const campaignSettingsSchema = z.object({
@@ -247,6 +348,12 @@ export const gameStateSchema = z.object({
   }),
   chronicle: z.array(chronicleEntrySchema),
   world: worldStateSchema,
+  budget: budgetStateSchema,
+  desk: deskStateSchema,
+  reports: z.array(quarterReportSchema),
+  ksp: z.object({ snapshots: z.array(kspSnapshotSchema) }),
+  /** active — gra trwa; dismissed — Anderson odwołany (ZW 0); collapsed — rozpad organizacji (SO 0). */
+  status: z.enum(['active', 'dismissed', 'collapsed']),
 });
 
 export type GameState = z.infer<typeof gameStateSchema>;
@@ -260,6 +367,11 @@ export type WorldState = z.infer<typeof worldStateSchema>;
 export type ThreadInstance = z.infer<typeof threadInstanceSchema>;
 export type WorldLogEntry = z.infer<typeof worldLogEntrySchema>;
 export type PendingDilemma = z.infer<typeof pendingDilemmaSchema>;
+export type Situation = z.infer<typeof situationSchema>;
+export type BudgetLedgerEntry = z.infer<typeof budgetLedgerEntrySchema>;
+export type QuarterReport = z.infer<typeof quarterReportSchema>;
+export type KspSnapshot = z.infer<typeof kspSnapshotSchema>;
+export type DeskActionRecord = z.infer<typeof deskActionRecordSchema>;
 
 /** Pusty stan świata — zmienne i Rozbieżność uzupełnia silnik z treści (ensureWorldState). */
 export function emptyWorldState(): WorldState {
@@ -272,6 +384,7 @@ export function emptyWorldState(): WorldState {
     templateLog: {},
     dilemmaLog: {},
     pendingDilemmas: [],
+    situations: [],
     corrections: [],
     log: [],
     seq: 0,
