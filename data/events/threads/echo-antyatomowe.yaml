@@ -1,0 +1,75 @@
+id: echo-antyatomowe
+title: Ruch przeciw bombom
+kind: reactive
+region: swiat
+summary: >-
+  Echo próby Castle Bravo: ruch przeciw broni jądrowej rośnie w Japonii i rozlewa się
+  po świecie. Startuje tylko wtedy, gdy opad po Bravo wywołał skandal.
+historicalNote: >-
+  Petycja z tokijskiej dzielnicy Suginami (od maja 1954) zebrała ponad 30 milionów podpisów.
+  Pierwsza Światowa Konferencja przeciw Bombom Atomowym i Wodorowym w Hiroszimie
+  (6 sierpnia 1955). Film „Godzilla” (listopad 1954). W KANONIE GRY ruch jest silniejszy niż
+  w historii, bo trzecia bomba spadła na Kobe.
+drivers: [nastroje_spoleczne, wyscig_atomowy]
+start:
+  from: 1954-Q3
+  conditions: { flag: ruch_antyatomowy }
+stages:
+  - id: petycja
+    title: trzydzieści milionów podpisów
+    offset: 1
+    branches:
+      - id: podpisy
+        title: Petycja ogarnia Japonię
+        weight: 10
+        effects:
+          - { indicator: WF, add: -1 }
+        text: >-
+          Petycję przeciw bombom podpisała już jedna trzecia dorosłych Japończyków.
+          W kinach bije rekordy film o potworze obudzonym przez próby jądrowe.
+
+  - id: hiroszima
+    title: konferencja w Hiroszimie
+    offset: 4
+    decision:
+      title: 'Ruch antyatomowy: zaproszenie do Hiroszimy'
+      prompt: >-
+        Organizatorzy światowej konferencji przeciw bombom zapraszają do Hiroszimy
+        przedstawiciela PACE jako „komisji pokojowych eksperymentów”. Rada Naukowa chce
+        jechać. Pentagon uważa konferencję za imprezę sterowaną z Moskwy.
+      options:
+        - id: delegat
+          title: Wysłać uczonego z Rady Naukowej
+          effects:
+            - { faction: RN, disposition: 1 }
+            - { faction: DPO, disposition: -1 }
+            - { indicator: WF, add: 3 }
+            - { indicator: ZW, add: -2 }
+          text: >-
+            Fizyk z Rady Naukowej mówi w Hiroszimie o rakietach, które badają zorze, a nie
+            miasta. Sala bije brawo. W Waszyngtonie ktoś zakłada nową teczkę.
+        - id: list
+          title: Wysłać list z pozdrowieniami
+          effects:
+            - { indicator: WF, add: 1 }
+          text: >-
+            PACE wysyła uprzejmy list. Organizatorzy odczytują go między dwoma przemówieniami.
+        - id: odmowa
+          title: Odmówić
+          effects:
+            - { faction: RN, disposition: -1 }
+            - { faction: DPO, disposition: 1 }
+          text: >-
+            PACE nie odpowiada na zaproszenie. Japoński obserwator w Radzie Atlantyckiej
+            pyta, czy komisja wstydzi się swojej nazwy.
+      defaultOption: list
+    branches:
+      - id: konferencja
+        title: Pierwsza światowa konferencja przeciw bombom
+        weight: 10
+        effects:
+          - { var: nastroje_spoleczne, add: 1 }
+        text: >-
+          W dziesiątą rocznicę zrzucenia bomby w Hiroszimie zbiera się pięć tysięcy
+          delegatów z kilkunastu państw. Żądają zakazu prób jądrowych. Ocaleni z Hiroszimy,
+          Nagasaki i Kobe po raz pierwszy mówią publicznie.

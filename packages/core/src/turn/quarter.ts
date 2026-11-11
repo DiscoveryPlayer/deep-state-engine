@@ -23,6 +23,12 @@ const PP_LOW = 40;
 const PP_LOW_STEP = 5;
 /** Powyżej tego progu Poparcie Publiczne daje ZW +1 na kwartał (GDD 6.2). */
 const PP_HIGH = 70;
+/**
+ * Dryf Poparcia Publicznego (decyzja 0017): powyżej i poniżej tych progów PP wraca o 1 punkt
+ * na kwartał w stronę środka. Bez tego jedna akcja Biurka powtarzana co kwartał dawała PP 100.
+ */
+const PP_DRIFT_HIGH = 55;
+const PP_DRIFT_LOW = 45;
 /** Nastawienie frakcji, od którego zegar Cierpliwości rośnie albo się cofa (GDD 7.1). */
 const DISPOSITION_ANGRY = -2;
 const DISPOSITION_CONTENT = 2;
@@ -155,6 +161,10 @@ export function closeQuarter(input: GameState, content: GameContent): CloseQuart
     state.indicators.ZW = clamp(state.indicators.ZW + 1, 0, 100);
     notes.push(`Poparcie Publiczne powyżej ${PP_HIGH}: Zaufanie Waszyngtonu +1.`);
   }
+
+  // Opinia publiczna wraca do obojętności: bez nowych powodów Poparcie Publiczne dryfuje ku środkowi.
+  if (state.indicators.PP > PP_DRIFT_HIGH) state.indicators.PP -= 1;
+  else if (state.indicators.PP < PP_DRIFT_LOW) state.indicators.PP += 1;
 
   // 4. Migawka KSP: przypomnienie w trybie Honorowym.
   if (!state.ksp.snapshots.some((s) => s.quarter === q)) {

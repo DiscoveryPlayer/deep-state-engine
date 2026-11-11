@@ -1,0 +1,175 @@
+id: bomba-brytyjska
+title: Brytyjska bomba
+kind: historical
+region: europa
+summary: >-
+  Wielka Brytania zostaje trzecim mocarstwem atomowym. Próby odbywają się w Australii,
+  która jest gospodarzem poligonu Woomera i członkiem PACE.
+historicalNote: >-
+  Operacja Hurricane (3 października 1952, wyspy Monte Bello). Próby Totem (15 i 27
+  października 1953, Emu Field). Decyzja rządu Churchilla o budowie bomby wodorowej (lipiec
+  1954), ogłoszona w Białej Księdze obronnej 17 lutego 1955. Próby Mosaic (maj–czerwiec 1956,
+  Monte Bello) i Buffalo (wrzesień–październik 1956, Maralinga). Grapple X, pierwszy pełny
+  sukces termojądrowy (8 listopada 1957). Porozumienie o współpracy obronnej z USA
+  (3 lipca 1958).
+drivers: [sila_wielkiej_brytanii, wyscig_atomowy]
+start:
+  from: 1952-Q2
+stages:
+  - id: hurricane
+    title: operacja Hurricane
+    at: 1952-Q4
+    rumor:
+      quartersBefore: 1
+      reliability: B
+      credibility: 2
+      source: allies
+      text: >-
+        Brytyjska eskadra z fregatą bez załogi kotwiczy przy wyspach Monte Bello u wybrzeży
+        Australii. Rejon zamknięto dla żeglugi do końca roku.
+    decision:
+      title: 'Brytyjska próba: prośba o Woomerę'
+      prompt: >-
+        Londyn prosi, żeby stacje śledzące PACE w Woomerze zmierzyły chmurę i falę uderzeniową
+        po próbie atomowej. Formalnie to „badania wysokich warstw atmosfery”. Rada Naukowa
+        pyta, od kiedy komisja pokojowa mierzy bomby.
+      options:
+        - id: zgoda
+          title: Udostępnić stacje
+          effects:
+            - { faction: BAS, disposition: 1 }
+            - { faction: RN, disposition: -1 }
+            - { indicator: WF, add: -2 }
+            - { var: sila_wielkiej_brytanii, add: 1 }
+          text: >-
+            Stacje w Woomerze rejestrują próbę. Londyn dostaje dane, BAS kopię, a w protokole
+            Rady Atlantyckiej zapisano „pomiary meteorologiczne”.
+        - id: odmowa
+          title: Odmówić
+          effects:
+            - { faction: RN, disposition: 1 }
+            - { indicator: WF, add: 1 }
+            - { currency: KP, add: -1 }
+          text: >-
+            PACE odmawia. Brytyjczycy mierzą sami, a delegat Londynu w Radzie Atlantyckiej
+            przez miesiąc mówi do Andersona wyłącznie na piśmie.
+      defaultOption: odmowa
+      inactionEffects:
+        - { var: sila_wielkiej_brytanii, add: -1 }
+    branches:
+      - id: udana
+        title: Wielka Brytania ma bombę
+        historical: true
+        weight: 10
+        effects:
+          - { var: sila_wielkiej_brytanii, add: 1 }
+          - { var: wyscig_atomowy, add: 1 }
+        text: >-
+          W lagunie wysp Monte Bello wybucha pierwsza brytyjska bomba atomowa, ukryta
+          w kadłubie fregaty. Wielka Brytania zostaje trzecim mocarstwem atomowym.
+      - id: opozniona
+        title: Próba odłożona o rok
+        weight: 1
+        delayQuarters: 4
+        effects:
+          - { var: sila_wielkiej_brytanii, add: -1 }
+        text: >-
+          Kłopoty z plutonem zmuszają Londyn do odłożenia próby. W Waszyngtonie przyjmują to
+          z ulgą, w Londynie ze wstydem.
+
+  - id: totem
+    title: próby na pustyni
+    at: 1953-Q4
+    branches:
+      - id: emu
+        title: Próby Totem w Australii
+        historical: true
+        weight: 10
+        text: >-
+          Brytyjczycy przeprowadzają dwie kolejne próby, tym razem na australijskiej pustyni,
+          kilkaset kilometrów od Woomery. Rząd w Canberze zapewnia, że opad nikomu nie zagraża.
+
+  - id: bomba-wodorowa
+    title: decyzja o bombie wodorowej
+    at: 1955-Q1
+    branches:
+      - id: biala-ksiega
+        title: Londyn zbuduje bombę wodorową
+        historical: true
+        weight: 10
+        effects:
+          - { var: wyscig_atomowy, add: 1 }
+        text: >-
+          Biała Księga obronna ogłasza, że Wielka Brytania zbuduje własną bombę wodorową.
+          Churchill mówi w Izbie Gmin, że bezpieczeństwo będzie odtąd „krzepkim dzieckiem trwogi”.
+        reactions:
+          - actor: Canberra
+            text: >-
+              Rząd Australii zgadza się na stały poligon atomowy w Maralindze. W zamian oczekuje
+              większego udziału w programach rakietowych w Woomerze.
+
+  - id: maralinga
+    title: Maralinga
+    at: 1956-Q4
+    branches:
+      - id: proby
+        title: Próby w Maralindze
+        historical: true
+        weight: 10
+        text: >-
+          Na nowym poligonie w Maralindze wybuchają cztery ładunki. O skażeniu ziem
+          Aborygenów mało kto wtedy mówi.
+      - id: skandal
+        title: Skandal skażenia
+        weight: 1
+        effects:
+          - { indicator: WF, add: -3 }
+          - { var: sila_wielkiej_brytanii, add: -1 }
+        text: >-
+          Australijska prasa ujawnia, że chmura po próbie przeszła nad zamieszkanymi terenami.
+          Canberra żąda wyjaśnień, a opozycja domaga się zamknięcia wszystkich brytyjskich
+          poligonów, z Woomerą włącznie.
+
+  - id: grapple
+    title: bomba wodorowa
+    at: 1957-Q4
+    branches:
+      - id: sukces
+        title: Brytyjska bomba wodorowa
+        historical: true
+        weight: 10
+        effects:
+          - { var: sila_wielkiej_brytanii, add: 1 }
+        text: >-
+          Nad Wyspą Bożego Narodzenia na Pacyfiku wybucha brytyjski ładunek o sile blisko
+          dwóch megaton. Londyn ma bombę wodorową.
+      - id: porazka
+        title: Próba poniżej oczekiwań
+        weight: 2
+        minor: true
+        delayQuarters: 2
+        text: >-
+          Ładunek daje ułamek zakładanej mocy. Naukowcy z Aldermaston wracają do tablic.
+
+  - id: porozumienie
+    title: porozumienie z USA
+    at: 1958-Q3
+    branches:
+      - id: podpisane
+        title: Współpraca atomowa przywrócona
+        historical: true
+        weight: 10
+        effects:
+          - { var: jednosc_zachodu, add: 1 }
+        text: >-
+          Stany Zjednoczone i Wielka Brytania podpisują porozumienie o współpracy obronnej.
+          Po dwunastu latach przerwy Londyn znów ma dostęp do amerykańskich tajemnic atomowych.
+      - id: brak
+        title: Londyn idzie sam
+        weight: 1
+        effects:
+          - { var: jednosc_zachodu, add: -1 }
+          - correction: { units: -0.4, quarters: 4, reason: 'Wielka Brytania tnie składkę: płaci sama za zbrojenia atomowe' }
+        text: >-
+          Kongres nie zgadza się na zmianę ustawy o energii atomowej. Wielka Brytania musi
+          płacić za własny arsenał sama i szuka oszczędności w programach sojuszniczych.

@@ -1,0 +1,221 @@
+id: nowe-spojrzenie
+title: Nowe Spojrzenie
+kind: historical
+region: usa
+summary: >-
+  Administracja Eisenhowera chce taniej obrony opartej na broni jądrowej. Komitety doradcze
+  dają pociskom dalekiego zasięgu najwyższy priorytet i po raz pierwszy mówią o satelitach.
+  Dla PACE to pieniądze, żądania wojska i spór o to, czym komisja ma być.
+historicalNote: >-
+  Projekt Solarium (lato 1953). NSC 162/2 (30 października 1953): doktryna „Nowego Spojrzenia”.
+  Przemówienie Dullesa o masowym odwecie (12 stycznia 1954). Raport komitetu von Neumanna,
+  „Teapot” (10 lutego 1954): głowica termojądrowa zmieści się w rakiecie, program trzeba
+  przyspieszyć. Raport Killiana „Odparcie groźby ataku z zaskoczenia” (14 lutego 1955):
+  rozpoznanie z dużych wysokości i satelity. Dzień Lotnictwa w Tuszynie (lipiec 1955): bombowce
+  M-4 przelatują kilkakrotnie i dają złudzenie dużej floty („luka bombowcowa”). Pocisk
+  międzykontynentalny dostaje najwyższy priorytet narodowy (13 września 1955).
+  Uwaga: wątek nie tworzy pojazdów. Daje frakcjom żądania, a budżetowi kierunek.
+drivers: [wyscig_atomowy, presja_wyscigu, koniunktura]
+start:
+  from: 1953-Q3
+  conditions: { flag: administracja_eisenhower }
+stages:
+  - id: solarium
+    title: przegląd strategii
+    at: 1953-Q3
+    branches:
+      - id: przeglad
+        title: Biały Dom przegląda strategię
+        historical: true
+        weight: 10
+        text: >-
+          Prezydent zamyka trzy zespoły doradców na sześć tygodni i każe każdemu obronić
+          inną strategię wobec Moskwy. Wniosek: powstrzymywanie zostaje, ale ma kosztować mniej.
+
+  - id: doktryna
+    title: nowa doktryna
+    at: 1953-Q4
+    branches:
+      - id: nowe-spojrzenie
+        title: Tańsza obrona oparta na atomie
+        historical: true
+        weight: 10
+        effects:
+          - { var: wyscig_atomowy, add: 1 }
+          - { flag: nowe_spojrzenie }
+        text: >-
+          Rada Bezpieczeństwa Narodowego przyjmuje nową doktrynę: mniej dywizji, więcej
+          bombowców i głowic. Budżet obrony spada, a każdy program musi pokazać, co daje
+          odstraszaniu.
+        reactions:
+          - actor: DPO
+            text: >-
+              Dyrektoriat Programów Obronnych składa listę programów PACE, które „bezpośrednio
+              służą odstraszaniu”. Lista jest długa.
+          - actor: RN
+            text: >-
+              Rada Naukowa ostrzega, że badania podstawowe pierwsze pójdą pod nóż, bo nie
+              mają czym straszyć.
+      - id: drogi-model
+        title: Zostaje droga obrona z czasów Korei
+        weight: 1
+        effects:
+          - { var: koniunktura, add: -1 }
+          - correction: { units: 0.3, quarters: 4, reason: 'Wysoki budżet obrony utrzymany: więcej pieniędzy na programy' }
+        text: >-
+          Szefowie sztabów przekonują prezydenta, że cięcia są zbyt ryzykowne. Budżet obrony
+          zostaje na poziomie z czasów wojny, a skarb państwa szuka pieniędzy w podatkach.
+
+  - id: odwet
+    title: masowy odwet
+    at: 1954-Q1
+    branches:
+      - id: przemowienie
+        title: Dulles ogłasza masowy odwet
+        historical: true
+        weight: 10
+        effects:
+          - { indicator: NG, add: -1 }
+        text: >-
+          Sekretarz stanu zapowiada, że na agresję Ameryka odpowie „natychmiast, środkami
+          i w miejscach, które sama wybierze”. Sojusznicy pytają, czy to oznacza bombę
+          atomową za każdą potyczkę graniczną.
+
+  - id: teapot
+    title: komitet von Neumanna
+    sameQuarter: true
+    branches:
+      - id: raport
+        title: Rakieta z głowicą termojądrową jest możliwa
+        historical: true
+        weight: 10
+        effects:
+          - { var: presja_wyscigu, add: 1 }
+          - { flag: priorytet_pociskow_zalecony }
+        text: >-
+          Komitet pod przewodnictwem Johna von Neumanna stwierdza, że lekka głowica
+          termojądrowa zmieści się w rakiecie dalekiego zasięgu, a Rosjanie mogą być
+          bliżej celu. Zaleca program na miarę projektu Manhattan.
+        reactions:
+          - actor: DPO
+            text: >-
+              Dyrektoriat żąda, żeby silniki i układy naprowadzania z programów PACE trafiały
+              najpierw do pocisków. Reszta ma czekać.
+          - actor: PRZ
+            text: >-
+              Konsorcja Przemysłowe wietrzą największe zamówienia od czasu wojny i zaczynają
+              podkupywać sobie nawzajem inżynierów.
+            effects:
+              - { var: pula_kadr, add: -1 }
+
+  - id: killian
+    title: raport Killiana
+    at: 1955-Q1
+    decision:
+      title: 'Satelita rozpoznawczy: kto go zbuduje'
+      prompt: >-
+        Zespół doradców prezydenta kończy raport o groźbie ataku z zaskoczenia. Jego
+        przewodniczący pyta poufnie, czy PACE podjęłaby się studiów nad satelitą
+        rozpoznawczym. Jeśli nie, zadanie dostanie Lotnictwo. Rada Naukowa uważa, że szpiegowanie
+        z orbity pogrzebie pokojową fasadę komisji.
+      options:
+        - id: przyjac
+          title: Przyjąć zadanie
+          effects:
+            - { faction: DPO, disposition: 1 }
+            - { faction: BAS, disposition: 1 }
+            - { faction: RN, disposition: -1 }
+            - { indicator: WF, add: -3 }
+            - { flag: pace_satelita_rozpoznawczy }
+            - correction: { units: 0.4, quarters: 4, reason: 'Fundusze celowe na studia nad satelitą rozpoznawczym' }
+          text: >-
+            PACE przyjmuje zadanie. Fundusze przychodzą z kasy, o której nie mówi się
+            w Radzie Atlantyckiej, a dokumenty dostają nową klauzulę.
+        - id: cywilny
+          title: Zaproponować satelitę naukowego jako pierwszy krok
+          effects:
+            - { faction: RN, disposition: 1 }
+            - { currency: KP, add: -1 }
+            - { flag: pace_satelita_naukowy_najpierw }
+          text: >-
+            Anderson odpowiada, że najpierw powinien polecieć satelita naukowy: ustali prawo
+            przelotu nad cudzym terytorium, zanim ktokolwiek zapyta, co ma na pokładzie.
+            Doradcy prezydenta zapisują tę myśl.
+        - id: odmowic
+          title: Odmówić
+          effects:
+            - { faction: DPO, disposition: -1 }
+            - { faction: BAS, disposition: -1 }
+            - { indicator: WF, add: 1 }
+          text: >-
+            PACE odmawia. Zadanie dostaje Lotnictwo, a z nim pieniądze i wpływy, których
+            komisja już nie odzyska.
+      defaultOption: odmowic
+      inactionEffects:
+        - { indicator: ZW, add: -2 }
+    branches:
+      - id: raport
+        title: Doradcy zalecają rozpoznanie z wysoka i satelity
+        historical: true
+        weight: 10
+        effects:
+          - { var: presja_wyscigu, add: 1 }
+        text: >-
+          Raport ostrzega, że Ameryka jest ślepa: nie wie, ile bombowców i rakiet ma Moskwa.
+          Zaleca samoloty rozpoznawcze latające wyżej niż myśliwce, a w dalszej kolejności
+          sztuczne satelity.
+      - id: bez-satelitow
+        title: Raport pomija satelity
+        weight: 1
+        effects:
+          - { var: presja_wyscigu, add: -1 }
+        text: >-
+          Raport skupia się na radarach i obronie przeciwlotniczej. O satelitach wspomina
+          jednym zdaniem, jako o sprawie na następną dekadę.
+
+  - id: tuszyno
+    title: pokaz w Tuszynie
+    at: 1955-Q3
+    branches:
+      - id: zludzenie
+        title: Bombowce nad Moskwą
+        historical: true
+        weight: 10
+        effects:
+          - { var: presja_wyscigu, add: 1 }
+          - { flag: luka_bombowcowa }
+        text: >-
+          Na pokazie lotniczym pod Moskwą zachodni attaché naliczyli dwa razy więcej
+          nowych bombowców odrzutowych, niż się spodziewano. Lotnictwo żąda podwojenia
+          zamówień. Nikt nie wie, że te same maszyny przeleciały nad trybuną kilka razy.
+      - id: skromny
+        title: Pokaz bez niespodzianek
+        weight: 2
+        minor: true
+        text: >-
+          Na pokazie pod Moskwą przelatuje kilka nowych bombowców. Attaché notują typy
+          i wracają do ambasad bez sensacji.
+
+  - id: priorytet
+    title: najwyższy priorytet
+    sameQuarter: true
+    branches:
+      - id: nadany
+        title: Pocisk międzykontynentalny ma pierwszeństwo
+        historical: true
+        weight: 10
+        effects:
+          - { var: wyscig_atomowy, add: 1 }
+          - correction: { units: 0.5, quarters: 4, reason: 'Najwyższy priorytet dla pocisków: dodatkowe fundusze obronne' }
+        text: >-
+          Prezydent nadaje programowi pocisku międzykontynentalnego najwyższy priorytet
+          narodowy. Pieniądze przestają być problemem. Problemem staje się to, kto nimi
+          rządzi.
+      - id: odlozony
+        title: Priorytet odłożony
+        weight: 2
+        minor: true
+        delayQuarters: 2
+        text: >-
+          Biuro Budżetu blokuje decyzję o najwyższym priorytecie do czasu nowego przeglądu
+          kosztów. Program idzie dalej zwykłym trybem.

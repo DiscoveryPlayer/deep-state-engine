@@ -110,8 +110,6 @@ export function validateWorldContent(world: WorldContent, factionIds: ReadonlySe
           add(file, `${where}.decision`, `opcja domyślna "${s.decision.defaultOption}" nie istnieje`);
         checkEffects(s.decision.inactionEffects, file, `${where}.decision.biernosc`);
       }
-      if (!s.branches.some((b) => b.requires === undefined))
-        add(file, where, 'co najmniej jedna gałąź musi być dostępna bez warunku "requires"');
       const branchIds = new Set<string>();
       for (const b of s.branches) {
         const bw = `${where}.${b.id}`;

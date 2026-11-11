@@ -141,3 +141,78 @@ dilemmas:
       - { faction: RN, disposition: -1 }
     expiresAfterQuarters: 1
     source: wydarzenia 1951, nr 72
+
+  - id: senator-z-okregu
+    title: Senator i zakład w jego stanie
+    conditions: { after: 1951-Q3 }
+    chancePerQuarter: 0.06
+    cooldownQuarters: 10
+    prompt: >-
+      Senator z komisji środków daje do zrozumienia, że chętniej zagłosuje za budżetem PACE,
+      jeśli nowa hala montażowa stanie w jego stanie. Zarządcy ośrodków mają lepszą i tańszą
+      lokalizację gdzie indziej.
+    options:
+      - id: zgodzic-sie
+        title: Postawić halę w stanie senatora
+        effects:
+          - { indicator: ZW, add: 3 }
+          - { faction: DOI, disposition: -1 }
+          - correction: { units: -0.4, quarters: 2, reason: 'Droższa lokalizacja hali montażowej (decyzja polityczna)' }
+        text: >-
+          Hala stanie tam, gdzie chce senator. Zarządcy ośrodków liczą dodatkowe kilometry
+          i dodatkowe dolary.
+      - id: odmowic
+        title: Wybrać lokalizację według rachunku
+        effects:
+          - { indicator: ZW, add: -2 }
+          - { faction: DOI, disposition: 1 }
+        text: >-
+          PACE buduje tam, gdzie taniej. Senator przestaje odbierać telefony od łącznika komisji.
+      - id: obiecac
+        title: Obiecać mu następną inwestycję
+        effects:
+          - { currency: KP, add: -1 }
+        text: >-
+          Anderson obiecuje senatorowi następną inwestycję. Senator zapisuje to w notesie,
+          który podobno nigdy niczego nie gubi.
+    defaultOption: odmowic
+    inactionEffects:
+      - { indicator: ZW, add: -1 }
+    source: Dossier III, wzorzec 4
+
+  - id: telewizja-na-poligonie
+    title: Kamery na poligonie
+    conditions: { after: 1952-Q1 }
+    chancePerQuarter: 0.05
+    cooldownQuarters: 10
+    prompt: >-
+      Stacja telewizyjna chce pokazać próbę PACE w wieczornym programie. Udany lot na ekranach
+      to poparcie, jakiego nie da żaden komunikat. Nieudany zobaczy cały kraj. BAS jest
+      przeciw z zasady.
+    options:
+      - id: wpuscic
+        title: Wpuścić kamery
+        effects:
+          - { indicator: PP, add: 3 }
+          - { indicator: WF, add: 1 }
+          - { faction: BAS, disposition: -1 }
+        text: >-
+          Kamery stają za ogrodzeniem. Tym razem wszystko się udaje i miliony widzów oglądają
+          start przy kolacji.
+      - id: film
+        title: Pozwolić tylko na film po fakcie
+        effects:
+          - { indicator: PP, add: 1 }
+        text: >-
+          Telewizja dostaje zmontowany film tydzień po próbie. Wygląda dobrze, ale wszyscy
+          wiedzą, że pokazano tylko to, co się udało.
+      - id: odmowic
+        title: Odmówić
+        effects:
+          - { faction: BAS, disposition: 1 }
+          - { indicator: PP, add: -1 }
+        text: >-
+          PACE odmawia. Reporter kończy materiał zdaniem, że za płotem dzieje się coś, czego
+          podatnik nie ma prawa zobaczyć.
+    defaultOption: film
+    source: Dossier III, wzorzec 127

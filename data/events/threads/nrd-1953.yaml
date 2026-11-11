@@ -1,0 +1,126 @@
+id: nrd-1953
+title: Powstanie w NRD
+kind: historical
+region: zsrr
+exclusiveGroup: blok-wschodni
+summary: >-
+  Pierwszy bunt w bloku wschodnim po śmierci Stalina. Zachód nie interweniuje, ale przez
+  otwartą granicę w Berlinie uciekają tysiące ludzi, w tym inżynierowie.
+historicalNote: >-
+  Podniesienie norm pracy (maj 1953) i „nowy kurs” (9–11 czerwca). Strajk robotników
+  budowlanych w Berlinie Wschodnim 16 czerwca i powstanie w całej NRD 17 czerwca 1953,
+  stłumione przez radzieckie czołgi. Amerykański program paczek żywnościowych (lipiec–sierpień
+  1953, ponad 5 milionów paczek). W 1953 roku z NRD uciekło na Zachód ponad 330 tysięcy osób.
+drivers: [jednosc_bloku, kurs_kremla]
+start:
+  from: 1953-Q2
+  conditions: { flag: po_stalinie }
+stages:
+  - id: powstanie
+    title: 17 czerwca
+    at: 1953-Q2
+    branches:
+      - id: stlumione
+        title: Powstanie stłumione przez czołgi
+        historical: true
+        weight: 10
+        effects:
+          - { var: jednosc_bloku, add: -1 }
+          - { indicator: NG, add: -1 }
+        text: >-
+          Strajk murarzy z berlińskiej alei Stalina w jeden dzień ogarnia ponad pięćset
+          miast NRD. Radzieckie dowództwo ogłasza stan wyjątkowy i wyprowadza czołgi
+          na ulice. Zachód patrzy przez Bramę Brandenburską i nie robi nic.
+        reactions:
+          - actor: Bonn
+            text: >-
+              Bundestag ogłasza 17 czerwca Dniem Jedności Niemiec. Niemieccy pracownicy PACE
+              proszą o urlopy: wielu ma rodziny po drugiej stronie.
+          - actor: BAS
+            text: >-
+              BAS notuje, że radzieckie dywizje zareagowały w kilka godzin, bez czekania
+              na Moskwę. Wniosek: dowódcy w terenie mają wolną rękę.
+      - id: ustepstwa
+        title: Władze ustępują, powstania nie ma
+        weight: 1
+        effects:
+          - { var: kurs_kremla, add: -1 }
+        next: uciekinierzy
+        text: >-
+          Władze NRD w ostatniej chwili cofają podwyżkę norm i dymisjonują kilku ministrów.
+          Strajk budowlanych wygasa, zanim wyszedł poza Berlin.
+
+  - id: paczki
+    title: reakcja Zachodu
+    at: 1953-Q3
+    branches:
+      - id: zywnosc
+        title: Paczki żywnościowe Eisenhowera
+        historical: true
+        weight: 10
+        effects:
+          - { indicator: PP, add: 1 }
+        text: >-
+          W Berlinie Zachodnim Amerykanie rozdają paczki żywnościowe mieszkańcom NRD. Po odbiór
+          przyjeżdżają setki tysięcy ludzi, dopóki władze wschodnie nie wstrzymają sprzedaży
+          biletów kolejowych do Berlina.
+      - id: bron
+        title: Służby chcą dozbroić opór
+        weight: 1
+        modifiers:
+          - { when: { var: antykomunizm, op: '>=', value: 8 }, mul: 3 }
+        effects:
+          - { indicator: NG, add: -1 }
+          - { faction: BAS, disposition: 1 }
+        text: >-
+          Rada Bezpieczeństwa Narodowego zatwierdza plan wspierania „ruchu oporu” w NRD.
+          Moskwa odpowiada zamknięciem przejść w Berlinie na dwa tygodnie.
+
+  - id: uciekinierzy
+    title: uciekinierzy
+    at: 1953-Q4
+    decision:
+      title: 'Berlin: inżynierowie z NRD'
+      prompt: >-
+        W obozie przejściowym w Berlinie-Marienfelde czeka kilkudziesięciu inżynierów
+        i techników z zakładów lotniczych i optycznych NRD. BAS proponuje stały punkt
+        werbunkowy PACE. Bonn chce ich dla własnego przemysłu.
+      options:
+        - id: werbowac
+          title: Otworzyć punkt werbunkowy
+          effects:
+            - { var: pula_kadr, add: 1 }
+            - { faction: BAS, disposition: 1 }
+            - { indicator: WF, add: -2 }
+            - { flag: werbunek_berlin }
+          text: >-
+            PACE otwiera biuro w Berlinie Zachodnim. Pierwsi specjaliści lecą za ocean po
+            trzech tygodniach sprawdzania. Wschodnia prasa pisze o „handlarzach ludźmi”.
+        - id: bonn
+          title: Zostawić ich Niemcom
+          effects:
+            - { var: jednosc_zachodu, add: 1 }
+            - { currency: KP, add: 1 }
+          text: >-
+            Anderson zostawia uciekinierów zachodnioniemieckim firmom. Delegat RFN w Radzie
+            Atlantyckiej dziękuje i obiecuje, że Bonn o tym nie zapomni.
+        - id: wybrac
+          title: Wziąć tylko kilku najlepszych
+          effects:
+            - { faction: RN, disposition: 1 }
+          text: >-
+            Rada Naukowa wybiera sześciu ludzi z listy. Reszta trafia do firm w Bawarii
+            i nad Renem.
+      defaultOption: bonn
+      inactionEffects:
+        - { faction: BAS, disposition: -1 }
+    branches:
+      - id: fala
+        title: Rekordowa fala ucieczek
+        historical: true
+        weight: 10
+        effects:
+          - { var: jednosc_bloku, add: -1 }
+        text: >-
+          W ciągu roku z NRD uciekło na Zachód ponad trzysta tysięcy ludzi. Granica
+          w Berlinie pozostaje otwarta, a NRD traci lekarzy, inżynierów i nauczycieli.

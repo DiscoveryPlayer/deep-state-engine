@@ -1,0 +1,73 @@
+id: kongres-1954
+title: Wybory do Kongresu 1954
+kind: historical
+region: usa
+summary: >-
+  Wybory śródokresowe decydują, kto przewodniczy komisjom środków. Od nich zależy budżet
+  i nadzór nad PACE przez następne dwa lata.
+historicalNote: >-
+  Wybory 2 listopada 1954: demokraci odzyskują obie izby (Senat 48 do 47, Izba 232 do 203).
+  Lyndon Johnson zostaje liderem większości w Senacie, Sam Rayburn przewodniczącym Izby.
+drivers: [koniunktura, antykomunizm]
+start:
+  from: 1954-Q3
+stages:
+  - id: kampania
+    title: kampania
+    at: 1954-Q3
+    branches:
+      - id: recesja-i-mccarthy
+        title: Kampania w cieniu recesji i McCarthy'ego
+        historical: true
+        weight: 10
+        text: >-
+          Demokraci atakują recesję, republikanie komunizm. Wiceprezydent objeżdża kraj
+          i zarzuca przeciwnikom miękkość. Sondaże dają demokratom lekką przewagę.
+
+  - id: wynik
+    title: wynik wyborów
+    at: 1954-Q4
+    decision:
+      title: 'Nowy Kongres: zaproszenie dla komisji'
+      prompt: >-
+        Po wyborach zmienią się przewodniczący komisji, od których zależy budżet PACE.
+        Łącznik w Waszyngtonie radzi zaprosić nowych ludzi do ośrodka startowego, zanim
+        napiszą pierwszy projekt ustawy. To kosztuje czas i przysługi.
+      options:
+        - id: zaprosic
+          title: Zaprosić komisję do ośrodka
+          effects:
+            - { currency: KP, add: -1 }
+            - { indicator: ZW, add: 3 }
+          text: >-
+            Kongresmeni oglądają start rakiety sondującej z trybuny dla gości. Jeden z nich
+            mówi potem, że pierwszy raz rozumie, na co głosuje.
+        - id: dystans
+          title: Zachować dystans
+          text: >-
+            Anderson uznaje, że komisja sama poprosi o to, czego potrzebuje. Nowi
+            przewodniczący poznają PACE z raportów kontrolerów.
+      defaultOption: dystans
+      inactionEffects:
+        - { indicator: ZW, add: -1 }
+    branches:
+      - id: demokraci
+        title: Demokraci odzyskują Kongres
+        historical: true
+        weight: 10
+        modifiers:
+          - { when: { var: koniunktura, op: '>=', value: 7 }, mul: 0.5 }
+        effects:
+          - { flag: kongres_demokratow }
+          - { clearFlag: kongres_podzielony }
+        text: >-
+          Demokraci odzyskują obie izby Kongresu, Senat jednym głosem. Liderem większości
+          zostaje senator z Teksasu Lyndon Johnson, który lubi wiedzieć, na co idą pieniądze.
+      - id: republikanie
+        title: Republikanie utrzymują Senat
+        weight: 2
+        modifiers:
+          - { when: { var: koniunktura, op: '>=', value: 7 }, mul: 2 }
+        text: >-
+          Republikanie tracą Izbę, ale utrzymują Senat. Komisje środków będą się nawzajem
+          pilnować, a każdy budżet przejdzie dwa razy przez te same pytania.

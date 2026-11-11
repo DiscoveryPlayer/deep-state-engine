@@ -170,6 +170,11 @@ export const branchSchema = z
     title: z.string().min(1),
     /** Gałąź zgodna z historią. Rozbieżność regionu działa na wagi gałęzi historycznych i pozostałych. */
     historical: z.boolean().default(false),
+    /**
+     * Drobne odchylenie od historii (np. krótszy strajk): gałąź niehistoryczna, która
+     * NIE podnosi Rozbieżności regionu.
+     */
+    minor: z.boolean().default(false),
     /** Jawny rodzaj gałęzi. Brak = silnik wyprowadza go z mechaniki (funkcja branchKind). */
     kind: z.enum(BRANCH_KINDS).optional(),
     reactions: z.array(reactionSchema).default([]),

@@ -6,20 +6,56 @@ summary: >-
   Pierwsze zderzenie Andersona z wielką polityką. Demokraci rządzą od 1933 roku, a Anderson
   został mianowany przez Trumana. Nowa administracja zechce przejrzeć jego programy.
 historicalNote: >-
-  Konwencja republikanów w Chicago (7–11 lipca 1952): Eisenhower zdobywa nominację w pierwszym
-  głosowaniu, po przejściu delegacji Minnesoty. Nie chciał sam narzucać konwencji nazwiska
-  zastępcy: przekazał Brownellowi listę młodszych polityków, a decyzję wypracowała narada
-  najważniejszych ludzi jego obozu, w której Dewey skierował dyskusję ku Nixonowi. Wybory
-  4 listopada 1952. Kotwica (decyzja 0013): wygrywa Eisenhower. Niepewne są wiceprezydent
-  i dokładne wyniki, w tym układ sił w Kongresie. Historycznie republikanie przejęli obie izby
-  nieznaczną większością. Lista alternatywnych kandydatów na wiceprezydenta: autor, 7.11.2026.
+  Prawybory w New Hampshire (11 marca 1952): Eisenhower wygrywa, nie prowadząc kampanii;
+  Truman ogłasza 29 marca, że nie będzie kandydował. Konwencja republikanów w Chicago
+  (7–11 lipca 1952): Eisenhower pokonuje Tafta w pierwszym głosowaniu po przejściu delegacji
+  Minnesoty. Nie chciał sam narzucać konwencji nazwiska zastępcy: przekazał Brownellowi listę
+  młodszych polityków, a decyzję wypracowała narada najważniejszych ludzi jego obozu, w której
+  Dewey skierował dyskusję ku Nixonowi. Przemówienie Nixona o funduszu („Checkers”,
+  23 września 1952). Wybory 4 listopada 1952; republikanie zdobywają obie izby nieznaczną
+  większością. Charles Wilson sekretarzem obrony od stycznia 1953. KANON GRY: kandydatem
+  demokratów jest Averell Harriman (Dokument Decyzyjny 4.3), nie Stevenson. Kotwica K2:
+  wygrywa Eisenhower. Lista alternatywnych wiceprezydentów: autor, 7.11.2026.
 drivers: [antykomunizm, koniunktura, zaangazowanie_usa]
 start:
   from: 1952-Q1
 stages:
+  - id: prawybory
+    title: prawybory
+    at: 1952-Q1
+    anchor: true
+    branches:
+      - id: new-hampshire
+        title: Eisenhower wygrywa w New Hampshire, Truman rezygnuje
+        historical: true
+        weight: 10
+        text: >-
+          Generał Eisenhower wygrywa prawybory w New Hampshire, choć wciąż dowodzi w Paryżu
+          i nie wygłosił ani jednego przemówienia. Kilka tygodni później prezydent Truman
+          ogłasza, że nie będzie się ubiegał o kolejną kadencję.
+        reactions:
+          - actor: Waszyngton
+            text: >-
+              W stolicy wszyscy liczą, kto zostanie po zmianie władzy. Nominaci Trumana,
+              a wśród nich Dowódca Operacyjny PACE, wiedzą, że zegar ruszył.
+
+  - id: konwencja
+    title: konwencja w Chicago
+    at: 1952-Q3
+    anchor: true
+    branches:
+      - id: eisenhower
+        title: Eisenhower pokonuje Tafta
+        historical: true
+        weight: 10
+        text: >-
+          Na konwencji w Chicago Eisenhower zdobywa nominację republikanów w pierwszym
+          głosowaniu. Senator Taft, faworyt partyjnego aparatu i przeciwnik wydatków
+          na Europę, przegrywa po sporze o mandaty delegatów z Południa.
+
   - id: wiceprezydent
     title: kandydat na wiceprezydenta
-    at: 1952-Q3
+    sameQuarter: true
     branches:
       - id: nixon
         title: Richard Nixon
@@ -28,9 +64,8 @@ stages:
         effects:
           - { flag: vp_nixon }
         text: >-
-          Konwencja w Chicago nominuje Eisenhowera, a narada jego sztabu wskazuje na zastępcę
-          Richarda Nixona, młodego senatora z Kalifornii, znanego z pogoni za komunistami
-          w administracji.
+          Narada sztabu Eisenhowera wskazuje na zastępcę Richarda Nixona, młodego senatora
+          z Kalifornii, znanego z pogoni za komunistami w administracji.
       - id: lodge
         title: Henry Cabot Lodge Jr.
         weight: 0.5
@@ -117,59 +152,168 @@ stages:
           - { flag: vp_smith }
           - { var: antykomunizm, add: -1 }
         text: >-
-          Konwencja w Chicago zaskakuje wszystkich: kandydatką na wiceprezydenta zostaje Margaret
-          Chase Smith, senator z Maine, autorka „Deklaracji Sumienia” z czerwca 1950 roku przeciw
+          Konwencja zaskakuje wszystkich: kandydatką na wiceprezydenta zostaje Margaret Chase
+          Smith, senator z Maine, autorka „Deklaracji Sumienia” z czerwca 1950 roku przeciw
           metodom McCarthy'ego. Jeśli Eisenhower wygra, będzie pierwszą kobietą na tym urzędzie.
+
+  - id: demokraci
+    title: kandydat demokratów
+    sameQuarter: true
+    anchor: true
+    branches:
+      - id: harriman
+        title: Demokraci stawiają na Harrimana
+        historical: true
+        weight: 10
+        text: >-
+          Demokraci nominują Averella Harrimana, dyplomatę i zaufanego człowieka Trumana.
+          Dla PACE to znajoma twarz: Harriman pilnował pomocy dla Europy i zna Radę Atlantycką
+          od środka.
+
+  - id: kampania
+    title: kampania
+    sameQuarter: true
+    branches:
+      - id: fundusz
+        title: Sprawa funduszu Nixona
+        historical: true
+        weight: 10
+        requires: { flag: vp_nixon }
+        text: >-
+          Prasa ujawnia, że kalifornijscy biznesmeni opłacali wydatki Nixona z prywatnego
+          funduszu. Senator broni się w telewizji przed sześćdziesięcioma milionami widzów
+          i mówi, że zatrzyma tylko jeden prezent: psa Checkersa. Zostaje na liście.
+      - id: spokojna
+        title: Kampania bez wstrząsów
+        weight: 1
+        minor: true
+        requires: { not: { flag: vp_nixon } }
+        text: >-
+          Kampania toczy się wokół Korei, komunizmu i korupcji. Eisenhower obiecuje, że pojedzie
+          do Korei, i prowadzi w sondażach od pierwszego dnia.
+
   - id: wynik
     title: noc wyborcza
     at: 1952-Q4
+    anchor: true
     branches:
-      - id: historyczny
-        title: Eisenhower wygrywa, republikanie przejmują Kongres
+      - id: eisenhower
+        title: Eisenhower prezydentem
         historical: true
         weight: 10
         effects:
           - { flag: administracja_eisenhower }
         text: >-
-          Dwight Eisenhower wygrywa zdecydowanie. Republikanie przejmują obie izby Kongresu
-          niewielką większością. Po dwudziestu latach w Białym Domu zmienia się gospodarz.
-      - id: kongres_podzielony
-        title: Eisenhower wygrywa, Kongres podzielony
+          Dwight Eisenhower wygrywa zdecydowanie. Po dwudziestu latach w Białym Domu zmienia się
+          gospodarz, a razem z nim setki nominatów.
+
+  - id: kongres
+    title: nowy Kongres
+    sameQuarter: true
+    branches:
+      - id: republikanski
+        title: Republikanie przejmują obie izby
+        historical: true
+        weight: 10
+        text: >-
+          Republikanie przejmują obie izby Kongresu niewielką większością. Komisje środków
+          dostają nowych przewodniczących, a ci zapowiadają cięcia.
+      - id: podzielony
+        title: Kongres podzielony
         weight: 3
         modifiers:
           - { when: { var: antykomunizm, op: '<=', value: 5 }, mul: 2 }
         effects:
-          - { flag: administracja_eisenhower }
           - { flag: kongres_podzielony }
         text: >-
-          Eisenhower wygrywa, ale demokraci utrzymują jedną z izb. Każda ustawa budżetowa będzie
-          wymagała kompromisu.
+          Demokraci utrzymują jedną z izb. Każda ustawa budżetowa będzie wymagała kompromisu.
       - id: silny_mandat
-        title: Miażdżące zwycięstwo
+        title: Wyraźna większość republikanów
         weight: 2
         modifiers:
           - { when: { var: koniunktura, op: '<=', value: 4 }, mul: 2 }
         effects:
-          - { flag: administracja_eisenhower }
           - { flag: silny_mandat }
         text: >-
-          Eisenhower wygrywa miażdżąco, a republikanie zdobywają wyraźną większość w obu izbach.
-          Nowa administracja ma mandat do głębokich zmian.
+          Republikanie zdobywają wyraźną większość w obu izbach. Nowa administracja ma mandat
+          do głębokich zmian.
+
+  - id: gabinet
+    title: nowy gabinet
+    at: 1953-Q1
+    branches:
+      - id: wilson
+        title: Przemysłowiec w Pentagonie
+        historical: true
+        weight: 10
+        effects:
+          - { faction: PRZ, disposition: 1 }
+        text: >-
+          Sekretarzem obrony zostaje Charles Wilson, szef wielkiego koncernu samochodowego.
+          Na przesłuchaniu mówi, że co dobre dla kraju, jest dobre dla jego firmy, i odwrotnie.
+          Uchodzi za przeciwnika wydatków na badania, z których nie widać szybkiego pożytku.
+
   - id: przeglad
     title: przegląd programów
     at: 1953-Q2
+    decision:
+      title: 'Nowa administracja: przegląd programów'
+      prompt: >-
+        Biuro Budżetu zapowiada przegląd wszystkiego, co zostało po Trumanie. Sekretarz obrony
+        chce wiedzieć, po co Ameryce komisja „do eksperymentów” z europejskimi udziałowcami.
+        Jak Anderson ustawia PACE wobec nowej władzy?
+      options:
+        - id: wspolpraca
+          title: Otworzyć księgi i współpracować
+          effects:
+            - { indicator: ZW, add: 2 }
+            - { indicator: WF, add: -1 }
+            - { faction: DOI, disposition: -1 }
+          text: >-
+            Anderson otwiera przed kontrolerami wszystkie księgi. Waszyngton docenia gest,
+            a zarządcy ośrodków liczą, co im zabiorą.
+          weights: { kontynuacja: { mul: 1.5 } }
+        - id: sojusznicy
+          title: Zasłonić się sojusznikami
+          effects:
+            - { indicator: WF, add: 2 }
+            - { indicator: ZW, add: -2 }
+            - { currency: KP, add: -1 }
+          text: >-
+            Anderson przypomina, że PACE to umowa międzynarodowa i jej budżetu nie da się ciąć
+            bez Rady Atlantyckiej. Formalnie ma rację. Biały Dom zapamiętuje ton.
+          weights: { przeglad_programow: { mul: 1.3 } }
+        - id: wojsko
+          title: Sprzedać PACE jako tanią obronę
+          effects:
+            - { faction: DPO, disposition: 1 }
+            - { faction: RN, disposition: -1 }
+            - { indicator: ZW, add: 1 }
+          text: >-
+            Anderson pokazuje sekretarzowi obrony, ile wojsko dostaje z programów PACE za
+            ułamek ceny. Pentagon słucha uważnie. Rada Naukowa także, tylko z innym wyrazem twarzy.
+          weights: { kontynuacja: { mul: 2 } }
+      defaultOption: wspolpraca
+      inactionEffects:
+        - { indicator: ZW, add: -2 }
     branches:
       - id: przeglad_programow
-        title: Nowa administracja przegląda programy Trumana
+        title: Przegląd i cięcia
         historical: true
         weight: 8
         effects:
-          - { indicator: ZW, add: -5 }
+          - { indicator: ZW, add: -4 }
           - { flag: przeglad_programow }
         text: >-
-          Biuro Budżetu nowej administracji zapowiada przegląd wszystkich programów odziedziczonych
-          po Trumanie. Dowódca Operacyjny PACE, mianowany przez poprzedniego prezydenta, musi
-          udowodnić, że jest potrzebny.
+          Kontrolerzy Biura Budżetu spędzają w PACE sześć tygodni. Raport zaleca zamrożenie
+          nowych wydatków do czasu, aż komisja wykaże, do czego jest potrzebna.
+        ongoing:
+          title: Przegląd programów
+          text: >-
+            Do zakończenia przeglądu nowe wydatki wymagają osobnej zgody Biura Budżetu.
+          effects:
+            - correction: { units: -0.4, quarters: 1, reason: 'Zamrożone wydatki w czasie przeglądu Biura Budżetu' }
+          maxQuarters: 3
       - id: kontynuacja
         title: Administracja potwierdza Andersona
         weight: 4
@@ -177,6 +321,8 @@ stages:
           - { when: { indicator: ZW, op: '>=', value: 65 }, mul: 2 }
           - { when: { flag: silny_mandat }, mul: 0.5 }
           - { when: { flag: vp_lodge }, mul: 1.5 }
+        effects:
+          - { indicator: ZW, add: 2 }
         text: >-
-          Nowy sekretarz obrony uznaje PACE za instrument polityki sojuszniczej i potwierdza
-          Andersona na stanowisku. Przegląd budżetu i tak nadejdzie.
+          Sekretarz obrony uznaje PACE za użyteczny instrument polityki sojuszniczej i potwierdza
+          Andersona na stanowisku. Przegląd budżetu i tak kiedyś nadejdzie.

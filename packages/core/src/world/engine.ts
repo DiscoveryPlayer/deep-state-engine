@@ -341,14 +341,29 @@ export function advanceWorld(input: GameState, content: WorldContent): WorldStep
       if (world.pendingDilemmas.some((p) => p.source?.thread === instanceId && p.source.stage === stage.id)) break;
 
       const branch = pickBranch(branchWeights(stage, def.region, state, inst.decisions[stage.id]), rng);
-      if (!branch) break;
+      if (!branch) {
+        // Żadna gałąź nie spełnia warunków (`requires`): w tym świecie etap nie ma sensu,
+        // więc wątek po cichu przechodzi dalej.
+        const skipTo = def.stages.slice(stageIndex + 1).find((s) => !s.alternative);
+        if (!skipTo) {
+          inst.status = 'ended';
+          inst.stage = null;
+          inst.nextCheck = null;
+          break;
+        }
+        inst.stage = skipTo.id;
+        inst.nextCheck = skipTo.sameQuarter
+          ? q
+          : quarterCode(later(now, stageDue(def, def.stages.indexOf(skipTo), inst)));
+        continue;
+      }
       const ref = `${inst.def}.${stage.id}.${branch.id}`;
 
       applyEffects(state, branch.effects, content, ref);
       // Rozbieżność rośnie, gdy świat ODCHODZI od historii: w etapie z gałęzią historyczną
       // wypadła inna. W etapie alternatywnym historii już nie ma, więc nie liczy się drugi raz
       // (taki etap może podnieść Rozbieżność jawnie, skutkiem `divergence`).
-      if (!branch.historical && def.tracksHistory && !stage.alternative) {
+      if (!branch.historical && !branch.minor && def.tracksHistory && !stage.alternative) {
         world.divergence[def.region] = Math.min(
           DIVERGENCE_MAX,
           (world.divergence[def.region] ?? 0) + DIVERGENCE_PER_NONHISTORICAL_BRANCH,
@@ -446,7 +461,8 @@ export function advanceWorld(input: GameState, content: WorldContent): WorldStep
 
   // 7. Dylematy.
   for (const dil of [...content.dilemmas].sort((a, b) => a.id.localeCompare(b.id))) {
-    if (world.pendingDilemmas.length >= content.definition.maxPendingDilemmas) break;
+    // Limit dotyczy dylematów samodzielnych; decyzje etapów wątków są poza nim.
+    if (world.pendingDilemmas.filter((p) => !p.source).length >= content.definition.maxPendingDilemmas) break;
     if (world.pendingDilemmas.some((p) => p.dilemma === dil.id)) continue;
     const record = world.dilemmaLog[dil.id];
     if (dil.once && record) continue;

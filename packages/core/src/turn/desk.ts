@@ -22,6 +22,8 @@ const REST_UD = 2;
 const INTEL_UD = 1;
 /** Przy Wiarygodności Fasady poniżej tego progu konferencja prasowa może zaszkodzić. */
 const PRESS_RISK_BELOW_WF = 50;
+/** Od tego poziomu Poparcia Publicznego konferencja prasowa przestaje pomagać. */
+const PRESS_SATURATED_PP = 65;
 
 export const DESK_ACTION_IDS = ['spotkanie', 'lobbing', 'konferencja', 'zlecenie-wywiadowcze', 'odpoczynek'] as const;
 export type DeskActionId = (typeof DESK_ACTION_IDS)[number];
@@ -113,7 +115,7 @@ export function availableDeskActions(state: GameState, content: GameContent): De
     info(
       'konferencja',
       'Konferencja prasowa',
-      `Poparcie Publiczne zwykle rośnie. Przy Wiarygodności Fasady poniżej ${PRESS_RISK_BELOW_WF} może spaść. Raz na kwartał.`,
+      `Poparcie Publiczne zwykle rośnie o 1–4. Przy Wiarygodności Fasady poniżej ${PRESS_RISK_BELOW_WF} może spaść, a powyżej ${PRESS_SATURATED_PP} poparcia niewiele już daje. Raz na kwartał.`,
       PRESS_UD,
       0,
       null,
@@ -205,7 +207,9 @@ export function performDeskAction(
     }
     case 'konferencja': {
       const risky = state.indicators.WF < PRESS_RISK_BELOW_WF;
-      const delta = risky ? rng.int(-2, 3) : rng.int(1, 4);
+      // Przy wysokim poparciu kolejna konferencja niewiele już daje (prasa jest znudzona).
+      const saturated = state.indicators.PP >= PRESS_SATURATED_PP;
+      const delta = risky ? rng.int(-2, 3) : saturated ? rng.int(-1, 1) : rng.int(1, 4);
       state.indicators.PP = clamp(state.indicators.PP + delta, 0, 100);
       summary =
         delta >= 0

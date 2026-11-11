@@ -6,6 +6,9 @@ title: 'Kryzys naftowy w {kraj.miejsc}'
 region: bliski_wschod
 summary: Spór o koncesje naftowe przeradza się w kryzys, który podnosi ceny paliw na Zachodzie.
 drivers: [popyt_na_rope, zaangazowanie_usa, sila_wielkiej_brytanii]
+# Bezpieczniki: szablon milczy, dopóki trwa jego przypadek historyczny albo inny kryzys z tej grupy.
+historicalInstances: [abadan]
+exclusiveGroup: surowce
 params:
   kraj:
     - { mian: Irak, dop: Iraku, miejsc: Iraku }

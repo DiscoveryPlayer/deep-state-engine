@@ -1,0 +1,74 @@
+id: gwatemala-1954
+title: Gwatemala
+kind: historical
+region: swiat
+summary: >-
+  Waszyngton obala rząd w Gwatemali rękami emigrantów i wywiadu. Sukces utwierdza służby
+  w przekonaniu, że takie operacje są tanie i skuteczne.
+historicalNote: >-
+  Konferencja państw amerykańskich w Caracas (marzec 1954) przyjmuje rezolucję przeciw
+  komunizmowi na półkuli. Statek Alfhem z czechosłowacką bronią dociera do Puerto Barrios
+  (15 maja 1954). Operacja PBSuccess: oddział Castillo Armasa wkracza z Hondurasu 18 czerwca,
+  prezydent Árbenz ustępuje 27 czerwca 1954.
+drivers: [zaangazowanie_usa, antykomunizm]
+start:
+  from: 1954-Q1
+stages:
+  - id: caracas
+    title: konferencja w Caracas
+    at: 1954-Q1
+    branches:
+      - id: rezolucja
+        title: Rezolucja przeciw komunizmowi na półkuli
+        historical: true
+        weight: 10
+        text: >-
+          Na konferencji w Caracas sekretarz stanu przeprowadza rezolucję, że rządy
+          komunistów w którymkolwiek państwie Ameryki zagrażają wszystkim. Przeciw
+          głosuje tylko Gwatemala.
+
+  - id: alfhem
+    title: statek z bronią
+    at: 1954-Q2
+    branches:
+      - id: dostawa
+        title: Czechosłowacka broń w Gwatemali
+        historical: true
+        weight: 10
+        effects:
+          - { var: antykomunizm, add: 1 }
+        text: >-
+          Do gwatemalskiego portu zawija statek z dwoma tysiącami ton broni z Czechosłowacji.
+          Waszyngton ma dowód, którego szukał.
+
+  - id: inwazja
+    title: operacja
+    sameQuarter: true
+    branches:
+      - id: obalony
+        title: Árbenz ustępuje
+        historical: true
+        weight: 10
+        effects:
+          - { faction: BAS, disposition: 1 }
+          - { var: zaangazowanie_usa, add: 1 }
+        text: >-
+          Kilkuset emigrantów przekracza granicę z Hondurasu, a nieoznakowane samoloty
+          zrzucają bomby i ulotki na stolicę. Armia odmawia walki i prezydent Árbenz ustępuje.
+      - id: przetrwal
+        title: Árbenz się utrzymuje
+        weight: 1
+        effects:
+          - { var: zaangazowanie_usa, add: -1 }
+          - { faction: BAS, disposition: -1 }
+          - { indicator: WF, add: -1 }
+        text: >-
+          Armia Gwatemali rozbija oddział emigrantów w trzy dni. Prasa pisze o samolotach
+          bez znaków, a Waszyngton zapewnia, że nie ma z tym nic wspólnego.
+      - id: odwolana
+        title: Operacja odwołana
+        weight: 1
+        next: end
+        text: >-
+          Prezydent w ostatniej chwili wstrzymuje operację. Waszyngton zadowala się embargiem
+          i izolacją Gwatemali.

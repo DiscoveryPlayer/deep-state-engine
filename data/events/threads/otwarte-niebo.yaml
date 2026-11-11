@@ -1,0 +1,120 @@
+id: otwarte-niebo
+title: Duch Genewy
+kind: historical
+region: swiat
+summary: >-
+  Dwa lata po śmierci Stalina mocarstwa pierwszy raz od Poczdamu siadają do stołu.
+  Propozycja „Otwartego Nieba” stawia pytanie, które wróci razem z satelitami: czy wolno
+  patrzeć z góry na cudze terytorium.
+historicalNote: >-
+  Austriacki traktat państwowy (15 maja 1955): wojska okupacyjne wychodzą, Austria ogłasza
+  neutralność. Szczyt w Genewie (18–23 lipca 1955); propozycja „Otwartego Nieba” (21 lipca),
+  odrzucona przez Chruszczowa. Wizyta Adenauera w Moskwie (9–13 września 1955): stosunki
+  dyplomatyczne i powrót jeńców. Konferencja ministrów w Genewie (27 października –
+  16 listopada 1955) kończy się niczym.
+drivers: [kurs_kremla]
+start:
+  from: 1955-Q2
+  conditions: { flag: po_stalinie }
+stages:
+  - id: austria
+    title: traktat austriacki
+    at: 1955-Q2
+    branches:
+      - id: neutralna
+        title: Austria wolna i neutralna
+        historical: true
+        weight: 10
+        effects:
+          - { indicator: NG, add: 1 }
+          - { var: kurs_kremla, add: -1 }
+        text: >-
+          W wiedeńskim Belwederze cztery mocarstwa podpisują traktat z Austrią. Po dziesięciu
+          latach wojska okupacyjne wychodzą, a Austria ogłasza wieczystą neutralność.
+          Moskwa po raz pierwszy od wojny oddaje zajęte terytorium.
+
+  - id: szczyt
+    title: szczyt w Genewie
+    at: 1955-Q3
+    rumor:
+      quartersBefore: 1
+      reliability: B
+      credibility: 3
+      source: humint
+      topic: Szczyt w Genewie
+      text: >-
+        Doradcy prezydenta przygotowują na Genewę propozycję, o której nie wie nawet
+        Departament Stanu: wymianę planów baz wojskowych i wzajemne loty fotograficzne.
+    branches:
+      - id: odrzucone
+        title: Moskwa odrzuca Otwarte Niebo
+        historical: true
+        weight: 10
+        effects:
+          - { flag: otwarte_niebo_odrzucone }
+        text: >-
+          Prezydent proponuje, żeby oba mocarstwa pozwoliły sobie nawzajem fotografować
+          swoje terytoria z powietrza. Chruszczow nazywa to szpiegostwem. Poza tym szczyt
+          upływa w uśmiechach, które prasa nazywa duchem Genewy.
+        reactions:
+          - actor: BAS
+            visibility: secret
+            text: >-
+              Biuro Analiz Specjalnych notuje wniosek: skoro Moskwa nie zgadza się na loty
+              jawne, zostają loty niejawne. A w dalszej kolejności coś, czego nie da się zestrzelić.
+          - actor: RN
+            text: >-
+              Prawnicy Rady Naukowej zwracają uwagę, że nikt nie ustalił, do jakiej wysokości
+              sięga suwerenność państwa. Satelita naukowy mógłby odpowiedzieć na to pytanie
+              samym przelotem.
+      - id: przyjete
+        title: Moskwa przyjmuje pomysł co do zasady
+        weight: 1
+        modifiers:
+          - { when: { var: kurs_kremla, op: '<=', value: 4 }, mul: 3 }
+        effects:
+          - { indicator: NG, add: 1 }
+          - { var: presja_wyscigu, add: -1 }
+          - { flag: otwarte_niebo_przyjete }
+        text: >-
+          Ku zaskoczeniu wszystkich radziecka delegacja zgadza się rozmawiać o wzajemnych
+          lotach inspekcyjnych nad wybranymi strefami. Eksperci dostają pół roku na
+          uzgodnienie zasad.
+
+  - id: adenauer
+    title: Adenauer w Moskwie
+    sameQuarter: true
+    branches:
+      - id: jency
+        title: Stosunki za jeńców
+        historical: true
+        weight: 10
+        text: >-
+          Kanclerz Adenauer leci do Moskwy. Wraca z umową o stosunkach dyplomatycznych
+          i obietnicą zwolnienia ostatnich dziesięciu tysięcy niemieckich jeńców wojennych.
+
+  - id: ministrowie
+    title: konferencja ministrów
+    at: 1955-Q4
+    branches:
+      - id: fiasko
+        title: Duch Genewy gaśnie
+        historical: true
+        weight: 10
+        effects:
+          - { indicator: NG, add: -1 }
+        text: >-
+          Ministrowie spraw zagranicznych spędzają w Genewie trzy tygodnie nad Niemcami
+          i rozbrojeniem. Rozjeżdżają się bez jednego uzgodnionego zdania.
+      - id: postep
+        title: Pierwsze porozumienia
+        weight: 1
+        requires: { flag: otwarte_niebo_przyjete }
+        modifiers:
+          - { when: { flag: otwarte_niebo_przyjete }, mul: 30 }
+        effects:
+          - { divergence: swiat, add: 1 }
+          - { var: wyscig_atomowy, add: -1 }
+        text: >-
+          Ministrowie uzgadniają próbne loty inspekcyjne nad pasem po obu stronach granicy
+          w Niemczech. To niewiele, ale to pierwsza umowa o kontroli zbrojeń od wojny.

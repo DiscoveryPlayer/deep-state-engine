@@ -61,12 +61,14 @@ variables:
     max: 10
     initial: 7
     description: Siła maccartyzmu i nastrojów antykomunistycznych w USA.
-  - id: napiecie_korea
-    title: Napięcie wojny w Korei
+  - id: napiecie_azja
+    title: Napięcie w Azji
     min: 0
     max: 10
     initial: 7
-    description: Intensywność wojny koreańskiej; po rozejmie spada.
+    description: >-
+      Korea, Indochiny, Cieśnina Tajwańska, później Wietnam. Wysokie napięcie podbija budżety
+      obronne i odciąga uwagę Waszyngtonu od Europy.
   - id: presja_wyscigu
     title: Presja wyścigu
     min: 0
@@ -76,4 +78,62 @@ variables:
       Odczuwana presja rywalizacji ze ZSRR (mnożnik RP). Rośnie z sukcesami radzieckimi;
       później połączona z Bilansem Wyścigu.
 
+  - id: jednosc_bloku
+    title: Jedność bloku wschodniego
+    min: 0
+    max: 10
+    initial: 8
+    description: >-
+      Spójność państw pod kontrolą Moskwy. Spada po buntach (NRD 1953, Polska i Węgry 1956)
+      i po sporach z Pekinem. Niska jedność otwiera drogę uciekinierom i pęknięciom w bloku.
+  - id: jednosc_zachodu
+    title: Jedność Zachodu
+    min: 0
+    max: 10
+    initial: 6
+    description: >-
+      Spójność sojuszu atlantyckiego: spory o uzbrojenie Niemiec, o koszty i o przywództwo.
+      Niska jedność utrudnia wspólne finansowanie PACE.
+  - id: ambicja_francji
+    title: Ambicja Francji
+    min: 0
+    max: 10
+    initial: 4
+    description: >-
+      Dążenie Paryża do niezależności: własna bomba, własna rakieta, własne weto. Rośnie po
+      upokorzeniach (Indochiny, Suez) i z powrotem de Gaulle'a.
+  - id: kurs_kremla
+    title: Kurs Kremla
+    min: 0
+    max: 10
+    initial: 8
+    description: >-
+      Od odwilży (0) do twardego kursu (10). Steruje Napięciem Geopolitycznym i modelem ZSRR.
+      Na początku 1951 roku rządzi Stalin, więc kurs jest twardy.
+  - id: wyscig_atomowy
+    title: Wyścig atomowy
+    min: 0
+    max: 10
+    initial: 5
+    description: >-
+      Tempo prób i zbrojeń jądrowych. Rośnie z każdą nową bombą i próbą, spada po moratoriach
+      i traktatach. Wysoki poziom wzmacnia żądania Dyrektoriatu Programów Obronnych.
+  - id: nastroje_spoleczne
+    title: Niepokoje społeczne w USA
+    min: 0
+    max: 10
+    initial: 3
+    description: >-
+      Napięcia w społeczeństwie amerykańskim: prawa obywatelskie, strajki, później ruch
+      antywojenny. Wysoki poziom odbiera drogim programom poparcie opinii publicznej.
+  - id: dekolonizacja
+    title: Tempo dekolonizacji
+    min: 0
+    max: 10
+    initial: 3
+    description: >-
+      Tempo rozpadu imperiów kolonialnych. Rośnie po Indochinach, Bandungu i Algierii.
+      Osłabia Londyn i Paryż, a nowym państwom daje głos w ONZ.
+
+# Najwięcej samodzielnych dylematów czekających naraz. Decyzje etapów wątków nie liczą się do limitu.
 maxPendingDilemmas: 2

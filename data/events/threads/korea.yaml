@@ -6,106 +6,280 @@ summary: >-
   Wojna trwa od czerwca 1950 roku. Napędza budżety obronne i koniunkturę, podnosi ceny
   materiałów i pochłania uwagę Waszyngtonu.
 historicalNote: >-
-  Operacja Ripper (marzec 1951), dymisja MacArthura (11 kwietnia 1951), rozmowy rozejmowe
-  od lipca 1951 (Kaesong, potem Panmundżom), walki o wzgórza (m.in. Heartbreak Ridge,
-  wrzesień–październik 1951), rozejm 27 lipca 1953.
-drivers: [antykomunizm, napiecie_korea, koniunktura]
+  Operacja Ripper i odzyskanie Seulu (14–15 marca 1951). Dymisja MacArthura (11 kwietnia 1951)
+  i jego przemówienie w Kongresie (19 kwietnia). Chińska ofensywa wiosenna (kwiecień–maj 1951).
+  Propozycja Malika (23 czerwca 1951), rozmowy w Kaesongu od 10 lipca, od 25 października
+  w Panmundżomie; linia demarkacyjna uzgodniona 27 listopada 1951. Bunt jeńców na Koje-do
+  (maj 1952). Naloty na elektrownię Suiho (23 czerwca 1952). Eisenhower w Korei
+  (2–5 grudnia 1952). Wymiana chorych jeńców „Little Switch” (kwiecień 1953). Rozejm
+  27 lipca 1953. Układ obronny USA–Korea Południowa (1 października 1953).
+drivers: [napiecie_azja, antykomunizm, kurs_kremla]
 start:
   from: 1951-Q1
 stages:
-  - id: ofensywa
-    title: wiosna 1951
+  - id: seul
+    title: odzyskanie Seulu
+    at: 1951-Q1
+    branches:
+      - id: ripper
+        title: Wojska ONZ odzyskują Seul
+        historical: true
+        weight: 10
+        text: >-
+          Operacja Ripper wypiera Chińczyków z Seulu. Miasto zmienia gospodarza po raz czwarty
+          w ciągu dziewięciu miesięcy, a front zbliża się do 38. równoleżnika.
+
+  - id: macarthur
+    title: sprawa MacArthura
     at: 1951-Q2
     branches:
-      - id: front_stabilny
-        title: Front stabilizuje się koło 38 równoleżnika
+      - id: odwolany
+        title: Truman odwołuje MacArthura
+        historical: true
+        weight: 10
+        effects:
+          - { var: antykomunizm, add: 1 }
+          - { indicator: PP, add: -1 }
+        text: >-
+          Prezydent Truman odwołuje generała MacArthura, który publicznie domagał się
+          rozszerzenia wojny na Chiny. Dowodzenie przejmuje generał Ridgway.
+        reactions:
+          - actor: Kongres
+            text: >-
+              MacArthur żegna się z Kongresem słowami o starych żołnierzach, którzy nie umierają,
+              tylko odchodzą. Republikanie żądają przesłuchań w sprawie polityki wobec Azji.
+          - actor: DPO
+            text: >-
+              W Dyrektoriacie Programów Obronnych mówi się, że cywile właśnie pokazali wojsku
+              jego miejsce. Nie wszyscy mówią to z aprobatą.
+            effects:
+              - { faction: DPO, disposition: -1 }
+      - id: zostaje
+        title: MacArthur zostaje i rozszerza wojnę
+        weight: 1
+        modifiers:
+          - { when: { var: antykomunizm, op: '>=', value: 8 }, mul: 2 }
+        effects:
+          - { indicator: NG, add: -1 }
+          - { var: napiecie_azja, add: 2 }
+          - { flag: korea_eskalacja }
+          - correction: { units: -0.5, quarters: 4, reason: 'Eskalacja wojny w Korei podbija ceny materiałów' }
+        text: >-
+          Truman cofa się przed konfrontacją z MacArthurem. Lotnictwo dostaje zgodę na naloty
+          na bazy w Mandżurii, a Moskwa ostrzega przed „nieobliczalnymi skutkami”.
+
+  - id: ofensywa-wiosenna
+    title: chińska ofensywa wiosenna
+    sameQuarter: true
+    branches:
+      - id: odparta
+        title: Ofensywa odparta, front staje
         historical: true
         weight: 10
         effects:
           - { var: koniunktura, add: 1 }
-          - correction: { units: -0.5, quarters: 4, reason: 'Wojna podnosi ceny materiałów strategicznych' }
         text: >-
-          Kontrofensywa ONZ odzyskuje Seul, a prezydent odwołuje generała MacArthura. Front
-          zastyga w pobliżu 38 równoleżnika. Zamówienia wojskowe napędzają przemysł, ale metale
-          strategiczne drożeją.
-      - id: eskalacja
-        title: Eskalacja na Chiny
-        weight: 2
-        modifiers:
-          - { when: { var: antykomunizm, op: '>=', value: 8 }, add: 2 }
-        effects:
-          - { indicator: NG, add: -1 }
-          - { var: napiecie_korea, add: 2 }
-          - { var: koniunktura, add: 1 }
-          - { flag: korea_eskalacja }
-          - correction: { units: -1, quarters: 4, reason: 'Eskalacja wojny: niedobory i ceny materiałów' }
-        text: >-
-          MacArthur zostaje na stanowisku i dostaje zgodę na naloty za rzeką Jalu. Pekin i Moskwa
-          odpowiadają ostro. Waszyngton mówi o „wojnie, której nie wolno przegrać”.
+          Największa chińska ofensywa wojny załamuje się na północ od Seulu. Front zastyga
+          w pobliżu 38. równoleżnika i zaczyna się wojna pozycyjna o wzgórza.
+        ongoing:
+          title: Wojna w Korei
+          text: >-
+            Dopóki trwa wojna, zamówienia wojskowe podbijają ceny stali, miedzi i gumy,
+            a zakłady lotnicze pracują najpierw dla frontu.
+          effects:
+            - correction: { units: -0.3, quarters: 1, reason: 'Wojna w Korei: droższe materiały i kolejki u dostawców' }
+          until: rozejm
+          maxQuarters: 14
+
   - id: rozmowy
     title: rozmowy rozejmowe
     at: 1951-Q3
+    rumor:
+      quartersBefore: 1
+      reliability: B
+      credibility: 2
+      source: open
+      text: >-
+        Radziecki delegat przy ONZ mówi w radiu o możliwości zawieszenia broni. W Departamencie
+        Stanu uważają, że Moskwa sonduje grunt w imieniu Pekinu.
     branches:
-      - id: rozmowy_i_walki
-        title: Rozmowy ruszają, walki o wzgórza trwają
+      - id: kaesong
+        title: Rozmowy w Kaesongu i walki o wzgórza
         historical: true
         weight: 10
         text: >-
-          W Kaesongu zaczynają się rozmowy o rozejmie. Na froncie trwają krwawe walki o pojedyncze
-          wzgórza, a gazety liczą straty tygodniowo.
+          W Kaesongu zaczynają się rozmowy rozejmowe. Toczą się tygodniami o porządek obrad,
+          a w tym czasie obie strony biją się o każde wzgórze.
       - id: przelom
-        title: Szybki przełom w rozmowach
+        title: Szybki przełom
         weight: 2
-        modifiers:
-          - { when: { flag: korea_eskalacja }, mul: 0 }
         advanceNext: 4
+        effects:
+          - { var: napiecie_azja, add: -1 }
         text: >-
-          Delegacje porozumiewają się w sprawie linii demarkacyjnej szybciej, niż ktokolwiek
-          się spodziewał. Spór o jeńców wydaje się do rozwiązania.
+          Rozmowy w Kaesongu niespodziewanie ruszają z miejsca. Delegacje uzgadniają linię
+          demarkacyjną i zasady wymiany jeńców szybciej, niż ktokolwiek się spodziewał.
       - id: zerwane
         title: Rozmowy zerwane
         weight: 2
         modifiers:
           - { when: { flag: korea_eskalacja }, mul: 3 }
-        effects:
-          - { var: napiecie_korea, add: 1 }
         delayQuarters: 2
+        effects:
+          - { var: napiecie_azja, add: 1 }
         text: >-
-          Rozmowy zostają zerwane po incydencie w strefie neutralnej. Obie strony szykują nowe
-          ofensywy.
-  - id: rozejm
-    title: rozejm
-    at: 1953-Q3
+          Strona komunistyczna zrywa rozmowy po incydencie w strefie neutralnej. Walki o wzgórza
+          przybierają na sile.
+
+  - id: panmundzom
+    title: Panmundżom
+    at: 1951-Q4
     branches:
-      - id: panmundzom
-        title: Rozejm w Panmundżonie
+      - id: linia
+        title: Uzgodniona linia demarkacyjna
+        historical: true
+        weight: 10
+        text: >-
+          Rozmowy przenoszą się do wsi Panmundżom. Delegacje uzgadniają linię demarkacyjną
+          wzdłuż frontu, ale grzęzną w sprawie jeńców.
+
+  - id: jency
+    title: spór o jeńców
+    at: 1952-Q2
+    branches:
+      - id: koje
+        title: Bunt jeńców na wyspie Koje
         historical: true
         weight: 10
         effects:
-          - { var: napiecie_korea, set: 2 }
+          - { indicator: PP, add: -1 }
+        text: >-
+          Jeńcy w obozie na wyspie Koje biorą do niewoli amerykańskiego komendanta. Sprawa
+          dobrowolnej repatriacji blokuje rozejm na ponad rok.
+      - id: porozumienie
+        title: Porozumienie w sprawie jeńców
+        weight: 1
+        advanceNext: 3
+        text: >-
+          Delegacje przyjmują kompromis: o losie jeńców, którzy nie chcą wracać, zdecyduje
+          komisja państw neutralnych. Najtrudniejsza przeszkoda znika.
+
+  - id: wojna-powietrzna
+    title: wojna powietrzna
+    at: 1952-Q3
+    decision:
+      title: 'Korea: prośba Lotnictwa'
+      prompt: >-
+        Lotnictwo prosi PACE o wypożyczenie aparatury pomiarowej i dwóch zespołów inżynierów
+        do badań myśliwców w warunkach bojowych nad rzeką Yalu. Rada Naukowa ostrzega, że
+        komisja „do eksperymentów” nie powinna jeździć na wojnę.
+      options:
+        - id: zgoda
+          title: Wysłać zespoły i aparaturę
+          effects:
+            - { faction: DPO, disposition: 1 }
+            - { faction: RN, disposition: -1 }
+            - { indicator: WF, add: -2 }
+          text: >-
+            Zespoły PACE lecą do Japonii. Lotnictwo jest wdzięczne, a europejscy delegaci pytają,
+            czym właściwie zajmuje się komisja.
+        - id: aparatura
+          title: Wypożyczyć tylko aparaturę
+          effects:
+            - { currency: KP, add: -1 }
+          text: >-
+            PACE wypożycza aparaturę, ale ludzie zostają w kraju. Kompromis kosztuje kilka
+            trudnych rozmów w Pentagonie.
+        - id: odmowa
+          title: Odmówić
+          effects:
+            - { faction: DPO, disposition: -1 }
+            - { faction: RN, disposition: 1 }
+          text: >-
+            PACE odmawia. Rada Naukowa oddycha z ulgą, a w Pentagonie zapamiętują, kto nie pomógł.
+      defaultOption: aparatura
+      inactionEffects:
+        - { faction: DPO, disposition: -1 }
+    branches:
+      - id: yalu
+        title: Walki odrzutowców nad Yalu
+        historical: true
+        weight: 10
+        text: >-
+          Nad rzeką Yalu ścierają się odrzutowce obu stron, a lotnictwo ONZ bombarduje wielką
+          elektrownię wodną na granicy z Chinami. Raporty z walk czytają konstruktorzy
+          po obu stronach świata.
+
+  - id: wizyta
+    title: prezydent elekt w Korei
+    at: 1952-Q4
+    branches:
+      - id: eisenhower
+        title: Eisenhower na froncie
+        historical: true
+        weight: 10
+        text: >-
+          Prezydent elekt dotrzymuje obietnicy z kampanii i leci do Korei. Po powrocie mówi,
+          że tej wojny nie da się wygrać „małymi atakami na małych wzgórzach”.
+
+  - id: rozejm
+    title: rozejm
+    at: 1953-Q3
+    rumor:
+      quartersBefore: 1
+      reliability: B
+      credibility: 2
+      source: allies
+      text: >-
+        Po zmianie na Kremlu Pekin zgadza się na wymianę chorych i rannych jeńców. Brytyjczycy
+        uważają, że rozejm jest kwestią miesięcy.
+    branches:
+      - id: panmundzom
+        title: Rozejm w Panmundżomie
+        historical: true
+        weight: 10
+        modifiers:
+          - { when: { flag: stalin_zyje }, mul: 0.3 }
+        effects:
+          - { var: napiecie_azja, add: -2 }
           - { var: koniunktura, add: -1 }
           - { indicator: NG, add: 1 }
         text: >-
-          W Panmundżonie podpisano rozejm. Wojna nie kończy się pokojem, tylko linią na mapie.
-          Kończy się też koniunktura zbrojeniowa, a Kongres zaczyna liczyć wydatki.
+          W Panmundżomie podpisano rozejm. Linia frontu staje się granicą, a zamówienia
+          wojskowe zaczynają spadać. Korea pozostaje podzielona.
       - id: wojna_trwa
-        title: Wojna przeciąga się
-        weight: 3
+        title: Wojna trwa
+        weight: 2
         modifiers:
-          - { when: { var: napiecie_korea, op: '>=', value: 8 }, mul: 2 }
+          - { when: { flag: stalin_zyje }, mul: 4 }
+          - { when: { flag: korea_eskalacja }, mul: 2 }
+          # Kotwica K8: wojna kończy się bez zjednoczenia Korei przed 1955 rokiem.
+          - { when: { after: 1954-Q3 }, mul: 0 }
+        delayQuarters: 4
         effects:
-          - { var: antykomunizm, add: 1 }
-        delayQuarters: 2
-        text: Rozmowy znów utknęły na sprawie jeńców. Front stoi, a straty rosną.
-      - id: grozba_atomowa
-        title: Groźba użycia broni atomowej
-        weight: 1
-        requires: { flag: korea_eskalacja }
-        effects:
-          - { indicator: NG, add: -2 }
-          - { var: presja_wyscigu, add: 2 }
-          - { flag: korea_grozba_atomowa }
-        delayQuarters: 1
+          - { var: napiecie_azja, add: 1 }
         text: >-
-          Waszyngton daje do zrozumienia, że nie wyklucza broni atomowej. Sojusznicy w Europie
-          są przerażeni, a Moskwa przyspiesza własne programy.
+          Rozmowy znów utknęły. Wojna pozycyjna trwa kolejny rok, a Kongres pyta, ile jeszcze
+          będzie kosztować.
+      - id: grozba
+        title: Rozejm po groźbie atomowej
+        weight: 1
+        effects:
+          - { var: napiecie_azja, add: -1 }
+          - { var: wyscig_atomowy, add: 1 }
+          - { indicator: NG, add: -1 }
+        text: >-
+          Waszyngton daje do zrozumienia, że sięgnie po broń atomową. Rozejm zostaje podpisany,
+          ale świat zapamiętuje, jak go wymuszono.
+
+  - id: po-rozejmie
+    title: po rozejmie
+    at: 1953-Q4
+    branches:
+      - id: uklad
+        title: Układ obronny z Seulem
+        historical: true
+        weight: 10
+        text: >-
+          Stany Zjednoczone i Korea Południowa podpisują układ o wzajemnej obronie. Amerykańskie
+          dywizje zostają na półwyspie na stałe.

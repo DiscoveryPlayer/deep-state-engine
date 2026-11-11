@@ -50,9 +50,16 @@ test('treść świata z data/events wczytuje się i przechodzi dekadę symulacji
   const content = await loadContent(DATA_DIR);
   const world = content.world;
   assert.ok(world, 'brak data/events/world.yaml');
-  assert.deepEqual(world.threads.map((t) => t.id).sort(), ['abadan', 'korea', 'maccartyzm', 'wybory-1952']);
-  assert.ok(world.patterns.length >= 12);
-  assert.equal(world.dilemmas.length, 4);
+  for (const id of ['abadan', 'korea', 'maccartyzm', 'wybory-1952', 'sukcesja-1953', 'mrg', 'nowe-spojrzenie']) {
+    assert.ok(
+      world.threads.some((t) => t.id === id),
+      `brak wątku ${id}`,
+    );
+  }
+  assert.ok(world.threads.length >= 20, 'treść 1951–1955 ma co najmniej 20 wątków');
+  assert.ok(content.launchSites && content.launchSites.length === 31, 'lista miejsc startu z instalacji autora');
+  assert.ok(world.patterns.length >= 30);
+  assert.ok(world.dilemmas.length >= 6);
   for (const seed of ['PACE-1951', 'A', 'B', 'C', 'D']) {
     const start = createInitialState(content, { id: 't', seed });
     const { state } = simulateWorld(start, world, { to: '1960-Q4', decisions: 'random' });
