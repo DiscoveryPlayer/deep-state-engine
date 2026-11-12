@@ -1,0 +1,46 @@
+# Szablon wątku: kryzys walutowy sojusznika (wzorzec: brytyjskie kryzysy funta,
+# plik wydarzeń 1951, nr 2). Uderza w składki na PACE i w Radę Atlantycką.
+id: kryzys-walutowy-sojusznika
+title: 'Kryzys walutowy: {kraj}'
+region: europa
+summary: Kryzys waluty sojusznika wymusza cięcia, także składek na wspólne programy.
+drivers: [koniunktura, zaangazowanie_usa]
+params:
+  kraj: [Wielka Brytania, Francja, Włochy]
+conditions:
+  var: koniunktura
+  op: '<='
+  value: 5
+chancePerQuarter: 0.04
+chanceModifiers:
+  - { when: { var: koniunktura, op: '<=', value: 3 }, mul: 2 }
+cooldownQuarters: 8
+maxInstances: 4
+stages:
+  - id: kryzys
+    title: ucieczka od waluty
+    offset: 0
+    branches:
+      - id: pomoc_usa
+        title: Pomoc amerykańska
+        weight: 4
+        modifiers:
+          - { when: { var: zaangazowanie_usa, op: '>=', value: 6 }, mul: 2 }
+        effects:
+          - { var: zaangazowanie_usa, add: 1 }
+        next: end
+        text: 'Waszyngton udziela pożyczki ratunkowej. {kraj} unika dewaluacji, ale Kongres pyta, ile jeszcze kosztuje Europa.'
+      - id: ciecia
+        title: Cięcia budżetowe
+        weight: 4
+        effects:
+          - correction: { units: -0.5, quarters: 2, reason: 'Sojusznik tnie składkę na wspólne programy PACE' }
+        next: end
+        text: '{kraj} tnie wydatki, w tym składki na programy sojusznicze. W Radzie Atlantyckiej robi się nerwowo.'
+      - id: dewaluacja
+        title: Dewaluacja
+        weight: 2
+        effects:
+          - { var: koniunktura, add: -1 }
+        next: end
+        text: '{kraj} dewaluuje walutę. Europejscy dostawcy PACE stają się tańsi, ale ich rządy są słabsze.'

@@ -6,6 +6,7 @@
  * Komunikaty są po polsku, bo czyta je autor treści, nie programista.
  */
 import type { GameContent } from './schema.ts';
+import { validateWorldContent } from '../world/validate.ts';
 
 export interface ContentProblem {
   file: string;
@@ -71,6 +72,8 @@ export function validateContentReferences(content: GameContent): ContentProblem[
       add('registry.yaml', e.id, 'Ciśnienie (pressure) mają tylko tajemnice');
     }
   }
+
+  if (content.world) problems.push(...validateWorldContent(content.world, factionIds));
 
   return problems;
 }

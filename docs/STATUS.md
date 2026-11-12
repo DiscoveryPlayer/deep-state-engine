@@ -32,6 +32,14 @@
 - Decyzje 0008–0014 z odpowiedzi autora; zestawienie w `docs/plan/rozstrzygniecia-2026-11.md`.
 - Dokumenty projektowe i badawcze w `docs/design/`, `docs/research/`, `docs/plan/`.
 
+### Wydarzenia świata (7.11.2026, decyzja 0015)
+
+- Silnik `packages/core/src/world/`: wątki, etapy alternatywne, kotwice, szablony, wzorce, dylematy, Rozbieżność; `advanceWorld`, `resolveDilemma`, `simulateWorld`.
+- Stan w wersji 2 z migracją 1 → 2 (`state/migrate.ts`).
+- Treść `data/events/`: 4 wątki, 2 szablony, 16 wzorców, 4 dylematy, 8 zmiennych.
+- CLI `dse swiat` (z `--serie` do strojenia). 46 testów.
+- Opis: `docs/design/wydarzenia-swiata.md`; odpowiedzi autora z 7.11 wdrożone (punkt 11).
+
 ## Następne zadania
 
 1. **Plan Budowy v3** — ostateczny plan na podstawie rozstrzygnięć (zastąpi `docs/PLAN_BUDOWY.md`).
@@ -41,9 +49,11 @@
    - parser formatu ConfigNode,
    - ekstrakcja węzłów: `CareerLog`, `ProgramHandler`, `SpaceCenterManagement` (kompleksy, platformy, `launchSiteName`), `Confidence`, `UnlockCreditHandler`, `Funding`, `ResearchAndDevelopment`, `Reputation`,
    - Migawka i różnice między Migawkami.
-3. **Kampania pilotażowa** (zamiast prototypu papierowego, decyzja 0008): skrócony pakiet zasad dla czatu jako Mistrza Gry.
-4. **Prototyp weryfikacji Tristara, lot 2** (decyzja 0009): eksperyment Kerbalism i kontrakt CC — do testu u autora.
-5. **Faza 1C — dane referencyjne RP-1**, potem **1D — silnik kwartału bez AI**.
+3. **Dossier III** (`docs/research/dossier-III-watki-swiata-1951-1980.md`) czeka na uwagi autora: pytania w części VI. Potem zmiany w silniku (`anchor`, `kind`, `decision`, bezpieczniki szablonów, `era`, palety) i zapis bloku A w YAML partiami po około 10 wątków.
+4. **Wydarzenia świata, ciąg dalszy:** zapis bloku A w YAML (blok A, potem 200 wzorców z paletami, szablony S03–S16, bloki B–D); skutek tworzący wpis Rejestru.
+5. **Kampania pilotażowa** (zamiast prototypu papierowego, decyzja 0008): skrócony pakiet zasad dla czatu jako Mistrza Gry.
+6. **Prototyp weryfikacji Tristara, lot 2** (decyzja 0009): eksperyment Kerbalism i kontrakt CC — do testu u autora.
+7. **Faza 1C — dane referencyjne RP-1**, potem **1D — silnik kwartału bez AI** (z `advanceWorld` jako krokiem zamknięcia kwartału i Korektami w raporcie budżetowym).
 
 ## Otwarte kwestie projektowe
 

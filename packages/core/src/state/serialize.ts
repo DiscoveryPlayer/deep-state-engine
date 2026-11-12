@@ -5,7 +5,8 @@
  * daje identyczny tekst. Dzięki temu porównanie dwóch zapisów (np. w Git albo
  * w teście determinizmu) pokazuje tylko prawdziwe zmiany.
  */
-import { gameStateSchema, STATE_SCHEMA_VERSION, type GameState } from './schema.ts';
+import { migrateState, StateMigrationError } from './migrate.ts';
+import { gameStateSchema, type GameState } from './schema.ts';
 
 export function serializeState(state: GameState): string {
   return JSON.stringify(sortKeys(state), null, 2) + '\n';
@@ -25,12 +26,11 @@ export function deserializeState(text: string): GameState {
   } catch (e) {
     throw new StateLoadError(`Plik kampanii nie jest poprawnym JSON: ${(e as Error).message}`);
   }
-  const version = (raw as { schemaVersion?: unknown } | null)?.schemaVersion;
-  if (version !== STATE_SCHEMA_VERSION) {
-    throw new StateLoadError(
-      `Plik kampanii ma wersję schematu ${String(version)}, a silnik obsługuje wersję ${STATE_SCHEMA_VERSION}. ` +
-        'Potrzebna migracja (patrz docs/decisions/).',
-    );
+  try {
+    raw = migrateState(raw);
+  } catch (e) {
+    if (e instanceof StateMigrationError) throw new StateLoadError(e.message);
+    throw e;
   }
   const result = gameStateSchema.safeParse(raw);
   if (!result.success) {

@@ -11,7 +11,8 @@
 import { z } from 'zod';
 import { factionIdSchema, registryTypeSchema } from '../content/schema.ts';
 
-export const STATE_SCHEMA_VERSION = 1 as const;
+/** Wersja 2: dodany stan świata `world` (decyzja 0015, migracja w migrate.ts). */
+export const STATE_SCHEMA_VERSION = 2 as const;
 
 const quarterSchema = z.object({
   year: z.number().int().min(1900).max(2100),
@@ -137,6 +138,77 @@ export const chronicleEntrySchema = z.object({
   tags: z.array(z.string()),
 });
 
+const qcode = z.string().regex(/^\d{4}-Q[1-4]$/);
+
+/** Instancja wątku świata (z wątku historycznego albo z szablonu). UKRYTE przed graczem. */
+export const threadInstanceSchema = z.object({
+  /** Identyfikator wątku albo szablonu w treści. */
+  def: z.string().min(1),
+  fromTemplate: z.boolean(),
+  /** Parametry wylosowane dla szablonu, np. { kraj: "Irak" }. */
+  params: z.record(z.string(), z.string()),
+  startedIn: qcode,
+  status: z.enum(['active', 'ended']),
+  /** Bieżący etap; null po zakończeniu. */
+  stage: z.string().nullable(),
+  /** Kiedy silnik sprawdzi bieżący etap. */
+  nextCheck: qcode.nullable(),
+  history: z.array(z.object({ quarter: qcode, stage: z.string(), branch: z.string(), historical: z.boolean() })),
+});
+
+export const worldLogEntrySchema = z.object({
+  quarter: qcode,
+  kind: z.enum(['thread', 'template', 'pattern', 'dilemma']),
+  /** Odwołanie: "wątek.etap.gałąź", identyfikator wzorca albo dylematu. */
+  ref: z.string().min(1),
+  title: z.string().min(1),
+  text: z.string().min(1),
+  visibility: z.enum(['public', 'secret']),
+  /** Dla gałęzi wątków: czy zgodna z historią. */
+  historical: z.boolean().optional(),
+});
+
+export const pendingDilemmaSchema = z.object({
+  instanceId: z.string().min(1),
+  dilemma: z.string().min(1),
+  title: z.string().min(1),
+  prompt: z.string().min(1),
+  options: z.array(z.object({ id: z.string().min(1), title: z.string().min(1) })),
+  defaultOption: z.string().min(1),
+  raisedIn: qcode,
+  expiresIn: qcode,
+});
+
+export const correctionEntrySchema = z.object({
+  /** Kwartał pierwszego zastosowania. */
+  from: qcode,
+  quarters: z.number().int().min(1),
+  /** Jednostki Korekty na kwartał (decyzja 0012). */
+  units: z.number(),
+  reason: z.string().min(1),
+  source: z.string().min(1),
+});
+
+/**
+ * Stan świata (decyzja 0015). Prawie wszystko UKRYTE: gracz widzi tylko publiczne wpisy
+ * dziennika i oczekujące dylematy (view/playerView.ts).
+ */
+export const worldStateSchema = z.object({
+  vars: z.record(z.string(), z.number()),
+  /** Rozbieżność regionów 0–10. */
+  divergence: z.record(z.string(), z.number().min(0).max(10)),
+  flags: z.array(z.string()),
+  threads: z.record(z.string(), threadInstanceSchema),
+  patternLog: z.record(z.string(), z.object({ count: z.number().int().min(0), last: qcode })),
+  templateLog: z.record(z.string(), z.object({ count: z.number().int().min(0), last: qcode })),
+  dilemmaLog: z.record(z.string(), z.object({ count: z.number().int().min(0), last: qcode })),
+  pendingDilemmas: z.array(pendingDilemmaSchema),
+  corrections: z.array(correctionEntrySchema),
+  log: z.array(worldLogEntrySchema),
+  /** Licznik do identyfikatorów instancji (szablony, dylematy). */
+  seq: z.number().int().min(0),
+});
+
 export const campaignSettingsSchema = z.object({
   id: z.string().min(1),
   seed: z.string().min(1),
@@ -174,6 +246,7 @@ export const gameStateSchema = z.object({
     assessments: z.array(assessmentSchema),
   }),
   chronicle: z.array(chronicleEntrySchema),
+  world: worldStateSchema,
 });
 
 export type GameState = z.infer<typeof gameStateSchema>;
@@ -183,3 +256,24 @@ export type CharacterState = z.infer<typeof characterStateSchema>;
 export type RegistryEntryState = z.infer<typeof registryEntryStateSchema>;
 export type ClockState = z.infer<typeof clockSchema>;
 export type Indicators = z.infer<typeof indicatorsSchema>;
+export type WorldState = z.infer<typeof worldStateSchema>;
+export type ThreadInstance = z.infer<typeof threadInstanceSchema>;
+export type WorldLogEntry = z.infer<typeof worldLogEntrySchema>;
+export type PendingDilemma = z.infer<typeof pendingDilemmaSchema>;
+
+/** Pusty stan świata — zmienne i Rozbieżność uzupełnia silnik z treści (ensureWorldState). */
+export function emptyWorldState(): WorldState {
+  return {
+    vars: {},
+    divergence: {},
+    flags: [],
+    threads: {},
+    patternLog: {},
+    templateLog: {},
+    dilemmaLog: {},
+    pendingDilemmas: [],
+    corrections: [],
+    log: [],
+    seq: 0,
+  };
+}

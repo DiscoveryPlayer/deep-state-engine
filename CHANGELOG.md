@@ -2,6 +2,28 @@
 
 Najnowsze na górze. Każdy wpis odpowiada jednemu pull requestowi.
 
+## 2026-11-07 — Dossier III: wątki świata 1951–1980
+
+- `docs/research/dossier-III-watki-swiata-1951-1980.md`:
+  - model poziomów pewności i rodzajów gałęzi (H/P/O/X/A);
+  - kotwice jako etapy;
+  - bezpieczniki szablonów;
+  - dylematy jako punkty decyzyjne;
+  - palety epok.
+- 12 kotwic, 99 wątków (blok A 1951–1960: 43, B 1961–1965: 25, C 1966–1972: 20, D 1973–1980: 11), 16 szablonów, 200 wzorców, przykładowe palety (odkrycia naukowe, wizyty).
+- Plan zmian w silniku i pytania do autora.
+
+## 2026-11-07 — Wydarzenia świata (decyzja 0015)
+
+- Silnik wydarzeń świata w `@dse/core` (`world/`): wątki z etapami i gałęziami, etapy alternatywne, kotwice, szablony z parametrami, wzorce, dylematy z opcją domyślną, Rozbieżność regionów, strukturalne warunki i skutki, walidacja treści.
+- Stan kampanii w wersji 2 (pole `world`) z migracją z wersji 1; odczyt stanu przechodzi przez `migrateState`.
+- Widok gracza: `worldNews` (tylko wpisy publiczne) i `pendingDilemmas` (bez opcji domyślnej).
+- Treść w `data/events/`: 6 regionów, 8 zmiennych, 4 wątki (Korea, Abadan, maccartyzm, wybory 1952), 2 szablony, 16 wzorców, 4 dylematy — z pliku wydarzeń 1951.
+- CLI: `dse swiat` (symulacja lat, `--prawda`, `--decyzje`, `--serie N`), `waliduj` liczy treść świata.
+- Dokumenty: `docs/design/wydarzenia-swiata.md`, decyzja 0015, słowniczek.
+- Po odpowiedziach autora: dziewięciu kandydatów na wiceprezydenta (etap na konwencji, 1952-Q3), koszt bierności w dylematach (`inactionEffects`) i opcje „nie angażować się”, odmiana parametrów szablonów przez przypadki (`{kraj.dop}`), wzorzec „nowy rocznik inżynierów”, powrót wątku irańskiego do etapu „los Mosaddegha” po wycofaniu Brytyjczyków.
+- Testy: 46 (było 26).
+
 ## 2026-11-07 — Domknięcie fazy 1A i decyzje z rund pytań
 
 - Przejście na RP-1 4.8.1: ustawienia domyślne kampanii, README, decyzja 0007 (zastępuje część 0005).
