@@ -91,6 +91,10 @@ export interface PlayerView {
   quarterStart: GameState['desk']['opening'];
   /** Ostatnia migawka kariery KSP albo null. */
   ksp: GameState['ksp']['snapshots'][number] | null;
+  /** Narracja wklejona przez gracza (teksty AI). Jawna w całości, bez skutków mechanicznych. */
+  narrative: GameState['narrative']['entries'];
+  /** Wierność historii wybrana przy zakładaniu kampanii. */
+  historyFidelity: GameState['campaign']['historyFidelity'];
   status: GameState['status'];
 }
 
@@ -187,6 +191,8 @@ export function toPlayerView(state: GameState): PlayerView {
       .map((r) => ({ action: r.action, summary: r.summary })),
     quarterStart: { ...state.desk.opening },
     ksp: state.ksp.snapshots.at(-1) ?? null,
+    narrative: state.narrative.entries.map((n) => ({ ...n, sections: n.sections.map((s) => ({ ...s })) })),
+    historyFidelity: state.campaign.historyFidelity,
     status: state.status,
   };
 }

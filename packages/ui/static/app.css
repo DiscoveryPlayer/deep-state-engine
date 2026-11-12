@@ -24,8 +24,12 @@
   --green: #86c98a;
   --red: #ea6a54;
   --teal: #62c2b8;
+  /* Papier narracji: maszynopis czytany przy lampie konsoli. */
+  --paper: #26271f;
+  --paper-ink: #ece5cf;
 
   --font-display: Bahnschrift, 'DIN Alternate', 'Roboto Condensed', 'Arial Narrow', 'Segoe UI', system-ui, sans-serif;
+  --font-prose: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, 'Noto Serif', serif;
   --font-body: 'Segoe UI', system-ui, -apple-system, 'Noto Sans', 'Helvetica Neue', Arial, sans-serif;
 
   --gap: 0.75rem;
@@ -48,6 +52,8 @@
   --green: #1f6b34;
   --red: #a92c19;
   --teal: #0c6a63;
+  --paper: #fbf7e9;
+  --paper-ink: #1f1c15;
   color-scheme: light;
 }
 @media (prefers-color-scheme: light) {
@@ -63,6 +69,8 @@
     --green: #1f6b34;
     --red: #a92c19;
     --teal: #0c6a63;
+    --paper: #fbf7e9;
+    --paper-ink: #1f1c15;
     color-scheme: light;
   }
 }
@@ -1224,4 +1232,263 @@ label {
   .status {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
+
+/* ── Narracja ───────────────────────────────────────────────────────────── */
+
+.narrative {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+.sheet {
+  max-inline-size: 44rem;
+  padding: 1rem 1.2rem 1.1rem 1.4rem;
+  border-inline-start: 0.2rem solid var(--amber);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--paper-ink);
+  font-family: var(--font-prose);
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+.sheet h4,
+.press h4 {
+  margin-block-end: 0.5rem;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--ink-dim);
+}
+.sheet h4 {
+  color: color-mix(in srgb, var(--paper-ink) 65%, var(--paper));
+}
+.sheet p {
+  margin: 0;
+  white-space: pre-line;
+}
+.sheet p + p {
+  margin-block-start: 0.7em;
+}
+.sheet .btn {
+  margin-block-start: 0.9rem;
+  font-family: var(--font-body);
+}
+.clippings {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  gap: var(--gap);
+  max-inline-size: 60rem;
+}
+.clipping {
+  padding: 0.7rem 0.9rem 0.8rem;
+  border-block-start: 0.2rem double var(--paper-ink);
+  background: var(--paper);
+  color: var(--paper-ink);
+  font-family: var(--font-prose);
+  line-height: 1.5;
+}
+.clipping h5 {
+  margin: 0 0 0.35rem;
+  font-size: 1.02rem;
+  line-height: 1.3;
+}
+.clipping p {
+  margin: 0;
+  font-size: 0.95rem;
+}
+.invite {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 1rem;
+  max-inline-size: 44rem;
+  padding: 0.8rem 1rem;
+  border: 0.0625rem dashed var(--line);
+  border-radius: var(--radius);
+  color: var(--ink-dim);
+}
+.invite p {
+  flex: 1 1 18rem;
+  margin: 0;
+}
+.advisers {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  gap: 0.6rem;
+  padding-block-start: 0.6rem;
+  border-block-start: 0.0625rem solid var(--line);
+}
+.voices {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  inline-size: 100%;
+}
+.voice {
+  margin: 0;
+  padding: 0.6rem 0.8rem;
+  border-inline-start: 0.2rem solid var(--teal);
+  background: var(--paper);
+  color: var(--paper-ink);
+  font-family: var(--font-prose);
+  line-height: 1.5;
+}
+.voice cite {
+  display: block;
+  margin-block-end: 0.25rem;
+  font-family: var(--font-display);
+  font-style: normal;
+  font-weight: 600;
+}
+.voice p {
+  margin: 0;
+  white-space: pre-line;
+}
+.voice p + p {
+  margin-block-start: 0.5em;
+}
+
+/* ── Okna narratora i odprawy ───────────────────────────────────────────── */
+
+.dialog-wide {
+  inline-size: min(48rem, calc(100vw - 2rem));
+}
+.step {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding-block-start: var(--gap);
+  border-block-start: 0.0625rem solid var(--line);
+}
+.step-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.8rem;
+}
+a.btn {
+  display: inline-flex;
+  align-items: center;
+  color: var(--ink);
+  text-decoration: none;
+}
+.liaison-text {
+  inline-size: 100%;
+  min-block-size: 6rem;
+  padding: 0.6rem 0.7rem;
+  border: 0.0625rem solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  resize: vertical;
+}
+.liaison-text[readonly] {
+  color: var(--ink-dim);
+}
+.headlines {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 0;
+  padding-inline-start: 1.4rem;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+}
+.alert {
+  margin: 0.6rem 0 0;
+  padding: 0.5rem 0.7rem;
+  border-inline-start: 0.2rem solid var(--amber);
+  background: color-mix(in srgb, var(--amber) 14%, var(--panel));
+}
+.choice-stack {
+  flex-direction: column;
+  align-items: stretch;
+  inline-size: min(100%, 30rem);
+}
+.choice-stack label {
+  align-items: start;
+}
+.new-campaign .choice input {
+  flex: none;
+  inline-size: 1.05rem;
+  margin-block-start: 0.2rem;
+}
+.choice-stack label span {
+  display: flex;
+  flex-direction: column;
+}
+.choice-stack small {
+  color: var(--ink-dim);
+  font-size: 0.9rem;
+}
+
+/* ── Obraz: przebiegi wskaźników i Tablica sytuacyjna ───────────────────── */
+
+.spark {
+  display: block;
+  inline-size: 100%;
+  block-size: 1.3rem;
+  margin-block-start: 0.35rem;
+}
+.spark polyline {
+  fill: none;
+  stroke: var(--ink-dim);
+  stroke-width: 1.25;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.spark circle {
+  fill: var(--amber);
+}
+.hexes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.hex {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.1rem;
+  inline-size: 7.4rem;
+  block-size: 6.4rem;
+  padding: 0 1.3rem;
+  clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
+  background: var(--panel-2);
+  color: var(--ink-dim);
+  text-align: center;
+  font-size: 0.72rem;
+  line-height: 1.2;
+}
+.hex b {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  line-height: 1;
+  color: inherit;
+}
+.hex-active {
+  background: color-mix(in srgb, var(--teal) 30%, var(--panel-2));
+  color: var(--ink);
+}
+.hex-hot {
+  background: color-mix(in srgb, var(--amber) 42%, var(--panel-2));
+  color: var(--ink);
+}
+.sr {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }

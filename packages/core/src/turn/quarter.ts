@@ -139,7 +139,7 @@ export function closeQuarter(input: GameState, content: GameContent): CloseQuart
   if (units !== 0) {
     const funds = unitFunds === null ? '' : ` (około ${Math.round(units * unitFunds)} funduszy w KSP)`;
     notes.push(
-      `Korekta budżetu kwartału: ${units > 0 ? '+' : '−'}${Math.abs(units).toFixed(1).replace('.', ',')} jedn.${funds}.`,
+      `Korekta budżetu kwartału: ${units > 0 ? '+' : '−'}${Math.abs(units).toFixed(1).replace('.', ',')} jedn.${funds === '' ? '' : `${funds}.`}`,
     );
   }
 

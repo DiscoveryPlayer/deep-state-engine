@@ -43,7 +43,7 @@ test('nowa-kampania i stan: pełny obieg bez ujawniania warstwy ukrytej', async 
   const file = join(dir, 'kampania.json');
   await dse('nowa-kampania', '--ziarno', 'PACE-1951', '--wyjscie', file);
   const saved = await readFile(file, 'utf8');
-  assert.match(saved, /"schemaVersion": 3/);
+  assert.match(saved, /"schemaVersion": 4/);
 
   const { stdout } = await dse('stan', file);
   assert.match(stdout, /PACE — Pan-Atlantic Commission for Experimentation/);

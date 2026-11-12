@@ -8,6 +8,8 @@ import { createServer, type IncomingMessage, type Server, type ServerResponse } 
 import { z } from 'zod';
 import {
   DESK_ACTION_IDS,
+  HISTORY_FIDELITY_LEVELS,
+  NARRATIVE_SOURCES,
   DeskActionError,
   QuarterError,
   StateLoadError,
@@ -19,6 +21,7 @@ import {
   quarterCode,
   quarterLabel,
   recordKspSnapshot,
+  recordNarrative,
   resolveDilemma,
   settleCorrection,
   toPlayerView,
@@ -26,6 +29,16 @@ import {
   type GameState,
 } from '@dse/core';
 import { CareerReadError, ConfigNodeParseError, readCareerFile, toKspSnapshot } from '@dse/ksp-bridge';
+import {
+  DECISION_SECTION_PREFIX,
+  NarratorError,
+  QUARTER_SECTIONS,
+  REPLY_MAX_CHARS,
+  ReplyError,
+  buildNarratorPackage,
+  parseNarratorReply,
+  type NarratorCast,
+} from '@dse/narrator';
 import type { ApiError, CampaignListItem, DeskPayload } from './api.ts';
 import { CAMPAIGN_ID, CampaignStore } from './store.ts';
 
@@ -45,7 +58,7 @@ class HttpError extends Error {
   }
 }
 
-const MAX_BODY_BYTES = 64 * 1024;
+const MAX_BODY_BYTES = 256 * 1024;
 
 async function readJson(req: IncomingMessage): Promise<unknown> {
   const chunks: Buffer[] = [];
@@ -77,14 +90,61 @@ function parseBody<T>(schema: z.ZodType<T, z.ZodTypeDef, unknown>, raw: unknown)
 const newCampaignBody = z.object({
   id: z.string().regex(CAMPAIGN_ID, 'małe litery, cyfry i myślniki, najwyżej 40 znaków'),
   seed: z.string().trim().min(1).max(80),
+  historyFidelity: z.enum(HISTORY_FIDELITY_LEVELS).default('high'),
 });
 const dilemmaBody = z.object({ instanceId: z.string().min(1).max(60), optionId: z.string().min(1).max(60) });
 const actionBody = z.object({ action: z.enum(DESK_ACTION_IDS), target: z.string().min(1).max(60).optional() });
 const kspBody = z.object({ path: z.string().trim().min(1).max(1000) });
+const narratorPackageBody = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('quarter'), mode: z.enum(['full', 'short']) }),
+  z.object({ kind: z.literal('decision'), mode: z.enum(['full', 'short']), instanceId: z.string().min(1).max(60) }),
+]);
+const narratorReplyBody = z.object({
+  kind: z.enum(['quarter', 'decision']),
+  instanceId: z.string().min(1).max(60).optional(),
+  source: z.enum(NARRATIVE_SOURCES),
+  // Parser i tak przytnie tekst do REPLY_MAX_CHARS; tu tylko bezpieczny zapas na wklejkę z nadmiarem.
+  text: z
+    .string()
+    .min(1)
+    .max(REPLY_MAX_CHARS * 2),
+});
 const settleBody = z.object({ quarter: z.string().regex(/^\d{4}-Q[1-4]$/) });
 
 export function createApp(options: AppOptions): Server {
   const { content, store, assets } = options;
+
+  /** Jawna obsada dla narratora: nazwy frakcji i karty głosu, bez notatek Mistrza Gry. */
+  const cast: NarratorCast = {
+    factions: content.factions.map((f) => ({ id: f.id, name: f.name, summary: f.summary })),
+    voices: Object.fromEntries(
+      content.characters.map((c) => [c.id, { register: c.voice.register, habits: [...c.voice.habits] }]),
+    ),
+  };
+
+  /** Region depeszy: z wątku albo wzorca, do którego odwołuje się wpis. Bez treści świata: brak. */
+  const regionOf = (ref: string): string | undefined => {
+    const head = ref.split('.')[0] ?? '';
+    return (
+      content.world?.threads.find((t) => t.id === head)?.region ??
+      content.world?.patterns.find((p) => p.id === head)?.region
+    );
+  };
+  /** Liczba jawnych depesz bieżącego kwartału w każdym regionie (Tablica sytuacyjna). */
+  const regionBoard = (state: GameState): DeskPayload['regions'] => {
+    const now = quarterCode(state.quarter);
+    const counts = new Map<string, number>();
+    for (const e of state.world.log) {
+      if (e.quarter !== now || e.visibility !== 'public') continue;
+      const region = regionOf(e.ref);
+      if (region) counts.set(region, (counts.get(region) ?? 0) + 1);
+    }
+    return (content.world?.definition.regions ?? []).map((r) => ({
+      id: r.id,
+      title: r.title,
+      news: counts.get(r.id) ?? 0,
+    }));
+  };
 
   const payload = (id: string, state: GameState, messages: string[] = []): DeskPayload => ({
     campaign: {
@@ -100,6 +160,7 @@ export function createApp(options: AppOptions): Server {
       const agenda = live?.agendaKnown ? f.agendas.find((a) => a.id === live.agenda) : undefined;
       return { id: f.id, name: f.name, summary: f.summary, agendaTitle: agenda?.title ?? null };
     }),
+    regions: regionBoard(state),
     launchSites: content.launchSites ?? [],
     messages,
   });
@@ -123,7 +184,12 @@ export function createApp(options: AppOptions): Server {
     if (parts.length === 2 && method === 'POST') {
       const body = parseBody(newCampaignBody, await readJson(req));
       if (await store.exists(body.id)) throw new HttpError(409, `Kampania „${body.id}” już istnieje.`);
-      const state = beginQuarter(createInitialState(content, { id: body.id, seed: body.seed }), content).state;
+      const fresh = createInitialState(content, {
+        id: body.id,
+        seed: body.seed,
+        settings: { historyFidelity: body.historyFidelity },
+      });
+      const state = beginQuarter(fresh, content).state;
       await store.save(body.id, state);
       return payload(body.id, state);
     }
@@ -177,6 +243,42 @@ export function createApp(options: AppOptions): Server {
           `Wczytano zapis „${career.title}” z dnia ${career.date}.`,
           ...result.warnings,
         ]);
+      }
+      case 'narrator-package': {
+        const body = parseBody(narratorPackageBody, await readJson(req));
+        try {
+          return buildNarratorPackage(toPlayerView(state), cast, body);
+        } catch (e) {
+          if (e instanceof NarratorError) throw new HttpError(409, e.message);
+          throw e;
+        }
+      }
+      case 'narrator-reply': {
+        const body = parseBody(narratorReplyBody, await readJson(req));
+        const dilemma =
+          body.kind === 'decision'
+            ? state.world.pendingDilemmas.find((d) => d.instanceId === body.instanceId)
+            : undefined;
+        if (body.kind === 'decision' && !dilemma) throw new HttpError(409, 'Ta sprawa nie czeka już na decyzję.');
+        let parsed;
+        try {
+          parsed = parseNarratorReply(
+            body.text,
+            body.kind === 'quarter' ? QUARTER_SECTIONS : [DECISION_SECTION_PREFIX],
+          );
+        } catch (e) {
+          if (e instanceof ReplyError) throw new HttpError(422, e.message);
+          throw e;
+        }
+        const next = recordNarrative(state, {
+          kind: body.kind,
+          ...(dilemma ? { ref: dilemma.instanceId } : {}),
+          title: dilemma ? `Głosy w sprawie: ${dilemma.title}` : `Narracja: ${quarterLabel(state.quarter)}`,
+          source: body.source,
+          sections: parsed.sections,
+        });
+        await store.save(id, next);
+        return payload(id, next, ['Narracja wczytana.', ...parsed.warnings]);
       }
       case 'settle': {
         const body = parseBody(settleBody, await readJson(req));

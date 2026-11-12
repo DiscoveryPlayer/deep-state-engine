@@ -5,7 +5,7 @@
  * stanowiska frakcji, w środku zakładki pracy, po prawej sprawy do decyzji i zamknięcie kwartału.
  * Strona pokazuje wyłącznie to, co wie Anderson (widok gracza z serwera).
  */
-import { ApiFailure, api, type CampaignListItem, type DeskPayload } from './api.ts';
+import { ApiFailure, api, type HistoryFidelity, type CampaignListItem, type DeskPayload } from './api.ts';
 import { h, plural, quarterName, signed } from './dom.ts';
 import { INDICATOR_NAMES, TABS, renderPanel, type TabId } from './panels.ts';
 import {
@@ -18,6 +18,16 @@ import {
   type Settings,
 } from './settings.ts';
 
+import {
+  briefingBody,
+  findNarrative,
+  liaisonBody,
+  quarterNarrative,
+  sparkline,
+  voices,
+  type LiaisonState,
+} from './narrator.ts';
+
 interface AppState {
   payload: DeskPayload | null;
   campaigns: CampaignListItem[];
@@ -28,7 +38,13 @@ interface AppState {
   armed: { instanceId: string; optionId: string } | null;
   busy: boolean;
   notices: { id: number; kind: 'info' | 'error'; text: string }[];
-  dialog: 'settings' | 'close' | 'campaigns' | null;
+  dialog: 'settings' | 'close' | 'campaigns' | 'liaison' | 'reader' | 'briefing' | null;
+  /** Okno Łącznika AI: co zamawiamy u narratora i co gracz już wkleił. */
+  liaison: LiaisonState | null;
+  /** Identyfikator narracji otwartej w czytniku. */
+  reader: string | null;
+  /** Wierność historii wybrana w formularzu nowej kampanii. */
+  fidelity: HistoryFidelity;
   settings: Settings;
 }
 
@@ -43,14 +59,28 @@ const state: AppState = {
   busy: false,
   notices: [],
   dialog: null,
+  liaison: null,
+  reader: null,
+  fidelity: 'high',
   settings: loadSettings(),
 };
 let noticeSeq = 0;
 
 // ── Operacje ────────────────────────────────────────────────────────────────
 
+/** Po tylu milisekundach komunikat informacyjny znika sam. Błędy zostają do zamknięcia. */
+const NOTICE_LIFETIME_MS = 7000;
+
 function notify(kind: 'info' | 'error', text: string): void {
-  state.notices = [...state.notices.slice(-3), { id: ++noticeSeq, kind, text }];
+  const id = ++noticeSeq;
+  state.notices = [...state.notices.slice(-2), { id, kind, text }];
+  if (kind === 'info') {
+    setTimeout(() => {
+      state.notices = state.notices.filter((n) => n.id !== id);
+      // Usuwamy sam komunikat, bez przerysowania strony: gracz może właśnie pisać w oknie.
+      root.querySelector(`[data-notice="${id}"]`)?.remove();
+    }, NOTICE_LIFETIME_MS);
+  }
 }
 
 function accept(payload: DeskPayload, followQuarter: boolean): void {
@@ -64,18 +94,100 @@ function accept(payload: DeskPayload, followQuarter: boolean): void {
 }
 
 /** Wykonuje operację na serwerze, blokuje przyciski na czas trwania i pokazuje błąd po polsku. */
-async function run(operation: () => Promise<DeskPayload>, followQuarter = false): Promise<void> {
-  if (state.busy) return;
+async function run(operation: () => Promise<DeskPayload>, followQuarter = false): Promise<boolean> {
+  if (state.busy) return false;
+  let ok = false;
   state.busy = true;
   render();
   try {
     accept(await operation(), followQuarter);
+    ok = true;
   } catch (e) {
     notify('error', e instanceof ApiFailure ? e.message : 'Coś poszło nie tak. Spróbuj ponownie.');
   } finally {
     state.busy = false;
     render();
   }
+  return ok;
+}
+
+// ── Łącznik AI ──────────────────────────────────────────────────────────────
+
+const liaisonTarget = (l: LiaisonState) =>
+  l.kind === 'decision' && l.instanceId !== undefined
+    ? ({ kind: 'decision', instanceId: l.instanceId } as const)
+    : ({ kind: 'quarter' } as const);
+
+/** Pobiera pakiet dla narratora. Wynik trafia do okna, jeśli gracz go w międzyczasie nie zamknął. */
+async function loadPackage(): Promise<void> {
+  const l = state.liaison;
+  if (!l || !state.payload) return;
+  try {
+    const pkg = await api.narratorPackage(campaignId(), liaisonTarget(l), l.mode);
+    if (state.liaison !== l) return;
+    l.pkg = pkg;
+  } catch (e) {
+    notify('error', e instanceof ApiFailure ? e.message : 'Nie udało się przygotować pakietu.');
+  }
+  render();
+}
+
+function openLiaison(kind: 'quarter' | 'decision', instanceId?: string): void {
+  const p = state.payload;
+  if (!p) return;
+  const last = p.view.narrative.at(-1);
+  state.liaison = {
+    kind,
+    ...(instanceId === undefined ? {} : { instanceId }),
+    // Pierwszy pakiet w kampanii niesie zasady i opis świata; kolejne mogą iść do tej samej rozmowy.
+    mode: last ? 'short' : 'full',
+    source: last?.source ?? 'claude',
+    pkg: null,
+    reply: '',
+    copied: false,
+  };
+  state.dialog = 'liaison';
+  render();
+  void loadPackage();
+}
+
+async function copyPackage(): Promise<void> {
+  const l = state.liaison;
+  if (!l?.pkg) return;
+  try {
+    await navigator.clipboard.writeText(l.pkg.prompt);
+    l.copied = true;
+  } catch {
+    // Schowek bywa zablokowany: zaznaczamy tekst, żeby gracz skopiował go sam.
+    notify('info', 'Nie mam dostępu do schowka. Zaznaczyłem pakiet: skopiuj go przez Ctrl i C.');
+    render();
+    root.querySelector<HTMLTextAreaElement>('#liaison-package')?.select();
+    return;
+  }
+  render();
+}
+
+async function submitReply(): Promise<void> {
+  const l = state.liaison;
+  if (!l) return;
+  if (l.reply.trim() === '') {
+    notify('error', 'Najpierw wklej odpowiedź narratora.');
+    render();
+    return;
+  }
+  const ok = await run(() => api.narratorReply(campaignId(), liaisonTarget(l), l.source, l.reply));
+  if (!ok || !state.payload) return;
+  const entry = findNarrative(state.payload.view.narrative, state.payload.campaign.quarterCode, l.kind, l.instanceId);
+  state.liaison = null;
+  state.reader = entry?.id ?? null;
+  state.dialog = entry ? 'reader' : null;
+  render();
+}
+
+function openReader(id: string): void {
+  state.reader = id;
+  state.dialog = 'reader';
+  render();
 }
 
 const campaignId = () => state.payload!.campaign.id;
@@ -147,13 +259,14 @@ function topBar(p: DeskPayload): HTMLElement {
     h(
       'div',
       { class: 'top-actions' },
+      h('button', { class: 'btn btn-quiet', onClick: () => openLiaison('quarter') }, 'Narrator'),
       h('button', { class: 'btn btn-quiet', onClick: () => openDialog('campaigns') }, 'Kampanie'),
       h('button', { class: 'btn btn-quiet', onClick: () => openDialog('settings') }, 'Ustawienia'),
     ),
   );
 }
 
-function meter(id: 'ZW' | 'SO' | 'PP' | 'WF', value: number, previous: number): HTMLElement {
+function meter(id: 'ZW' | 'SO' | 'PP' | 'WF', value: number, previous: number, history: number[]): HTMLElement {
   const level = value < 25 ? 'bad' : value < 40 ? 'warn' : 'ok';
   const delta = value - previous;
   return h(
@@ -180,6 +293,7 @@ function meter(id: 'ZW' | 'SO' | 'PP' | 'WF', value: number, previous: number): 
     delta === 0
       ? null
       : h('span', { class: `meter-delta ${delta > 0 ? 'up' : 'down'}` }, `${signed(delta)} od początku kwartału`),
+    sparkline([...history, value], `Przebieg: ${INDICATOR_NAMES[id]} w ostatnich kwartałach`),
   );
 }
 
@@ -188,13 +302,15 @@ function statusRow(p: DeskPayload): HTMLElement {
   const before = p.view.quarterStart;
   const upcoming = budget.upcoming.reduce((s, i) => s + i.units, 0);
   const unsettled = budget.ledger.filter((e) => !e.settled).length;
+  // Ostatnie trzy lata: stan wskaźnika po zamknięciu każdego kwartału.
+  const trail = (id: 'ZW' | 'SO' | 'PP' | 'WF') => p.view.reports.slice(-12).map((r) => r.after[id]);
   return h(
     'section',
     { class: 'status', 'aria-label': 'Wskaźniki' },
-    meter('ZW', indicators.ZW, before.ZW),
-    meter('SO', indicators.SO, before.SO),
-    meter('PP', indicators.PP, before.PP),
-    meter('WF', indicators.WF, before.WF),
+    meter('ZW', indicators.ZW, before.ZW, trail('ZW')),
+    meter('SO', indicators.SO, before.SO, trail('SO')),
+    meter('PP', indicators.PP, before.PP, trail('PP')),
+    meter('WF', indicators.WF, before.WF, trail('WF')),
     h(
       'div',
       { class: 'readout', title: 'Napięcie Geopolityczne: od 5 (odprężenie) do 1 (krawędź)' },
@@ -372,8 +488,25 @@ function decisions(p: DeskPayload): HTMLElement {
               }),
             ),
             confirmRow(d),
+            adviserRow(d),
           ),
         ),
+  );
+}
+
+/** Głosy doradców: narracja AI do tej sprawy albo przycisk, który ją zamawia. */
+function adviserRow(d: DeskPayload['view']['pendingDilemmas'][number]): HTMLElement {
+  const p = state.payload!;
+  const entry = findNarrative(p.view.narrative, p.campaign.quarterCode, 'decision', d.instanceId);
+  return h(
+    'div',
+    { class: 'advisers' },
+    entry ? voices(entry) : null,
+    h(
+      'button',
+      { class: 'btn btn-small btn-quiet', disabled: state.busy, onClick: () => openLiaison('decision', d.instanceId) },
+      entry ? 'Poproś o głosy jeszcze raz' : 'Wysłuchaj doradców (narrator AI)',
+    ),
   );
 }
 
@@ -516,6 +649,8 @@ function workArea(p: DeskPayload): HTMLElement {
         {
           act: (action, target) => void run(() => api.act(campaignId(), action, target)),
           importSave: (path) => void run(() => api.importSave(campaignId(), path)),
+          askNarrator: () => openLiaison('quarter'),
+          readNarrative: openReader,
           settle: (quarter) => void run(() => api.settle(campaignId(), quarter)),
           showQuarter: (code) => {
             state.newsQuarter = code;
@@ -535,11 +670,16 @@ function openDialog(kind: AppState['dialog']): void {
   render();
 }
 
-function dialogShell(title: string, body: (HTMLElement | null)[], footer: HTMLElement[]): HTMLDialogElement {
+function dialogShell(
+  title: string,
+  body: (HTMLElement | null)[],
+  footer: HTMLElement[],
+  extraClass = '',
+): HTMLDialogElement {
   const dialog = h(
     'dialog',
     {
-      class: 'dialog',
+      class: `dialog ${extraClass}`.trim(),
       'aria-label': title,
       onClose: () => {
         state.dialog = null;
@@ -639,7 +779,10 @@ function closeDialog(p: DeskPayload): HTMLDialogElement {
           onClick: () => {
             state.dialog = null;
             state.tab = 'depesze';
-            void run(() => api.closeQuarter(campaignId()), true);
+            state.armed = null;
+            void run(() => api.closeQuarter(campaignId()), true).then((ok) => {
+              if (ok) openDialog('briefing');
+            });
           },
         },
         'Zamknij kwartał',
@@ -647,6 +790,86 @@ function closeDialog(p: DeskPayload): HTMLDialogElement {
     ],
   );
 }
+
+function liaisonDialog(l: LiaisonState): HTMLDialogElement {
+  const dilemma = state.payload?.view.pendingDilemmas.find((d) => d.instanceId === l.instanceId);
+  return dialogShell(
+    l.kind === 'decision' ? `Narrator: głosy w sprawie „${dilemma?.title ?? ''}”` : 'Narrator: narracja kwartału',
+    liaisonBody(l, state.busy, {
+      setMode: (mode) => {
+        l.mode = mode;
+        l.pkg = null;
+        l.copied = false;
+        render();
+        void loadPackage();
+      },
+      setSource: (source) => {
+        l.source = source;
+        render();
+      },
+      setReply: (text) => {
+        l.reply = text;
+      },
+      copy: () => void copyPackage(),
+      submit: () => void submitReply(),
+    }),
+    [closeButton()],
+    'dialog-wide',
+  );
+}
+
+function readerDialog(p: DeskPayload, id: string): HTMLDialogElement | null {
+  const entry = p.view.narrative.find((n) => n.id === id);
+  if (!entry) return null;
+  return dialogShell(
+    entry.title,
+    [entry.kind === 'quarter' ? quarterNarrative(entry, false, () => undefined) : voices(entry)],
+    [closeButton()],
+    'dialog-wide dialog-reader',
+  );
+}
+
+function briefingDialog(p: DeskPayload): HTMLDialogElement {
+  const ended = p.view.status !== 'active';
+  return dialogShell(
+    ended ? 'Koniec kampanii' : `Otwarcie: ${p.campaign.quarterLabel}`,
+    ended
+      ? [
+          h(
+            'p',
+            { class: 'lead' },
+            p.view.status === 'dismissed'
+              ? 'Waszyngton stracił zaufanie do Andersona. Biały Dom przyjmuje jego rezygnację, zanim zdąży ją napisać.'
+              : 'PACE rozpada się od środka. Dyrektoriaty przestają odpowiadać na pisma z gabinetu Dowódcy Operacyjnego.',
+          ),
+          ...briefingBody(p).slice(0, 1),
+        ]
+      : briefingBody(p),
+    ended
+      ? [closeButton()]
+      : [
+          h(
+            'button',
+            {
+              class: 'btn',
+              onClick: () => openLiaison('quarter'),
+            },
+            'Poproś narratora o scenę',
+          ),
+          closeButton('Do depesz'),
+        ],
+  );
+}
+
+const FIDELITY_CHOICES: { value: HistoryFidelity; label: string; hint: string }[] = [
+  { value: 'high', label: 'Wysoka (około 90%)', hint: 'Świat trzyma się podręcznika. Kilka rozejść na pięć lat.' },
+  {
+    value: 'medium',
+    label: 'Umiarkowana (około 70%)',
+    hint: 'Co trzecie rozstrzygnięcie idzie inaczej. Znajome tło, inne zakręty.',
+  },
+  { value: 'low', label: 'Niska (około 50%)', hint: 'Rzut monetą. Po kilku latach to już inna zimna wojna.' },
+];
 
 function campaignForm(): HTMLElement {
   const name = h('input', {
@@ -673,7 +896,9 @@ function campaignForm(): HTMLElement {
         e.preventDefault();
         state.dialog = null;
         state.tab = 'depesze';
-        void run(() => api.create(name.value.trim().toLowerCase(), seed.value.trim()), true).then(refreshCampaigns);
+        void run(() => api.create(name.value.trim().toLowerCase(), seed.value.trim(), state.fidelity), true).then(
+          refreshCampaigns,
+        );
       },
     },
     h('label', { for: 'c-id' }, 'Nazwa pliku kampanii'),
@@ -682,6 +907,33 @@ function campaignForm(): HTMLElement {
     h('label', { for: 'c-seed' }, 'Ziarno losowania'),
     seed,
     h('p', { class: 'meta' }, 'To samo ziarno i te same decyzje dają ten sam świat. Inne ziarno to inna historia.'),
+    h(
+      'fieldset',
+      { class: 'choice choice-stack' },
+      h('legend', null, 'Zbieżność z historią'),
+      FIDELITY_CHOICES.map((c) =>
+        h(
+          'label',
+          null,
+          h('input', {
+            type: 'radio',
+            name: 'fidelity',
+            value: c.value,
+            checked: state.fidelity === c.value,
+            // Bez przerysowania: pola formularza zachowują to, co gracz już wpisał.
+            onChange: () => {
+              state.fidelity = c.value;
+            },
+          }),
+          h('span', null, h('b', null, c.label), h('small', null, c.hint)),
+        ),
+      ),
+      h(
+        'p',
+        { class: 'meta' },
+        'Jak często wydarzenia świata idą drogą znaną z historii. Kotwice (na przykład śmierć Stalina) zdarzają się zawsze. Tego ustawienia nie zmienisz w trakcie kampanii.',
+      ),
+    ),
     h(
       'button',
       { class: 'btn btn-primary', type: 'submit', disabled: state.busy },
@@ -758,7 +1010,7 @@ function notices(): HTMLElement {
     state.notices.map((n) =>
       h(
         'div',
-        { class: `notice notice-${n.kind}` },
+        { class: `notice notice-${n.kind}`, 'data-notice': n.id },
         h('span', null, n.text),
         h(
           'button',
@@ -802,6 +1054,9 @@ function render(): void {
   if (state.dialog === 'settings') dialog = settingsDialog();
   else if (state.dialog === 'campaigns') dialog = campaignsDialog();
   else if (state.dialog === 'close' && p) dialog = closeDialog(p);
+  else if (state.dialog === 'liaison' && p && state.liaison) dialog = liaisonDialog(state.liaison);
+  else if (state.dialog === 'reader' && p && state.reader) dialog = readerDialog(p, state.reader);
+  else if (state.dialog === 'briefing' && p) dialog = briefingDialog(p);
   if (dialog) children.push(dialog);
 
   root.replaceChildren(...children.filter((c): c is HTMLElement => c !== null));

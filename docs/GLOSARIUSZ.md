@@ -56,3 +56,10 @@
 | Bilans lotów | — | `closeQuarter` | reguła tymczasowa (decyzja 0017, punkt 7) |
 | Miejsce startu | — | `data/launch-sites.yaml`, `launchSiteProblem` | strony: `west`, `east`, `out_of_period` |
 | Naruszenie zasad uczciwości | — | wpis Kroniki z tagiem `naruszenie` | GDD 22; gra nie blokuje |
+| Wierność historii | — | `campaign.historyFidelity`, `HISTORY_FIDELITY_ALT_SCALE` | wysoka, umiarkowana, niska: około 90%, 70%, 50% (decyzja 0018) |
+| Łącznik AI | — | `packages/narrator`, okno „Narrator” | narrator przez kopiuj-wklej, bez klucza API |
+| Pakiet Kontekstu | — | `buildNarratorPackage` | tylko z `PlayerView` i jawnej obsady |
+| Narracja | — | `narrative.entries`, `recordNarrative` | tekst AI wklejony przez gracza; bez skutków mechanicznych |
+| Głosy doradców | — | narracja rodzaju `decision` | sekcje `## GŁOS: …` przy sprawie do decyzji |
+| Odprawa | — | okno po zamknięciu kwartału | bilans, depesze, sprawy |
+| Tablica sytuacyjna | — | `DeskPayload.regions` | jawne depesze kwartału według regionów |

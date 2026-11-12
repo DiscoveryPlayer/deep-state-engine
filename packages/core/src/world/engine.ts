@@ -15,7 +15,7 @@
  * AI dostaje potem gotowe wpisy dziennika do opisania.
  */
 import { Rng } from '../rng.ts';
-import type { GameState, ThreadInstance, WorldLogEntry, WorldState } from '../state/schema.ts';
+import type { GameState, HistoryFidelity, ThreadInstance, WorldLogEntry, WorldState } from '../state/schema.ts';
 import { parseQuarterCode, quarterCode, quartersBetween, type Quarter } from '../time.ts';
 import { DIVERGENCE_MAX, applyEffects, evaluateCondition, shiftQuarter } from './conditions.ts';
 import { PARAM_PLACEHOLDER } from './schema.ts';
@@ -61,6 +61,13 @@ function applyModifiers(base: number, modifiers: readonly WeightModifier[], stat
   return Math.max(0, base * mul + add);
 }
 
+/**
+ * Wierność historii (decyzja 0018): mnożnik wag gałęzi niehistorycznych. Wartości dobrane
+ * w seriach 300 symulacji 1951–1955 tak, żeby w etapach, w których jest wybór, gałąź
+ * historyczna wygrywała średnio w około 90%, 70% i 50% rozstrzygnięć.
+ */
+export const HISTORY_FIDELITY_ALT_SCALE: Record<HistoryFidelity, number> = { high: 1.4, medium: 5, low: 10 };
+
 /** Mnożnik Rozbieżności dla gałęzi (historycznej albo nie). */
 export function divergenceFactor(historical: boolean, divergence: number): number {
   const d = Math.min(DIVERGENCE_MAX, Math.max(0, divergence));
@@ -86,12 +93,14 @@ export function branchWeights(
 ): WeightedBranch[] {
   const d = state.world.divergence[region] ?? 0;
   const shifts = stage.decision?.options.find((o) => o.id === choice)?.weights ?? {};
+  const altScale = HISTORY_FIDELITY_ALT_SCALE[state.campaign.historyFidelity];
   return stage.branches
     .filter((b) => b.requires === undefined || evaluateCondition(b.requires, state))
     .map((b) => {
       const shift = shifts[b.id];
       const base = applyModifiers(b.weight, b.modifiers, state) * (shift?.mul ?? 1) + (shift?.add ?? 0);
-      return { branch: b, weight: Math.max(0, base) * divergenceFactor(b.historical, d) };
+      const fidelity = b.historical ? 1 : altScale;
+      return { branch: b, weight: Math.max(0, base) * divergenceFactor(b.historical, d) * fidelity };
     });
 }
 

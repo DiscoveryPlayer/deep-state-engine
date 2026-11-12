@@ -1,6 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  HISTORY_FIDELITY_ALT_SCALE,
+  STATE_SCHEMA_VERSION,
   advanceWorld,
   branchWeights,
   createInitialState,
@@ -234,7 +236,11 @@ test('Rozbieżność: przy 0 historia ma przewagę ×3, przy 10 znika, gałęzie
   const weight = (list: typeof calm, id: string) => list.find((x) => x.branch.id === id)!.weight;
   assert.equal(weight(calm, 'hist'), 3);
   assert.equal(weight(wild, 'hist'), 1);
-  assert.equal(weight(wild, 'wojna'), 2500);
+  // 1000 (waga) × 2,5 (Rozbieżność 10) × 1,4 (wierność wysoka).
+  assert.equal(weight(wild, 'wojna'), 2500 * HISTORY_FIDELITY_ALT_SCALE.high);
+  s.campaign.historyFidelity = 'low';
+  assert.equal(weight(branchWeights(stage, 'bliski_wschod', s), 'wojna'), 2500 * HISTORY_FIDELITY_ALT_SCALE.low);
+  assert.equal(weight(branchWeights(stage, 'bliski_wschod', s), 'hist'), 1, 'wierność nie rusza gałęzi historycznej');
   assert.equal(weight(wild, 'szybko'), 0, 'modyfikator bez spełnionego warunku nie działa');
 });
 
@@ -382,7 +388,7 @@ test('migracja: stan w wersji 1 dostaje pusty świat i działa dalej', () => {
   delete raw.world;
   raw.schemaVersion = 1;
   const migrated = deserializeState(JSON.stringify(raw));
-  assert.equal(migrated.schemaVersion, 3);
+  assert.equal(migrated.schemaVersion, STATE_SCHEMA_VERSION);
   assert.deepEqual(migrated.budget.ledger, []);
   assert.deepEqual(migrated.world.threads, {});
   const w = worldFixture();

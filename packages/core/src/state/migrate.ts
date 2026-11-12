@@ -42,6 +42,15 @@ const STEPS: Record<number, (s: RawState) => RawState> = {
   },
 };
 
+STEPS[3] = (s) => ({
+  // 3 → 4: wierność historii w ustawieniach kampanii i narracja (decyzja 0018).
+  // Starsze kampanie dostają wierność wysoką, najbliższą dotychczasowemu zachowaniu świata.
+  ...s,
+  schemaVersion: 4,
+  campaign: { historyFidelity: 'high', ...(s.campaign as object) },
+  narrative: { entries: [] },
+});
+
 export class StateMigrationError extends Error {
   constructor(message: string) {
     super(message);
