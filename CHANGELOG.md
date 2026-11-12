@@ -2,6 +2,15 @@
 
 Najnowsze na górze. Każdy wpis odpowiada jednemu pull requestowi.
 
+## 2026-11-12 — Wierność historii i Łącznik AI (decyzja 0018)
+
+- **Wierność historii:** wybór przy zakładaniu kampanii (wysoka, umiarkowana, niska; około 90%, 70% i 50% rozstrzygnięć historycznych). Polecenie `dse swiat` dostało opcję `--wiernosc` i miarę zbieżności w raporcie serii.
+- **Łącznik AI** (`@dse/narrator`): Pakiet Kontekstu z widoku gracza do wklejenia w rozmowę z Claude albo Gemini, odczyt wklejonej odpowiedzi, narracja kwartału i głosy doradców. Bez klucza API i bez połączeń z internetem.
+- **Interfejs:** okno „Narrator”, czytnik narracji, odprawa po zamknięciu kwartału, narracja w zakładkach Biurko i Depesze, głosy doradców w sprawach, Tablica sytuacyjna regionów, przebiegi wskaźników, komunikaty znikające same.
+- **Stan kampanii w wersji 4** z migracją 3 → 4 (starsze kampanie dostają wierność wysoką i pustą narrację).
+- Poprawka: podwójna kropka w uwadze raportu o Korekcie budżetu.
+- Testy: 94 (było 81).
+
 ## 2026-11-11 — Plaster 1: da się grać, 1951–1955 (decyzja 0017, Plan Budowy v3)
 
 - **Silnik wątków głębokich** (`@dse/core`, `world/`): etapy-kotwice, depesze w tym samym kwartale, pogłoski wywiadu, decyzje etapów z wagami gałęzi, reakcje stron, sytuacje trwające, wątki-echa, gałęzie `minor`, pominięcie etapu bez dostępnej gałęzi, bezpieczniki szablonów, warunek epoki.

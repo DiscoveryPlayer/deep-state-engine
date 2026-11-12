@@ -1,6 +1,9 @@
-import type { CampaignListItem, DeskPayload } from '../../server/src/api.ts';
+import type { CampaignListItem, DeskPayload, NarratorPackage } from '../../server/src/api.ts';
 
-export type { CampaignListItem, DeskPayload };
+export type { CampaignListItem, DeskPayload, NarratorPackage };
+
+export type HistoryFidelity = DeskPayload['view']['historyFidelity'];
+type NarratorTarget = { kind: 'quarter' } | { kind: 'decision'; instanceId: string };
 
 export class ApiFailure extends Error {}
 
@@ -27,7 +30,8 @@ const campaign = (id: string) => `/api/campaigns/${encodeURIComponent(id)}`;
 
 export const api = {
   campaigns: () => call<CampaignListItem[]>('/api/campaigns'),
-  create: (id: string, seed: string) => call<DeskPayload>('/api/campaigns', { id, seed }),
+  create: (id: string, seed: string, historyFidelity: HistoryFidelity) =>
+    call<DeskPayload>('/api/campaigns', { id, seed, historyFidelity }),
   load: (id: string) => call<DeskPayload>(campaign(id)),
   decide: (id: string, instanceId: string, optionId: string) =>
     call<DeskPayload>(`${campaign(id)}/dilemma`, { instanceId, optionId }),
@@ -35,5 +39,9 @@ export const api = {
     call<DeskPayload>(`${campaign(id)}/action`, target === undefined ? { action } : { action, target }),
   closeQuarter: (id: string) => call<DeskPayload>(`${campaign(id)}/close-quarter`, {}),
   importSave: (id: string, path: string) => call<DeskPayload>(`${campaign(id)}/ksp`, { path }),
+  narratorPackage: (id: string, target: NarratorTarget, mode: 'full' | 'short') =>
+    call<NarratorPackage>(`${campaign(id)}/narrator-package`, { ...target, mode }),
+  narratorReply: (id: string, target: NarratorTarget, source: string, text: string) =>
+    call<DeskPayload>(`${campaign(id)}/narrator-reply`, { ...target, source, text }),
   settle: (id: string, quarter: string) => call<DeskPayload>(`${campaign(id)}/settle`, { quarter }),
 };

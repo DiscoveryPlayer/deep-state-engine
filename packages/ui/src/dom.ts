@@ -51,3 +51,13 @@ export function plural(n: number, one: string, few: string, many: string): strin
   if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return few;
   return many;
 }
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+/** Element SVG z atrybutami. Kolory i grubości ustawia arkusz stylów przez klasy. */
+export function svg(tag: string, attrs: Record<string, string | number>, ...children: SVGElement[]): SVGElement {
+  const el = document.createElementNS(SVG_NS, tag);
+  for (const [key, val] of Object.entries(attrs)) el.setAttribute(key, String(val));
+  el.append(...children);
+  return el;
+}

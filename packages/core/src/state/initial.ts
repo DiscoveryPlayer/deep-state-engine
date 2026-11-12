@@ -27,6 +27,7 @@ export const DEFAULT_CAMPAIGN_SETTINGS: Omit<CampaignSettings, 'id' | 'seed'> = 
   metaDifficulty: 'secret',
   integrationMode: 'honor',
   discipline: 'standard',
+  historyFidelity: 'high',
 };
 
 /** Cierpliwość frakcji to zegar 6-segmentowy (GDD 7.1). */
@@ -150,6 +151,7 @@ export function createInitialState(content: GameContent, options: NewCampaignOpt
     desk: { log: [], restBonus: 0, opening: { ...content.campaign.indicators, KP: content.campaign.currencies.KP } },
     reports: [],
     ksp: { snapshots: [] },
+    narrative: { entries: [] },
     status: 'active',
   };
 

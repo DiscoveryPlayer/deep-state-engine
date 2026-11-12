@@ -16,7 +16,7 @@ import { factionIdSchema, registryTypeSchema } from '../content/schema.ts';
  * Wersja 3: wątki głębokie (sytuacje, pogłoski, decyzje etapów), budżet, Biurko, raporty,
  * migawki KSP i status kampanii (decyzja 0017). Migracje w migrate.ts.
  */
-export const STATE_SCHEMA_VERSION = 3 as const;
+export const STATE_SCHEMA_VERSION = 4 as const;
 
 const quarterSchema = z.object({
   year: z.number().int().min(1900).max(2100),
@@ -315,6 +315,10 @@ export const kspSnapshotSchema = z.object({
   launchesInQuarter: z.array(z.object({ vessel: z.string(), date: z.string(), site: z.string().nullable() })),
 });
 
+/** Wierność historii: jak często świat idzie drogą historyczną (decyzja 0018). */
+export const HISTORY_FIDELITY_LEVELS = ['high', 'medium', 'low'] as const;
+export type HistoryFidelity = (typeof HISTORY_FIDELITY_LEVELS)[number];
+
 export const campaignSettingsSchema = z.object({
   id: z.string().min(1),
   seed: z.string().min(1),
@@ -325,7 +329,28 @@ export const campaignSettingsSchema = z.object({
   metaDifficulty: z.enum(['confidential', 'secret', 'top_secret']),
   integrationMode: z.enum(['honor', 'save', 'mod']),
   discipline: z.enum(['free', 'standard', 'archival']),
+  /** Ustawiana przy zakładaniu kampanii i potem niezmienna. */
+  historyFidelity: z.enum(HISTORY_FIDELITY_LEVELS),
 });
+
+/**
+ * Narracja: teksty napisane przez AI na podstawie widoku gracza i wklejone przez gracza
+ * (decyzja 0018). Nie mają żadnego skutku mechanicznego (zasada Z3) i są w całości jawne.
+ */
+export const NARRATIVE_KINDS = ['quarter', 'decision'] as const;
+export const NARRATIVE_SOURCES = ['claude', 'gemini', 'other'] as const;
+export const narrativeEntrySchema = z.object({
+  /** Klucz wpisu: kwartał, rodzaj i odniesienie. Ponowny import zastępuje wpis o tym samym kluczu. */
+  id: z.string().min(1),
+  quarter: z.string().regex(/^\d{4}-Q[1-4]$/),
+  kind: z.enum(NARRATIVE_KINDS),
+  /** Dla rodzaju `decision`: identyfikator sprawy do decyzji. */
+  ref: z.string().optional(),
+  title: z.string().min(1),
+  source: z.enum(NARRATIVE_SOURCES),
+  sections: z.array(z.object({ key: z.string().min(1), title: z.string().min(1), body: z.string().min(1) })).min(1),
+});
+export type NarrativeEntry = z.infer<typeof narrativeEntrySchema>;
 
 export const gameStateSchema = z.object({
   schemaVersion: z.literal(STATE_SCHEMA_VERSION),
@@ -357,6 +382,7 @@ export const gameStateSchema = z.object({
   desk: deskStateSchema,
   reports: z.array(quarterReportSchema),
   ksp: z.object({ snapshots: z.array(kspSnapshotSchema) }),
+  narrative: z.object({ entries: z.array(narrativeEntrySchema) }),
   /** active — gra trwa; dismissed — Anderson odwołany (ZW 0); collapsed — rozpad organizacji (SO 0). */
   status: z.enum(['active', 'dismissed', 'collapsed']),
 });

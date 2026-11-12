@@ -96,6 +96,8 @@ export function renderWorldSeries(runs: GameState[], content: WorldContent): str
   const dilemmas: Counter = {};
   const divergence: Counter = {};
   let allHistorical = 0;
+  let choices = 0;
+  let choicesHistorical = 0;
   let correctionUnits = 0;
 
   for (const s of runs) {
@@ -109,6 +111,11 @@ export function renderWorldSeries(runs: GameState[], content: WorldContent): str
         inc(stageSeen, `${inst.def}.${h.stage}`);
         inc(branches, `${inst.def}.${h.stage}.${h.branch}`);
         if (!h.historical) onTrack = false;
+        const stage = content.threads.find((t) => t.id === inst.def)?.stages.find((st) => st.id === h.stage);
+        if (stage && !stage.alternative && stage.branches.length > 1) {
+          choices += 1;
+          if (h.historical) choicesHistorical += 1;
+        }
       }
     }
     if (onTrack) allHistorical += 1;
@@ -123,6 +130,10 @@ export function renderWorldSeries(runs: GameState[], content: WorldContent): str
   const L: string[] = [];
   L.push(`SERIA: ${n} symulacji`);
   L.push(`  Świat w całości zgodny z historią: ${allHistorical}/${n} (${pct(allHistorical, n).trim()})`);
+  L.push(
+    `  Zbieżność z historią: ${pct(choicesHistorical, Math.max(1, choices)).trim()} rozstrzygnięć w etapach z wyborem ` +
+      `(średnio ${(choices / n).toFixed(1)} takich etapów na symulację)`,
+  );
   L.push(`  Średnia suma Korekt budżetu: ${(correctionUnits / n).toFixed(2)} jedn.`);
   L.push('');
   L.push('WĄTKI (udział gałęzi w etapie)');

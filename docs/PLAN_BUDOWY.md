@@ -44,7 +44,7 @@ Dlatego wersja 3 buduje **plastrami**. Każdy plaster przechodzi przez wszystkie
 | Treść 1951–1955 | 24 wątki, 2 szablony, 35 wzorców, 6 dylematów, 15 zmiennych świata | `data/events` |
 | Miejsca startu | 31 miejsc z okresami dostępności | `data/launch-sites.yaml` |
 
-Testów jest 81. `npm run check` przechodzi.
+Testów jest 94. `npm run check` przechodzi.
 
 ### 2.2. Czego gra jeszcze nie robi
 
@@ -52,7 +52,7 @@ To lista uczciwa, żeby pilotaż nie rozczarował:
 
 1. **Loty prawie nie wpływają na politykę.** Migawka KSP daje dziś tylko prosty „bilans lotów” (kontrakty i awarie, decyzja 0017 punkt 7). Nie ma Dyrektyw, kart lotów ani programów testowych.
 2. **Nie ma przeciwnika.** ZSRR istnieje w depeszach i zmiennych świata, ale nie ma własnego programu kosmicznego ani kalendarza.
-3. **Nie ma narratora AI.** Wszystkie teksty pochodzą z plików YAML. Są pisane ręcznie, więc powtarzają się w kolejnych kampaniach.
+3. **Narrator działa przez kopiuj-wklej.** Od 12.11.2026 gra buduje pakiet dla Claude albo Gemini w przeglądarce i wczytuje wklejoną odpowiedź (decyzja 0018). Depesze nadal pochodzą z plików YAML; narrator dopisuje do nich scenę, prasę, kuluary i głosy doradców.
 4. **Ludzie są statyczni.** Sześciu dyrektorów ma cechy i Lojalność, ale nie starzeją się, nie odchodzą i nie mają własnych wątków.
 5. **Budżet to tylko Korekty.** Nie ma budżetu rocznego, Sesji Budżetowej ani Wniosków Programowych.
 6. **Rejestr Następstw stoi.** Decyzje nie tworzą jeszcze Długów, Uraz i Obietnic.
@@ -185,7 +185,9 @@ Bilans lotów z plastra 1 zostaje zastąpiony rozliczaniem Dyrektyw.
 
 ### Plaster 5 — „Świat mówi” (dawna faza 4)
 
-Narrator AI: memoranda dyrektorów, depesze, wycinki prasowe, referent Wniosków. Zasada Z3 bez wyjątków: AI dostaje wynik z silnika i `PlayerView`, zwraca tekst. Palety epok (Dossier III, część V) jako dane dla wzorców. Ślepy test modeli. Klucz API tylko w lokalnym `.env`.
+**Zrobione (decyzja 0018):** Łącznik AI, czyli Pakiet Kontekstu z widoku gracza, narracja kwartału i głosy doradców przez kopiuj-wklej, bez klucza API.
+
+**Zostaje:** memoranda dyrektorów po akcjach Biurka, rozmowa z postacią, referent Wniosków, kronika roku, opcjonalne bezpośrednie połączenie z API. Zasada Z3 bez wyjątków: AI dostaje wynik z silnika i `PlayerView`, zwraca tekst. Palety epok (Dossier III, część V) jako dane dla wzorców. Ślepy test modeli. Klucz API tylko w lokalnym `.env`.
 
 **Kamień M3.**
 

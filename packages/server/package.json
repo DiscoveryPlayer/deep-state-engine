@@ -11,6 +11,7 @@
     "@dse/core": "0.1.0",
     "@dse/content": "0.1.0",
     "@dse/ksp-bridge": "0.1.0",
-    "zod": "^3.25.0"
+    "zod": "^3.25.0",
+    "@dse/narrator": "0.1.0"
   }
 }

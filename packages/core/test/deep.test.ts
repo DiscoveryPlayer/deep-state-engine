@@ -1,12 +1,15 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  STATE_SCHEMA_VERSION,
   advanceWorld,
   branchKind,
   createInitialState,
   deserializeState,
   evaluateCondition,
+  narrativeId,
   nextQuarter,
+  recordNarrative,
   resolveDilemma,
   serializeState,
   threadContentSchema,
@@ -295,7 +298,8 @@ test('migracja 2 → 3: instancje wątków dostają pola wątków głębokich', 
   const s = run(start(), deepWorld(), 2);
   const raw = JSON.parse(serializeState(s)) as Record<string, any>;
   raw.schemaVersion = 2;
-  for (const k of ['budget', 'desk', 'reports', 'ksp', 'status']) delete raw[k];
+  for (const k of ['budget', 'desk', 'reports', 'ksp', 'status', 'narrative']) delete raw[k];
+  delete raw.campaign.historyFidelity;
   delete raw.world.situations;
   for (const inst of Object.values(raw.world.threads) as Record<string, unknown>[]) {
     delete inst.rumors;
@@ -304,9 +308,57 @@ test('migracja 2 → 3: instancje wątków dostają pola wątków głębokich', 
   }
   for (const e of raw.world.log) if (e.kind === 'reaction' || e.kind === 'situation') e.kind = 'thread';
   const migrated = deserializeState(JSON.stringify(raw));
-  assert.equal(migrated.schemaVersion, 3);
+  assert.equal(migrated.schemaVersion, STATE_SCHEMA_VERSION);
   assert.deepEqual(migrated.world.threads.kanal!.rumors, []);
   assert.equal(migrated.status, 'active');
+});
+
+test('migracja 3 → 4: starsza kampania dostaje wysoką wierność historii i pustą narrację', () => {
+  const raw = JSON.parse(serializeState(start())) as Record<string, any>;
+  raw.schemaVersion = 3;
+  delete raw.narrative;
+  delete raw.campaign.historyFidelity;
+  const migrated = deserializeState(JSON.stringify(raw));
+  assert.equal(migrated.schemaVersion, STATE_SCHEMA_VERSION);
+  assert.equal(migrated.campaign.historyFidelity, 'high');
+  assert.deepEqual(migrated.narrative.entries, []);
+});
+
+test('wierność historii: im niższa, tym częściej świat schodzi z drogi historycznej', () => {
+  const w = threeStageWorld({
+    branches: [
+      { id: 'hist', title: 'H', historical: true, weight: 1, text: 'Historycznie.' },
+      { id: 'inaczej', title: 'I', weight: 0.3, text: 'Inaczej.' },
+    ],
+  });
+  const divergences = (historyFidelity: 'high' | 'low') => {
+    let total = 0;
+    for (let i = 0; i < 80; i++) {
+      const s0 = createInitialState(content(w), { id: 't', seed: `W${i}`, settings: { historyFidelity } });
+      const s = run(s0, w, 3);
+      for (const inst of Object.values(s.world.threads)) total += inst.history.filter((h) => !h.historical).length;
+    }
+    return total;
+  };
+  const [high, low] = [divergences('high'), divergences('low')];
+  assert.ok(low > high * 2, `niska wierność daje więcej rozejść (wysoka: ${high}, niska: ${low})`);
+});
+
+test('narracja: wpis trafia do bieżącego kwartału, ponowny import go zastępuje, stan gry się nie zmienia', () => {
+  const s = start();
+  const entry = {
+    kind: 'quarter' as const,
+    title: 'Narracja',
+    source: 'claude' as const,
+    sections: [{ key: 'scena', title: 'Scena', body: 'Pada.' }],
+  };
+  const once = recordNarrative(s, entry);
+  const twice = recordNarrative(once, { ...entry, sections: [{ key: 'scena', title: 'Scena', body: 'Śnieg.' }] });
+  assert.equal(twice.narrative.entries.length, 1);
+  assert.equal(twice.narrative.entries[0]!.id, narrativeId('1951-Q1', 'quarter'));
+  assert.equal(twice.narrative.entries[0]!.sections[0]!.body, 'Śnieg.');
+  assert.deepEqual({ ...twice, narrative: s.narrative }, s, 'narracja nie rusza niczego poza sobą (zasada Z3)');
+  assert.equal(toPlayerView(twice).narrative.length, 1);
 });
 
 /** Świat z jednym wątkiem o trzech etapach; środkowy etap konfiguruje test. */

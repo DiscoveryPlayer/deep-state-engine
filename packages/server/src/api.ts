@@ -4,6 +4,8 @@
  */
 import type { DeskActionInfo, LaunchSite, PlayerView } from '@dse/core';
 
+export type { NarratorPackage } from '@dse/narrator';
+
 export interface FactionInfo {
   id: string;
   name: string;
@@ -17,6 +19,8 @@ export interface DeskPayload {
   view: PlayerView;
   actions: DeskActionInfo[];
   factions: FactionInfo[];
+  /** Tablica sytuacyjna: regiony świata i liczba jawnych depesz z bieżącego kwartału. */
+  regions: { id: string; title: string; news: number }[];
   launchSites: LaunchSite[];
   /** Komunikat po ostatniej operacji (np. ostrzeżenia po wczytaniu zapisu KSP). */
   messages: string[];

@@ -4,6 +4,7 @@
  */
 import type { DeskPayload } from './api.ts';
 import { h, plural, quarterName, signed, type Child } from './dom.ts';
+import { findNarrative, narrativeInvite, quarterNarrative, regionBoard } from './narrator.ts';
 
 export const TABS = [
   { id: 'biurko', label: 'Biurko' },
@@ -21,6 +22,8 @@ export interface PanelActions {
   importSave(path: string): void;
   settle(quarter: string): void;
   showQuarter(code: string): void;
+  askNarrator(): void;
+  readNarrative(id: string): void;
 }
 
 export interface PanelState {
@@ -121,9 +124,17 @@ function deskPanel(p: DeskPayload, state: PanelState, on: PanelActions): HTMLEle
       )
     : null;
 
+  const story = findNarrative(view.narrative, p.campaign.quarterCode, 'quarter');
+
   return h(
     'div',
     { class: 'panel-body' },
+    section(
+      `Z gabinetu: ${p.campaign.quarterLabel}`,
+      story
+        ? quarterNarrative(story, true, () => on.readNarrative(story.id))
+        : narrativeInvite(on.askNarrator, state.busy),
+    ),
     section(
       'Akcje Biurka',
       h(
@@ -150,12 +161,14 @@ function deskPanel(p: DeskPayload, state: PanelState, on: PanelActions): HTMLEle
 
 // ── Depesze ─────────────────────────────────────────────────────────────────
 
-function newsPanel(p: DeskPayload, state: PanelState): HTMLElement {
+function newsPanel(p: DeskPayload, state: PanelState, on: PanelActions): HTMLElement {
   const items = p.view.worldNews.filter((n) => n.quarter === state.newsQuarter);
   const isCurrent = state.newsQuarter === p.campaign.quarterCode;
+  const story = findNarrative(p.view.narrative, state.newsQuarter, 'quarter');
   return h(
     'div',
     { class: 'panel-body' },
+    isCurrent ? regionBoard(p.regions, p.campaign.quarterLabel) : null,
     section(
       `Depesze: ${quarterName(state.newsQuarter)}${isCurrent ? '' : ' (archiwum)'}`,
       items.length === 0
@@ -173,6 +186,15 @@ function newsPanel(p: DeskPayload, state: PanelState): HTMLElement {
             ),
           ),
     ),
+    // Fakty najpierw, opowieść po nich: narracja niczego nie dodaje do depesz, tylko je ożywia.
+    story
+      ? section(
+          `Narracja: ${quarterName(state.newsQuarter)}`,
+          quarterNarrative(story, false, () => undefined),
+        )
+      : isCurrent
+        ? narrativeInvite(on.askNarrator, state.busy)
+        : null,
   );
 }
 
@@ -506,7 +528,7 @@ export function renderPanel(tab: TabId, p: DeskPayload, state: PanelState, on: P
     case 'biurko':
       return deskPanel(p, state, on);
     case 'depesze':
-      return newsPanel(p, state);
+      return newsPanel(p, state, on);
     case 'wywiad':
       return intelPanel(p);
     case 'budzet':

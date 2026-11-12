@@ -21,6 +21,7 @@ import {
   simulateWorld,
   toPlayerView,
   type DilemmaPolicy,
+  type HistoryFidelity,
 } from '@dse/core';
 import { ContentLoadError, loadContent } from '@dse/content';
 import { renderStateReport } from './report.ts';
@@ -40,7 +41,7 @@ Polecenia:
       Pokazuje stan kampanii tak, jak widzi go Anderson.
       --prawda pokazuje warstwę faktyczną (tylko do testów, psuje mgłę wojny).
   swiat [--od <kwartał>] [--do <kwartał>] [--ziarno <tekst>] [--decyzje domyslne|losowe]
-        [--prawda] [--serie <N>] [--dane <folder>]
+        [--prawda] [--serie <N>] [--wiernosc wysoka|umiarkowana|niska] [--dane <folder>]
       Symuluje wydarzenia świata od I kw. 1951 do kwartału --do (domyślnie 1960-Q4).
       --od ukrywa wpisy sprzed podanego kwartału (symulacja i tak liczy się od 1951).
       --decyzje: domyslne (Anderson nie decyduje, silnik przyjmuje opcję domyślną)
@@ -115,6 +116,7 @@ async function main(argv: string[]): Promise<number> {
           do: { type: 'string', default: '1960-Q4' },
           ziarno: { type: 'string', default: 'PACE-1951' },
           decyzje: { type: 'string', default: 'domyslne' },
+          wiernosc: { type: 'string', default: 'wysoka' },
           prawda: { type: 'boolean', default: false },
           serie: { type: 'string' },
           dane: { type: 'string' },
@@ -138,8 +140,17 @@ async function main(argv: string[]): Promise<number> {
         return 1;
       }
       const world = content.world;
+      const levels: Record<string, HistoryFidelity> = { wysoka: 'high', umiarkowana: 'medium', niska: 'low' };
+      const historyFidelity = levels[values.wiernosc];
+      if (!historyFidelity) {
+        console.error('--wiernosc przyjmuje "wysoka", "umiarkowana" albo "niska"');
+        return 2;
+      }
       const run = (seed: string) =>
-        simulateWorld(createInitialState(content, { id: slug(seed), seed }), world, { to: values.do, decisions });
+        simulateWorld(createInitialState(content, { id: slug(seed), seed, settings: { historyFidelity } }), world, {
+          to: values.do,
+          decisions,
+        });
 
       if (values.serie !== undefined) {
         const n = Number.parseInt(values.serie, 10);

@@ -106,3 +106,71 @@ test('błędne dane: identyfikator, nieznana kampania, nieznana akcja', async (t
   const page = await fetch(`${base}/`);
   assert.match(page.headers.get('content-security-policy') ?? '', /default-src 'self'/);
 });
+
+test('nowa kampania: wierność historii z formularza trafia do widoku', async (t) => {
+  const { base } = await startApp(t);
+  const low = (await (
+    await post(base, '/api/campaigns', { id: 'niska', seed: 'x', historyFidelity: 'low' })
+  ).json()) as DeskPayload;
+  assert.equal(low.view.historyFidelity, 'low');
+  const def = (await (await post(base, '/api/campaigns', { id: 'domyslna', seed: 'x' })).json()) as DeskPayload;
+  assert.equal(def.view.historyFidelity, 'high');
+  assert.equal((await post(base, '/api/campaigns', { id: 'zla', seed: 'x', historyFidelity: 'zero' })).status, 400);
+  assert.ok(def.regions.length >= 5, 'Tablica sytuacyjna ma regiony świata');
+});
+
+test('narrator: pakiet do skopiowania i wklejona odpowiedź', async (t) => {
+  const { base } = await startApp(t);
+  await post(base, '/api/campaigns', { id: 'opowiesc', seed: 'PACE-1951' });
+  const pkgRes = await post(base, '/api/campaigns/opowiesc/narrator-package', { kind: 'quarter', mode: 'full' });
+  assert.equal(pkgRes.status, 200);
+  const pkg = (await pkgRes.json()) as { title: string; prompt: string };
+  assert.match(pkg.prompt, /ZADANIE: NARRACJA KWARTAŁU/);
+
+  const reply = '## SCENA\nDeszcz nad Potomakiem.\n\n## PRASA\nKurier: Nagłówek\nZdanie.\n\n## KULUARY\nCisza.';
+  const res = await post(base, '/api/campaigns/opowiesc/narrator-reply', {
+    kind: 'quarter',
+    source: 'claude',
+    text: reply,
+  });
+  assert.equal(res.status, 200);
+  const desk = (await res.json()) as DeskPayload;
+  assert.equal(desk.view.narrative.length, 1);
+  assert.equal(desk.view.narrative[0]!.sections.length, 3);
+  assert.equal(desk.view.narrative[0]!.source, 'claude');
+  assert.deepEqual(desk.messages, ['Narracja wczytana.']);
+  // Narracja nie zmienia stanu gry (zasada Z3).
+  const before = (await (await fetch(`${base}/api/campaigns/opowiesc`)).json()) as DeskPayload;
+  assert.deepEqual(before.view.indicators, desk.view.indicators);
+
+  assert.equal(
+    (await post(base, '/api/campaigns/opowiesc/narrator-reply', { kind: 'quarter', source: 'claude', text: '  ' }))
+      .status,
+    422,
+  );
+  assert.equal(
+    (
+      await post(base, '/api/campaigns/opowiesc/narrator-reply', {
+        kind: 'decision',
+        instanceId: 'brak',
+        source: 'gemini',
+        text: 'x',
+      })
+    ).status,
+    409,
+  );
+  assert.equal(
+    (
+      await post(base, '/api/campaigns/opowiesc/narrator-package', {
+        kind: 'decision',
+        mode: 'short',
+        instanceId: 'brak',
+      })
+    ).status,
+    409,
+  );
+  assert.equal(
+    (await post(base, '/api/campaigns/opowiesc/narrator-reply', { kind: 'quarter', source: 'obcy', text: 'x' })).status,
+    400,
+  );
+});

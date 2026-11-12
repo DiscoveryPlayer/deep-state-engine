@@ -3,9 +3,9 @@
 > Ten plik czyta się na początku każdej sesji pracy i aktualizuje na jej końcu.
 > Jest pamięcią projektu — historia czatu nią nie jest.
 
-**Ostatnia aktualizacja:** 11.11.2026
-**Bieżący plaster:** 1 „Da się grać: 1951–1955” gotowy (PR do zatwierdzenia); następny to plaster 2 „Pilotaż i poprawki”
-**Plan:** [Plan Budowy v3](PLAN_BUDOWY.md) (zastąpił wersje 1.0 i 2.0)
+**Ostatnia aktualizacja:** 12.11.2026
+**Bieżący plaster:** 2 „Pilotaż i poprawki”; z plastra 5 wyprzedzająco zrobiony Łącznik AI (PR do zatwierdzenia)
+**Plan:** [Plan Budowy v3](PLAN_BUDOWY.md)
 
 ## Zrobione
 
@@ -56,6 +56,13 @@
 - **Treść:** 24 wątki 1951–1955, 2 szablony, 35 wzorców, 6 dylematów, 15 zmiennych świata, 31 miejsc startu.
 - **Testy:** 81. Rozgrywka próbna przez API i w przeglądarce do 1956 roku.
 
+### Wierność historii i Łącznik AI (12.11.2026, decyzja 0018)
+
+- **Wierność historii** na planszy nowej kampanii: wysoka, umiarkowana, niska. W seriach 300 symulacji daje 90%, 70% i 51% rozstrzygnięć historycznych w etapach z wyborem.
+- **Łącznik AI:** okno „Narrator” kopiuje Pakiet Kontekstu do rozmowy z Claude albo Gemini i wczytuje wklejoną odpowiedź. Dwa zlecenia: narracja kwartału (scena, prasa, kuluary) i głosy doradców w sprawie do decyzji.
+- **Obraz i okna:** odprawa po zamknięciu kwartału, czytnik narracji, Tablica sytuacyjna regionów, przebiegi wskaźników, komunikaty znikające same.
+- **Stan w wersji 4** z migracją 3 → 4. Testów: 94.
+
 ## Następne zadania
 
 Kolejność według Planu Budowy v3, rozdział 5.
@@ -67,10 +74,11 @@ Kolejność według Planu Budowy v3, rozdział 5.
 
 ## Do sprawdzenia przy pilotażu
 
+- **Narrator:** czy Claude i Gemini trzymają się zasad z pakietu (nie dopisują faktów, nie podpowiadają opcji) i formatu sekcji. Gra tego nie sprawdza.
+- **Niska wierność historii:** czy świat po kilku latach pozostaje spójny w lekturze.
 - **Bilans lotów** (decyzja 0017, punkt 7): liczby są tymczasowe i nie pochodzą z GDD.
 - **Dryf Poparcia Publicznego** i nasycenie konferencji prasowej (decyzja 0017, punkt 6).
 - **Skutki wydarzeń świata dla Nastawienia frakcji** (`faction … disposition` w gałęziach, na przykład po próbie bomby wodorowej): czy nie są zbyt częste.
-- **Siła historii:** w serii 300 kampanii gałąź historyczna wygrywa w większości etapów w ponad 90% przypadków. Decyzje Andersona przesuwają wagi, ale świat rzadko zbacza daleko.
 - **Napięcie Geopolityczne** w rozgrywkach próbnych dochodziło w 1955 roku do odprężenia (poziom 5). Do oceny, czy to nie za wcześnie.
 
 ## Otwarte kwestie projektowe
