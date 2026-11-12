@@ -1,0 +1,86 @@
+id: japonia
+title: Japonia po okupacji
+kind: historical
+region: azja
+summary: >-
+  Japonia odzyskuje suwerenność i zostaje obserwatorem w PACE. Kraj, na który spadły trzy
+  bomby atomowe, nie chce rakiet wojskowych, ale chce nauki.
+historicalNote: >-
+  Traktat pokojowy z San Francisco wchodzi w życie 28 kwietnia 1952; „krwawy pierwszy maja”
+  w Tokio. Profesor Hideo Itokawa z Uniwersytetu Tokijskiego odpala rakietę „Ołówek”
+  (12 kwietnia 1955, długość 23 cm). Zjednoczenie konserwatystów w Partię Liberalno-Demokratyczną
+  (15 listopada 1955). KANON GRY: bomby spadły na Hiroszimę, Nagasaki i Kobe; Japonia jest
+  obserwatorem PACE od 1952 roku.
+drivers: [napiecie_azja, wyscig_atomowy]
+start:
+  from: 1952-Q2
+stages:
+  - id: suwerennosc
+    title: koniec okupacji
+    at: 1952-Q2
+    anchor: true
+    branches:
+      - id: traktat
+        title: Japonia odzyskuje suwerenność
+        historical: true
+        weight: 10
+        text: >-
+          Wchodzi w życie traktat pokojowy i kończy się okupacja Japonii. Amerykańskie bazy
+          zostają na mocy osobnego układu. Trzy dni później demonstracja pierwszomajowa
+          w Tokio kończy się bitwą z policją przed pałacem cesarskim.
+        reactions:
+          - actor: Sojusznicy
+            text: >-
+              Rada Atlantycka przyznaje Japonii status obserwatora w PACE. Australia głosuje
+              za, ale jej delegat prosi o zapisanie w protokole, że pamięta wojnę.
+
+  - id: olowek
+    title: rakieta „Ołówek”
+    at: 1955-Q2
+    decision:
+      title: 'Japonia: prośba profesora z Tokio'
+      prompt: >-
+        Japoński profesor odpalił w podmiejskim baraku rakietę długości ołówka i prosi PACE
+        o dane z rakiet sondujących na potrzeby Roku Geofizycznego. BAS uważa, że to
+        przekazywanie technologii rakietowej byłemu wrogowi. Rada Naukowa uważa, że to nauka.
+      options:
+        - id: dane
+          title: Przekazać dane i zaprosić japońskich uczonych
+          effects:
+            - { faction: RN, disposition: 1 }
+            - { faction: BAS, disposition: -1 }
+            - { indicator: WF, add: 2 }
+            - { flag: japonia_wspolpraca }
+          text: >-
+            Trzech japońskich uczonych przyjeżdża na staż do ośrodka rakiet sondujących.
+            Tokijskie gazety piszą o „pokojowych rakietach” i o tym, że Japonia wraca do nauki.
+        - id: odmowa
+          title: Odmówić
+          effects:
+            - { faction: BAS, disposition: 1 }
+            - { indicator: WF, add: -1 }
+          text: >-
+            PACE odpowiada uprzejmie, że dane są zastrzeżone. Profesor liczy wszystko sam
+            i za dwa lata ma rakietę, która dolatuje do jonosfery.
+      defaultOption: odmowa
+    branches:
+      - id: proba
+        title: Pierwsza japońska rakieta po wojnie
+        historical: true
+        weight: 10
+        text: >-
+          Na przedmieściach Tokio profesor Itokawa odpala poziomo rakietę długości dwudziestu
+          trzech centymetrów. Prasa nazywa ją „Ołówkiem”. To pierwsza japońska rakieta od
+          końca wojny i pierwsza, która nie ma niczego zabić.
+
+  - id: pld
+    title: nowa partia rządząca
+    at: 1955-Q4
+    branches:
+      - id: zjednoczenie
+        title: Konserwatyści łączą się w jedną partię
+        historical: true
+        weight: 10
+        text: >-
+          Dwie japońskie partie konserwatywne łączą się w Partię Liberalno-Demokratyczną.
+          Powstaje układ, który da Japonii stabilne rządy i stały sojusz z Ameryką.

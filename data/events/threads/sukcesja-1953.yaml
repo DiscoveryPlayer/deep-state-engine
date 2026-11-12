@@ -1,0 +1,220 @@
+id: sukcesja-1953
+title: Sukcesja na Kremlu
+kind: historical
+region: zsrr
+summary: >-
+  Śmierć Stalina otwiera walkę o władzę. Od jej wyniku zależy kurs Moskwy: odwilż albo
+  twarda ręka, a więc także Napięcie Geopolityczne i tempo radzieckich programów.
+historicalNote: >-
+  Komunikat o „spisku lekarzy” (13 stycznia 1953). Śmierć Stalina (5 marca 1953). Odwołanie
+  sprawy lekarzy (4 kwietnia) i amnestia. Przemówienie Eisenhowera „Szansa dla pokoju”
+  (16 kwietnia 1953). Aresztowanie Berii (26 czerwca, ogłoszone 10 lipca 1953); jego
+  nieobecność w Teatrze Wielkim 27 czerwca zauważyli dyplomaci. Egzekucja Berii (23 grudnia
+  1953). Malenkow ustępuje ze stanowiska premiera (8 lutego 1955), zastępuje go Bułganin.
+  Tajny referat Chruszczowa (25 lutego 1956). Rozbicie „grupy antypartyjnej” (czerwiec 1957).
+  Uwaga: losy Głównego Konstruktora należą do modelu ZSRR, nie do tego wątku.
+drivers: [kurs_kremla, jednosc_bloku]
+start:
+  from: 1953-Q1
+stages:
+  - id: lekarze
+    title: sprawa lekarzy
+    at: 1953-Q1
+    branches:
+      - id: komunikat
+        title: „Spisek lekarzy kremlowskich”
+        historical: true
+        weight: 10
+        effects:
+          - { var: kurs_kremla, add: 1 }
+        text: >-
+          Radziecka prasa ogłasza wykrycie spisku lekarzy, którzy mieli truć przywódców
+          partii. Większość aresztowanych to Żydzi. W Moskwie spodziewają się nowej
+          wielkiej czystki.
+
+  - id: smierc
+    title: śmierć Stalina
+    sameQuarter: true
+    branches:
+      - id: umiera
+        title: Stalin nie żyje
+        historical: true
+        weight: 10
+        effects:
+          - { var: kurs_kremla, add: -2 }
+          - { clearFlag: stalin_zyje }
+          - { flag: po_stalinie }
+        text: >-
+          Radio Moskwa podaje, że serce Józefa Stalina przestało bić. Władzę przejmuje
+          kolegialne kierownictwo: Malenkow, Beria, Mołotow, a w drugim szeregu Chruszczow.
+        reactions:
+          - actor: BAS
+            text: >-
+              Biuro Analiz Specjalnych przyznaje, że nie wie, kto naprawdę rządzi w Moskwie.
+              Ocena trafia na biurko z kodem F: nie da się ocenić.
+          - actor: Sojusznicy
+            text: >-
+              W Londynie Churchill mówi o „nowym wietrze” i chce spotkania na szczycie.
+              Waszyngton odpowiada, że najpierw czyny.
+      - id: zyje
+        title: Stalin wraca do zdrowia
+        weight: 1
+        delayQuarters: 4
+        effects:
+          - { flag: stalin_zyje }
+          - { var: kurs_kremla, add: 1 }
+          - { indicator: NG, add: -1 }
+        text: >-
+          Po kilku dniach milczenia Kreml podaje, że towarzysz Stalin wrócił do pracy.
+          Proces lekarzy ma się zacząć na wiosnę, a w partii zaczyna się czystka.
+
+  - id: szansa
+    title: odwilż
+    at: 1953-Q2
+    branches:
+      - id: amnestia
+        title: Amnestia i „Szansa dla pokoju”
+        historical: true
+        weight: 10
+        effects:
+          - { var: kurs_kremla, add: -1 }
+          - { indicator: NG, add: 1 }
+        text: >-
+          Kreml ogłasza amnestię i przyznaje, że sprawę lekarzy sfabrykowano. Prezydent
+          Eisenhower odpowiada przemówieniem: każdy zbudowany okręt i każda wystrzelona
+          rakieta to kradzież wobec głodnych. Wzywa Moskwę do czynów.
+
+  - id: beria
+    title: sprawa Berii
+    at: 1953-Q3
+    rumor:
+      quartersBefore: 1
+      reliability: C
+      credibility: 3
+      source: humint
+      topic: Kreml
+      text: >-
+        Dyplomaci w Moskwie zauważyli, że Berii nie było w loży na premierze w Teatrze Wielkim,
+        a na ulicach stolicy pojawiły się czołgi. BAS: albo Beria bierze wszystko, albo
+        właśnie wszystko stracił.
+    branches:
+      - id: aresztowany
+        title: Beria aresztowany
+        historical: true
+        weight: 10
+        effects:
+          - { var: jednosc_bloku, add: -1 }
+        text: >-
+          Moskwa ogłasza, że Ławrientij Beria został usunięty z partii jako „wróg ludu”
+          i agent imperializmu. Szef policji politycznej przegrał z resztą kierownictwa.
+      - id: wygrywa
+        title: Beria przejmuje władzę
+        weight: 1
+        effects:
+          - { var: kurs_kremla, add: -1 }
+          - { flag: beria_u_wladzy }
+        next: nota_berii
+        text: >-
+          Z kierownictwa znikają Malenkow i Chruszczow. Beria, szef policji i programu
+          atomowego, rządzi sam. Ku zaskoczeniu Zachodu zaczyna od ustępstw.
+
+  - id: nota_berii
+    title: oferta w sprawie Niemiec
+    at: 1953-Q4
+    alternative: true
+    branches:
+      - id: odrzucona
+        title: Zachód odrzuca ofertę
+        weight: 6
+        effects:
+          - { var: kurs_kremla, add: 1 }
+        next: malenkow
+        text: >-
+          Moskwa proponuje zjednoczenie Niemiec w zamian za ich neutralność. Bonn, Paryż
+          i Waszyngton uznają to za pułapkę, która ma zatrzymać uzbrojenie RFN.
+      - id: rozmowy
+        title: Rozmowy o neutralnych Niemczech
+        weight: 3
+        modifiers:
+          - { when: { var: jednosc_zachodu, op: '<=', value: 4 }, mul: 2 }
+        effects:
+          - { var: jednosc_zachodu, add: -2 }
+          - { divergence: europa, add: 2 }
+          - { indicator: NG, add: 1 }
+          - { flag: neutralne_niemcy_rozmowy }
+        next: malenkow
+        text: >-
+          Londyn i Paryż chcą sprawdzić ofertę Moskwy. W Berlinie zaczyna się konferencja
+          czterech mocarstw o zjednoczeniu i neutralności Niemiec. Adenauer mówi o zdradzie.
+
+  - id: egzekucja
+    title: koniec Berii
+    at: 1953-Q4
+    branches:
+      - id: stracony
+        title: Beria rozstrzelany
+        historical: true
+        weight: 10
+        text: >-
+          Po tajnym procesie Beria i sześciu jego ludzi zostają rozstrzelani. Policja
+          polityczna trafia pod kontrolę partii, a w kierownictwie rośnie pozycja
+          Nikity Chruszczowa.
+
+  - id: malenkow
+    title: zmiana premiera
+    at: 1955-Q1
+    branches:
+      - id: ustepuje
+        title: Malenkow ustępuje
+        historical: true
+        weight: 10
+        requires: { not: { flag: beria_u_wladzy } }
+        effects:
+          - { var: kurs_kremla, add: 1 }
+        text: >-
+          Gieorgij Malenkow składa samokrytykę i ustępuje ze stanowiska premiera. Zastępuje go
+          marszałek Bułganin, ale partią, a więc państwem, kieruje już Chruszczow. Priorytet
+          wraca do przemysłu ciężkiego i zbrojeń.
+      - id: zostaje
+        title: Malenkow zostaje
+        weight: 1
+        requires: { not: { flag: beria_u_wladzy } }
+        effects:
+          - { var: kurs_kremla, add: -1 }
+          - { var: presja_wyscigu, add: -1 }
+        text: >-
+          Malenkow odpiera atak Chruszczowa. Jego program się utrzymuje: więcej towarów
+          dla ludności, mniej stali dla armii.
+      - id: rzady-berii
+        title: Beria umacnia władzę
+        weight: 1
+        minor: true
+        requires: { flag: beria_u_wladzy }
+        text: >-
+          Beria usuwa z rządu ostatnich ludzi dawnego kierownictwa. Jego Moskwa jest
+          nieprzewidywalna: jednego dnia ustępuje, drugiego aresztuje.
+
+  - id: referat
+    title: XX Zjazd
+    at: 1956-Q1
+    branches:
+      - id: tajny-referat
+        title: Tajny referat Chruszczowa
+        historical: true
+        weight: 10
+        requires: { not: { flag: beria_u_wladzy } }
+        effects:
+          - { var: kurs_kremla, add: -2 }
+          - { var: jednosc_bloku, add: -2 }
+          - { flag: tajny_referat }
+        text: >-
+          Na zamkniętym posiedzeniu zjazdu partii Chruszczow przez cztery godziny mówi
+          o zbrodniach Stalina. Tekst w kilka tygodni krąży po całym bloku, a w czerwcu
+          drukuje go amerykańska prasa.
+      - id: bez-referatu
+        title: Zjazd bez rozliczeń
+        weight: 1
+        requires: { not: { flag: beria_u_wladzy } }
+        text: >-
+          Zjazd partii potwierdza „kolektywne kierownictwo” i ani słowem nie wspomina
+          o błędach przeszłości. Odwilż pozostaje sprawą gestów, nie zasad.

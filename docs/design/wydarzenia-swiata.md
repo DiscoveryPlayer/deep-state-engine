@@ -198,11 +198,12 @@ Im więcej wątków, tym rzadszy świat w pełni historyczny: przy 12 etapach na
 
 ## 10. Czego jeszcze nie ma
 
-- **Pętli tury.** Na razie świat przesuwa `simulateWorld` (CLI, testy). W fazie 1D `advanceWorld` stanie się krokiem zamknięcia kwartału.
-- **Korekt w budżecie.** Zapisują się w `world.corrections`, a raport budżetowy powstanie w fazie 1D.
-- **Narratora.** Wpisy dziennika są gotowe do opisania przez AI (faza 3), ale teksty z YAML już wystarczają do gry.
-- **Powiązań z frakcjami i Rejestrem.** Dylemat nie tworzy jeszcze wpisu Rejestru (Długu, Urazy). Potrzebny osobny skutek `registry`.
+- **Narratora.** Wpisy dziennika są gotowe do opisania przez AI (Plan Budowy v3, plaster 5), ale teksty z YAML wystarczają do gry.
+- **Powiązań z Rejestrem.** Decyzja nie tworzy jeszcze wpisu Rejestru (Długu, Urazy). Potrzebny osobny skutek `registry` (plaster 2).
+- **Palet epok** dla wzorców (Dossier III, część V).
 - **Postaci tła poza kadrem** (decyzja 0013): osobny system, który może korzystać z tych samych warunków.
+
+Pętla tury i Korekty w budżecie, których brakowało w wersji 1, są wdrożone (punkt 12).
 
 ## 11. Odpowiedzi autora (7.11.2026)
 
@@ -214,3 +215,38 @@ Im więcej wątków, tym rzadszy świat w pełni historyczny: przy 12 etapach na
 Poprawki po serii symulacji:
 - po wycofaniu Brytyjczyków z Abadanu wątek wraca do etapu „los Mosaddegha”;
 - nowy wzorzec „nowy rocznik inżynierów” równoważy drenaż mózgów, który wcześniej potrafił wyzerować pulę kadr.
+
+## 12. Wersja 2: wątki głębokie i pętla kwartału (11.11.2026, decyzja 0017)
+
+Standard wątku głębokiego z Dossier III (część VII) jest wdrożony w silniku i w treści na lata 1951–1955.
+
+**Nowe pola etapu:**
+
+| Pole | Znaczenie |
+|---|---|
+| `anchor: true` | Etap-kotwica: jedna gałąź historyczna, bez decyzji |
+| `sameQuarter: true` | Depesza w tym samym kwartale co poprzedni etap (nie na pierwszym etapie) |
+| `rumor` | Pogłoska wywiadu `quartersBefore` kwartałów przed etapem; trafia do Ocen wywiadowczych z kodem wiarygodności |
+| `decision` | Sprawa do decyzji Andersona przed etapem. Opcje mają `effects` i `weights`, które przesuwają wagi gałęzi tego samego etapu (`mul`, `add`). Bez decyzji: `defaultOption` i `inactionEffects` |
+
+**Nowe pola gałęzi:**
+
+| Pole | Znaczenie |
+|---|---|
+| `kind` | Rodzaj gałęzi: `H`, `P`, `O`, `X`, `A`. Walidator sprawdza zgodność z mechaniką (na przykład `O` wymaga `delayQuarters`) |
+| `minor: true` | Wariant szczegółu: niehistoryczny, ale bez wzrostu Rozbieżności |
+| `reactions` | Reakcje stron jako osobne wpisy dziennika (`actor`, `text`, `effects`) |
+| `ongoing` | Sytuacja trwająca: skutki co kwartał od następnego kwartału, do etapu `until` albo przez `maxQuarters` |
+
+**Wątki-echa** (`kind: reactive`) nie mają dat. Startują, gdy spełnią się `start.conditions` (zwykle flaga ustawiona przez inny wątek), a ich etapy liczą czas przez `offset`.
+
+**Kolejność w kwartale** (`advanceWorld`): dylematy po terminie → start wątków → szablony → sytuacje trwające → etapy wątków (pogłoska, decyzja, rozstrzygnięcie, reakcje, sytuacja) → wzorce → dylematy samodzielne. Limit oczekujących dylematów (`maxPendingDilemmas`) liczy tylko dylematy samodzielne; decyzje etapów przychodzą zawsze.
+
+**Etap bez dostępnej gałęzi** (wszystkie mają niespełnione `requires`) jest pomijany bez wpisu.
+
+**Bezpieczniki szablonów:** `historicalInstances` (szablon nie losuje kraju, który ma własny wątek historyczny) i `exclusiveGroup` (jedna instancja z grupy naraz).
+
+**Treść w wersji 2:** 24 wątki 1951–1955, 15 zmiennych świata, 35 wzorców, 6 dylematów. Lista wątków: `data/events/threads/`.
+
+**Strojenie:** `npm run dse -- swiat --serie 300 --do 1955-Q4 --decyzje losowe` pokazuje częstości gałęzi. W serii 300 kampanii z 11.11.2026 gałąź historyczna wygrywa w większości etapów w ponad 90% przypadków, ale etapów jest tyle, że żadna kampania nie przebiegła w całości zgodnie z historią: w każdej coś poszło inaczej.
+

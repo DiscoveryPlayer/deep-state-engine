@@ -2,12 +2,13 @@
  * Silnik wydarzeń świata (decyzja 0015, docs/design/wydarzenia-swiata.md).
  *
  * Jeden krok = jeden kwartał. Kolejność:
- *   1. dylematy po terminie rozstrzygają się opcją domyślną,
- *   2. startują wątki historyczne, których czas nadszedł,
+ *   1. dylematy i decyzje etapów po terminie rozstrzygają się opcją domyślną,
+ *   2. startują wątki historyczne i reaktywne, których czas nadszedł,
  *   3. szablony wątków mogą uruchomić nowe instancje,
- *   4. wątki rozstrzygają etapy, na które przyszła pora (wybór gałęzi),
- *   5. losują się wzorce,
- *   6. na Biurko mogą trafić nowe dylematy.
+ *   4. sytuacje trwające naliczają skutki,
+ *   5. wątki: pogłoski wywiadu, punkty decyzyjne, rozstrzygnięcie etapów (wybór gałęzi),
+ *   6. losują się wzorce,
+ *   7. na Biurko mogą trafić nowe dylematy.
  *
  * Gałęzie wybiera SILNIK, nie AI (zasada Z3): waga gałęzi zależy od stanu świata,
  * a losowanie idzie przez Rng z ziarnem zapisanym w stanie, więc wynik jest powtarzalny.
@@ -21,6 +22,7 @@ import { PARAM_PLACEHOLDER } from './schema.ts';
 import type {
   BranchContent,
   StageContent,
+  StageDecision,
   TemplateParamValue,
   ThreadContent,
   ThreadTemplateContent,
@@ -72,15 +74,25 @@ export interface WeightedBranch {
   weight: number;
 }
 
-/** Wagi gałęzi etapu w bieżącym stanie (tylko gałęzie, których warunek `requires` jest spełniony). */
-export function branchWeights(stage: StageContent, region: string, state: GameState): WeightedBranch[] {
+/**
+ * Wagi gałęzi etapu w bieżącym stanie (tylko gałęzie, których warunek `requires` jest spełniony).
+ * `choice` to opcja wybrana przez Andersona w punkcie decyzyjnym etapu: przesuwa wagi gałęzi.
+ */
+export function branchWeights(
+  stage: StageContent,
+  region: string,
+  state: GameState,
+  choice?: string,
+): WeightedBranch[] {
   const d = state.world.divergence[region] ?? 0;
+  const shifts = stage.decision?.options.find((o) => o.id === choice)?.weights ?? {};
   return stage.branches
     .filter((b) => b.requires === undefined || evaluateCondition(b.requires, state))
-    .map((b) => ({
-      branch: b,
-      weight: applyModifiers(b.weight, b.modifiers, state) * divergenceFactor(b.historical, d),
-    }));
+    .map((b) => {
+      const shift = shifts[b.id];
+      const base = applyModifiers(b.weight, b.modifiers, state) * (shift?.mul ?? 1) + (shift?.add ?? 0);
+      return { branch: b, weight: Math.max(0, base) * divergenceFactor(b.historical, d) };
+    });
 }
 
 function pickBranch(weighted: WeightedBranch[], rng: Rng): BranchContent | undefined {
@@ -119,6 +131,9 @@ interface ThreadDef {
   visibility: 'public' | 'secret';
   stages: StageContent[];
   fromTemplate: boolean;
+  /** Czy gałąź niehistoryczna sama podnosi Rozbieżność (tylko wątki historyczne). */
+  tracksHistory: boolean;
+  exclusiveGroup: string | undefined;
 }
 
 function threadDef(inst: ThreadInstance, content: WorldContent): ThreadDef | undefined {
@@ -132,13 +147,45 @@ function threadDef(inst: ThreadInstance, content: WorldContent): ThreadDef | und
     visibility: src.visibility,
     stages: src.stages,
     fromTemplate: inst.fromTemplate,
+    tracksHistory: !inst.fromTemplate && (src as ThreadContent).kind === 'historical',
+    exclusiveGroup: src.exclusiveGroup,
   };
+}
+
+/** Najwięcej etapów jednego wątku rozstrzyganych w jednym kwartale (`sameQuarter`). */
+const MAX_STAGES_PER_QUARTER = 8;
+
+function newInstance(def: string, fromTemplate: boolean, params: Record<string, string>, q: string, stage: string) {
+  const inst: ThreadInstance = {
+    def,
+    fromTemplate,
+    params,
+    startedIn: q,
+    status: 'active',
+    stage,
+    nextCheck: null,
+    history: [],
+    rumors: [],
+    asked: [],
+    decisions: {},
+  };
+  return inst;
+}
+
+/** Czy w regionie trwa już wątek albo szablon z tej samej grupy wyłączności. */
+function groupBusy(world: WorldState, content: WorldContent, group: string | undefined, region: string): boolean {
+  if (!group) return false;
+  return Object.values(world.threads).some((inst) => {
+    if (inst.status !== 'active') return false;
+    const def = threadDef(inst, content);
+    return def?.exclusiveGroup === group && def.region === region;
+  });
 }
 
 /** Kwartał, w którym etap powinien się rozstrzygnąć (historyczny albo przesunięty od startu szablonu). */
 function stageDue(def: ThreadDef, stageIndex: number, inst: ThreadInstance): Quarter {
   const stage = def.stages[stageIndex]!;
-  if (!def.fromTemplate && stage.at) return parseQuarterCode(stage.at);
+  if (stage.at) return parseQuarterCode(stage.at);
   const offset = stage.offset ?? stageIndex;
   return shiftQuarter(parseQuarterCode(inst.startedIn), offset);
 }
@@ -186,16 +233,7 @@ export function advanceWorld(input: GameState, content: WorldContent): WorldStep
     if (world.threads[t.id]) continue;
     if (quartersBetween(parseQuarterCode(t.start.from), now) < 0) continue;
     if (t.start.conditions && !evaluateCondition(t.start.conditions, state)) continue;
-    const inst: ThreadInstance = {
-      def: t.id,
-      fromTemplate: false,
-      params: {},
-      startedIn: q,
-      status: 'active',
-      stage: t.stages[0]!.id,
-      nextCheck: null,
-      history: [],
-    };
+    const inst = newInstance(t.id, false, {}, q, t.stages[0]!.id);
     const def = threadDef(inst, content)!;
     inst.nextCheck = quarterCode(later(now, stageDue(def, 0, inst)));
     world.threads[t.id] = inst;
@@ -207,6 +245,9 @@ export function advanceWorld(input: GameState, content: WorldContent): WorldStep
     if (record && record.count >= tpl.maxInstances) continue;
     if (!cooldownPassed(record?.last, tpl.cooldownQuarters, now)) continue;
     if (tpl.conditions && !evaluateCondition(tpl.conditions, state)) continue;
+    // Bezpieczniki (Dossier III, część I, punkt 4): przypadek historyczny trwa albo grupa zajęta.
+    if (tpl.historicalInstances.some((id) => world.threads[id]?.status === 'active')) continue;
+    if (groupBusy(world, content, tpl.exclusiveGroup, tpl.region)) continue;
     const p =
       chance(tpl.chancePerQuarter, tpl.chanceModifiers, state) *
       divergenceFactor(false, world.divergence[tpl.region] ?? 0);
@@ -215,77 +256,198 @@ export function advanceWorld(input: GameState, content: WorldContent): WorldStep
     for (const key of Object.keys(tpl.params).sort()) setParam(params, key, rng.pick(tpl.params[key]!));
     world.seq += 1;
     const instanceId = `${tpl.id}#${world.seq}`;
-    const inst: ThreadInstance = {
-      def: tpl.id,
-      fromTemplate: true,
-      params,
-      startedIn: q,
-      status: 'active',
-      stage: tpl.stages[0]!.id,
-      nextCheck: null,
-      history: [],
-    };
+    const inst = newInstance(tpl.id, true, params, q, tpl.stages[0]!.id);
     inst.nextCheck = quarterCode(later(now, stageDue(threadDef(inst, content)!, 0, inst)));
     world.threads[instanceId] = inst;
     world.templateLog[tpl.id] = { count: (record?.count ?? 0) + 1, last: q };
   }
 
-  // 4. Etapy wątków.
-  for (const instanceId of Object.keys(world.threads).sort()) {
-    const inst = world.threads[instanceId]!;
-    if (inst.status !== 'active' || inst.nextCheck === null || inst.stage === null) continue;
-    if (quartersBetween(parseQuarterCode(inst.nextCheck), now) < 0) continue;
-    const def = threadDef(inst, content);
-    if (!def) continue;
-    const stageIndex = def.stages.findIndex((s) => s.id === inst.stage);
-    const stage = def.stages[stageIndex];
-    if (!stage) continue;
-
-    const branch = pickBranch(branchWeights(stage, def.region, state), rng);
-    if (!branch) continue;
-
-    applyEffects(state, branch.effects, content, `${inst.def}.${stage.id}.${branch.id}`);
-    // Rozbieżność rośnie, gdy świat ODCHODZI od historii: w etapie z gałęzią historyczną
-    // wypadła inna. W etapie alternatywnym historii już nie ma, więc nie liczy się drugi raz
-    // (taki etap może podnieść Rozbieżność jawnie, skutkiem `divergence`).
-    if (!branch.historical && !def.fromTemplate && !stage.alternative) {
-      world.divergence[def.region] = Math.min(
-        DIVERGENCE_MAX,
-        (world.divergence[def.region] ?? 0) + DIVERGENCE_PER_NONHISTORICAL_BRANCH,
-      );
-    }
-    inst.history.push({ quarter: q, stage: stage.id, branch: branch.id, historical: branch.historical });
+  const endSituation = (sit: WorldState['situations'][number]) => {
+    world.situations = world.situations.filter((x) => x.id !== sit.id);
     log({
       quarter: q,
-      kind: def.fromTemplate ? 'template' : 'thread',
-      ref: `${inst.def}.${stage.id}.${branch.id}`,
-      title: fill(`${def.title}: ${stage.title}`, inst.params),
-      text: fill(branch.text, inst.params),
-      visibility: branch.visibility ?? def.visibility,
-      historical: branch.historical,
+      kind: 'situation',
+      ref: `${sit.thread}.${sit.stage}.${sit.branch}`,
+      title: `Koniec sytuacji: ${sit.title}`,
+      text: 'Sytuacja wygasła i nie obciąża już kolejnych kwartałów.',
+      visibility: 'public',
     });
+  };
 
-    if (branch.delayQuarters !== undefined) {
-      inst.nextCheck = quarterCode(shiftQuarter(now, branch.delayQuarters));
+  // 4. Sytuacje trwające: skutki co kwartał, od kwartału po starcie.
+  for (const sit of [...world.situations]) {
+    const inst = world.threads[sit.thread];
+    const def = inst ? threadDef(inst, content) : undefined;
+    const ongoing = def?.stages.find((st) => st.id === sit.stage)?.branches.find((b) => b.id === sit.branch)?.ongoing;
+    const passed = sit.until !== null && inst?.history.some((h) => h.stage === sit.until);
+    const over = !inst || !ongoing || inst.status === 'ended' || passed || sit.remaining <= 0;
+    if (over) {
+      endSituation(sit);
       continue;
     }
-    // Bez `next` wątek idzie do najbliższego etapu, który nie jest alternatywny:
-    // do etapów alternatywnych prowadzi tylko jawne `next`.
-    const nextId = branch.next ?? def.stages.slice(stageIndex + 1).find((s) => !s.alternative)?.id ?? 'end';
-    const nextIndex = def.stages.findIndex((s) => s.id === nextId);
-    if (nextId === 'end' || nextIndex === -1) {
-      inst.status = 'ended';
-      inst.stage = null;
-      inst.nextCheck = null;
-      continue;
-    }
-    let due = stageDue(def, nextIndex, inst);
-    if (branch.advanceNext !== undefined) due = shiftQuarter(due, -branch.advanceNext);
-    inst.stage = nextId;
-    inst.nextCheck = quarterCode(later(shiftQuarter(now, 1), due));
+    if (sit.startedIn === q) continue;
+    applyEffects(state, ongoing.effects, content, `${sit.thread}.${sit.stage}.${sit.branch}.sytuacja`);
+    sit.remaining -= 1;
   }
 
-  // 5. Wzorce.
+  // 5. Wątki: pogłoski, punkty decyzyjne, rozstrzygnięcie etapów.
+  for (const instanceId of Object.keys(world.threads).sort()) {
+    const inst = world.threads[instanceId]!;
+    const def = threadDef(inst, content);
+    if (!def) continue;
+
+    for (let guard = 0; guard < MAX_STAGES_PER_QUARTER; guard++) {
+      if (inst.status !== 'active' || inst.nextCheck === null || inst.stage === null) break;
+      const stageIndex = def.stages.findIndex((s) => s.id === inst.stage);
+      const stage = def.stages[stageIndex];
+      if (!stage) break;
+      const wait = quartersBetween(now, parseQuarterCode(inst.nextCheck));
+
+      // Pogłoska wywiadu: wychodzi przed etapem. Gdy etap już nadszedł, jest za późno.
+      if (stage.rumor && !inst.rumors.includes(stage.id) && wait <= stage.rumor.quartersBefore) {
+        inst.rumors.push(stage.id);
+        if (wait > 0) {
+          world.seq += 1;
+          state.knowledge.assessments.push({
+            id: `ocena-${world.seq}`,
+            topic: fill(stage.rumor.topic ?? def.title, inst.params),
+            text: fill(stage.rumor.text, inst.params),
+            source: stage.rumor.source,
+            reliability: stage.rumor.reliability,
+            credibility: stage.rumor.credibility,
+            quarter: q,
+          });
+        }
+      }
+
+      // Punkt decyzyjny: sprawa trafia na Biurko przed etapem. Etap czeka co najmniej kwartał.
+      if (stage.decision && !inst.asked.includes(stage.id) && wait <= stage.decision.quartersBefore) {
+        inst.asked.push(stage.id);
+        const due = later(shiftQuarter(now, 1), parseQuarterCode(inst.nextCheck));
+        inst.nextCheck = quarterCode(due);
+        raiseStageDecision(world, def, instanceId, inst, stage.id, stage.decision, q, quarterCode(due));
+        log({
+          quarter: q,
+          kind: 'dilemma',
+          ref: `${inst.def}.${stage.id}`,
+          title: fill(stage.decision.title ?? `${def.title}: decyzja`, inst.params),
+          text: 'Sprawa trafia na Biurko Dowódcy Operacyjnego.',
+          visibility: 'public',
+        });
+        break;
+      }
+      if (wait > 0) break;
+      // Decyzja etapu jeszcze czeka (termin nie minął) — etap się nie rozstrzyga.
+      if (world.pendingDilemmas.some((p) => p.source?.thread === instanceId && p.source.stage === stage.id)) break;
+
+      const branch = pickBranch(branchWeights(stage, def.region, state, inst.decisions[stage.id]), rng);
+      if (!branch) {
+        // Żadna gałąź nie spełnia warunków (`requires`): w tym świecie etap nie ma sensu,
+        // więc wątek po cichu przechodzi dalej.
+        const skipTo = def.stages.slice(stageIndex + 1).find((s) => !s.alternative);
+        if (!skipTo) {
+          inst.status = 'ended';
+          inst.stage = null;
+          inst.nextCheck = null;
+          break;
+        }
+        inst.stage = skipTo.id;
+        inst.nextCheck = skipTo.sameQuarter
+          ? q
+          : quarterCode(later(now, stageDue(def, def.stages.indexOf(skipTo), inst)));
+        continue;
+      }
+      const ref = `${inst.def}.${stage.id}.${branch.id}`;
+
+      applyEffects(state, branch.effects, content, ref);
+      // Rozbieżność rośnie, gdy świat ODCHODZI od historii: w etapie z gałęzią historyczną
+      // wypadła inna. W etapie alternatywnym historii już nie ma, więc nie liczy się drugi raz
+      // (taki etap może podnieść Rozbieżność jawnie, skutkiem `divergence`).
+      if (!branch.historical && !branch.minor && def.tracksHistory && !stage.alternative) {
+        world.divergence[def.region] = Math.min(
+          DIVERGENCE_MAX,
+          (world.divergence[def.region] ?? 0) + DIVERGENCE_PER_NONHISTORICAL_BRANCH,
+        );
+      }
+      inst.history.push({ quarter: q, stage: stage.id, branch: branch.id, historical: branch.historical });
+      // Sytuacje trwające, które miały wygasnąć po tym etapie, kończą się od razu.
+      for (const sit of world.situations.filter((x) => x.thread === instanceId && x.until === stage.id)) {
+        endSituation(sit);
+      }
+      const kind = def.fromTemplate ? 'template' : 'thread';
+      log({
+        quarter: q,
+        kind,
+        ref,
+        title: fill(`${def.title}: ${stage.title}`, inst.params),
+        text: fill(branch.text, inst.params),
+        visibility: branch.visibility ?? def.visibility,
+        historical: branch.historical,
+      });
+      for (const [i, reaction] of branch.reactions.entries()) {
+        applyEffects(state, reaction.effects, content, `${ref}.reakcja-${i + 1}`);
+        log({
+          quarter: q,
+          kind: 'reaction',
+          ref: `${ref}.reakcja-${i + 1}`,
+          actor: reaction.actor,
+          title: fill(`${def.title}: ${reaction.actor}`, inst.params),
+          text: fill(reaction.text, inst.params),
+          visibility: reaction.visibility ?? branch.visibility ?? def.visibility,
+        });
+      }
+      if (branch.ongoing) {
+        world.seq += 1;
+        world.situations.push({
+          id: `sytuacja-${world.seq}`,
+          thread: instanceId,
+          stage: stage.id,
+          branch: branch.id,
+          title: fill(branch.ongoing.title, inst.params),
+          text: fill(branch.ongoing.text, inst.params),
+          startedIn: q,
+          until: branch.ongoing.until ?? null,
+          remaining: branch.ongoing.maxQuarters,
+        });
+        log({
+          quarter: q,
+          kind: 'situation',
+          ref: `${ref}.sytuacja`,
+          title: fill(`Sytuacja: ${branch.ongoing.title}`, inst.params),
+          text: fill(branch.ongoing.text, inst.params),
+          visibility: 'public',
+        });
+      }
+
+      if (branch.delayQuarters !== undefined) {
+        inst.nextCheck = quarterCode(shiftQuarter(now, branch.delayQuarters));
+        break;
+      }
+      // Bez `next` wątek idzie do najbliższego etapu, który nie jest alternatywny:
+      // do etapów alternatywnych prowadzi tylko jawne `next`.
+      const nextId = branch.next ?? def.stages.slice(stageIndex + 1).find((s) => !s.alternative)?.id ?? 'end';
+      const nextIndex = def.stages.findIndex((s) => s.id === nextId);
+      if (nextId === 'end' || nextIndex === -1) {
+        inst.status = 'ended';
+        inst.stage = null;
+        inst.nextCheck = null;
+        break;
+      }
+      const nextStage = def.stages[nextIndex]!;
+      inst.stage = nextId;
+      if (nextStage.sameQuarter) {
+        // Kilka depesz w jednym kwartale: następny etap rozstrzyga się od razu.
+        inst.nextCheck = q;
+        continue;
+      }
+      let due = stageDue(def, nextIndex, inst);
+      if (branch.advanceNext !== undefined) due = shiftQuarter(due, -branch.advanceNext);
+      inst.nextCheck = quarterCode(later(shiftQuarter(now, 1), due));
+      // Pogłoska i decyzja następnego etapu mogą wyjść jeszcze w tym kwartale.
+    }
+  }
+
+  // 6. Wzorce.
   for (const pat of [...content.patterns].sort((a, b) => a.id.localeCompare(b.id))) {
     const record = world.patternLog[pat.id];
     if (pat.maxTotal !== undefined && (record?.count ?? 0) >= pat.maxTotal) continue;
@@ -297,9 +459,10 @@ export function advanceWorld(input: GameState, content: WorldContent): WorldStep
     log({ quarter: q, kind: 'pattern', ref: pat.id, title: pat.title, text: pat.text, visibility: pat.visibility });
   }
 
-  // 6. Dylematy.
+  // 7. Dylematy.
   for (const dil of [...content.dilemmas].sort((a, b) => a.id.localeCompare(b.id))) {
-    if (world.pendingDilemmas.length >= content.definition.maxPendingDilemmas) break;
+    // Limit dotyczy dylematów samodzielnych; decyzje etapów wątków są poza nim.
+    if (world.pendingDilemmas.filter((p) => !p.source).length >= content.definition.maxPendingDilemmas) break;
     if (world.pendingDilemmas.some((p) => p.dilemma === dil.id)) continue;
     const record = world.dilemmaLog[dil.id];
     if (dil.once && record) continue;
@@ -332,6 +495,30 @@ export function advanceWorld(input: GameState, content: WorldContent): WorldStep
   return { state, entries };
 }
 
+function raiseStageDecision(
+  world: WorldState,
+  def: ThreadDef,
+  instanceId: string,
+  inst: ThreadInstance,
+  stageId: string,
+  decision: StageDecision,
+  q: string,
+  expiresIn: string,
+): void {
+  world.seq += 1;
+  world.pendingDilemmas.push({
+    instanceId: `dylemat-${world.seq}`,
+    dilemma: `${inst.def}.${stageId}`,
+    title: fill(decision.title ?? `${def.title}: decyzja`, inst.params),
+    prompt: fill(decision.prompt, inst.params),
+    options: decision.options.map((o) => ({ id: o.id, title: o.title })),
+    defaultOption: decision.defaultOption,
+    raisedIn: q,
+    expiresIn,
+    source: { thread: instanceId, stage: stageId },
+  });
+}
+
 function resolvePending(
   state: GameState,
   content: WorldContent,
@@ -343,18 +530,46 @@ function resolvePending(
   const world = state.world;
   const pending = world.pendingDilemmas.find((p) => p.instanceId === instanceId);
   if (!pending) throw new Error(`Nie ma oczekującego dylematu "${instanceId}".`);
-  const dil = content.dilemmas.find((d) => d.id === pending.dilemma);
-  const option = dil?.options.find((o) => o.id === optionId);
-  if (!dil || !option) throw new Error(`Dylemat "${pending.dilemma}" nie ma opcji "${optionId}".`);
-  applyEffects(state, option.effects, content, `${dil.id}.${option.id}`);
-  if (byDefault) applyEffects(state, dil.inactionEffects, content, `${dil.id}.biernosc`);
+
+  let title: string;
+  let effects: Parameters<typeof applyEffects>[1];
+  let inaction: Parameters<typeof applyEffects>[1];
+  let text: string;
+  let optionTitle: string;
+  let params: Record<string, string> = {};
+  if (pending.source) {
+    // Punkt decyzyjny etapu wątku: wybór zapisuje się w instancji i przesunie wagi gałęzi.
+    const inst = world.threads[pending.source.thread];
+    const def = inst ? threadDef(inst, content) : undefined;
+    const decision = def?.stages.find((s) => s.id === pending.source!.stage)?.decision;
+    const option = decision?.options.find((o) => o.id === optionId);
+    if (!inst || !decision || !option) throw new Error(`Decyzja "${pending.dilemma}" nie ma opcji "${optionId}".`);
+    inst.decisions[pending.source.stage] = option.id;
+    params = inst.params;
+    title = pending.title;
+    effects = option.effects;
+    inaction = decision.inactionEffects;
+    text = option.text;
+    optionTitle = option.title;
+  } else {
+    const dil = content.dilemmas.find((d) => d.id === pending.dilemma);
+    const option = dil?.options.find((o) => o.id === optionId);
+    if (!dil || !option) throw new Error(`Dylemat "${pending.dilemma}" nie ma opcji "${optionId}".`);
+    title = dil.title;
+    effects = option.effects;
+    inaction = dil.inactionEffects;
+    text = option.text;
+    optionTitle = option.title;
+  }
+  applyEffects(state, effects, content, `${pending.dilemma}.${optionId}`);
+  if (byDefault) applyEffects(state, inaction, content, `${pending.dilemma}.biernosc`);
   world.pendingDilemmas = world.pendingDilemmas.filter((p) => p.instanceId !== instanceId);
   log({
     quarter: quarterCode(state.quarter),
     kind: 'dilemma',
-    ref: `${dil.id}.${option.id}`,
-    title: `${dil.title}: ${option.title}${byDefault ? ' (bez decyzji Dowódcy)' : ''}`,
-    text: option.text,
+    ref: `${pending.dilemma}.${optionId}`,
+    title: `${title}: ${optionTitle}${byDefault ? ' (bez decyzji Dowódcy)' : ''}`,
+    text: fill(text, params),
     visibility: 'public',
   });
 }

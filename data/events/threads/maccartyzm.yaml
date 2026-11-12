@@ -3,63 +3,202 @@ title: Maccartyzm
 kind: historical
 region: usa
 summary: >-
-  Senator Joseph McCarthy i jego naśladowcy szukają komunistów w rządzie, armii i nauce.
-  Dla PACE, z niemieckimi specjalistami i zagranicznymi członkami, to stałe zagrożenie.
+  Senator McCarthy i komisje śledcze szukają komunistów w administracji, na uczelniach
+  i w laboratoriach. PACE zatrudnia cudzoziemców i byłych niemieckich specjalistów.
 historicalNote: >-
-  Przemówienie w Wheeling (luty 1950), szczyt wpływów w latach 1952–1954, przesłuchania
-  w sprawie armii (wiosna 1954), potępienie przez Senat (2 grudnia 1954). Prawdziwa osoba
-  w zewnętrznym pierścieniu: tylko udokumentowane metody, bez wymyślonych występków.
+  Przemówienie w Wheeling (9 lutego 1950). Atak na generała Marshalla (14 czerwca 1951).
+  McCarthy przewodniczy Stałej Podkomisji Śledczej od stycznia 1953; przesłuchania w sprawie
+  Głosu Ameryki (luty–marzec 1953) i objazd Cohna i Schine'a po bibliotekach w Europie
+  (kwiecień 1953). Przesłuchanie w sprawie poświadczenia Oppenheimera (kwiecień–maj 1954,
+  decyzja 29 czerwca 1954). Przesłuchania armia–McCarthy (22 kwietnia – 17 czerwca 1954),
+  słowa Josepha Welcha 9 czerwca. Senat potępia McCarthy'ego 2 grudnia 1954.
 drivers: [antykomunizm]
 start:
-  from: 1951-Q1
+  from: 1951-Q2
 stages:
-  - id: nasilenie
-    title: fala przesłuchań
-    at: 1952-Q1
+  - id: marshall
+    title: atak na Marshalla
+    at: 1951-Q2
     branches:
-      - id: szczyt
-        title: Przesłuchania rozszerzają się
+      - id: przemowienie
+        title: McCarthy oskarża generała Marshalla
         historical: true
         weight: 10
         effects:
           - { var: antykomunizm, add: 1 }
-          - { flag: maccartyzm_szczyt }
         text: >-
-          Podkomisje Kongresu rozszerzają przesłuchania na kolejne agencje. Lojalność staje się
-          walutą, a podejrzenie wyrokiem.
+          Senator McCarthy przez trzy godziny oskarża w Senacie generała Marshalla o udział
+          w „spisku tak ogromnym, że przyćmiewa wszystkie dotychczasowe”. Większość senatorów
+          wychodzi z sali, ale nikt głośno nie protestuje.
+
+  - id: nasilenie
+    title: fala przesłuchań
+    at: 1952-Q1
+    branches:
+      - id: fala
+        title: Komisje sięgają po naukowców
+        historical: true
+        weight: 10
+        effects:
+          - { var: antykomunizm, add: 1 }
+          - { faction: RN, disposition: -1 }
+        text: >-
+          Komisje Kongresu wzywają fizyków, wykładowców i urzędników. Kilku uczonych związanych
+          z programami rządowymi traci poświadczenia bezpieczeństwa.
       - id: oslabienie
-        title: Fala słabnie wcześniej
+        title: Senat hamuje McCarthy'ego
         weight: 2
         modifiers:
-          - { when: { var: antykomunizm, op: '<=', value: 4 }, mul: 3 }
+          - { when: { var: antykomunizm, op: '<=', value: 5 }, mul: 3 }
         effects:
-          - { var: antykomunizm, add: -2 }
-        next: end
+          - { var: antykomunizm, add: -1 }
         text: >-
-          Kilka głośnych pomyłek kompromituje łowców czarownic. Senat traci cierpliwość
-          szybciej, niż się spodziewano.
+          Podkomisja senacka publikuje raport o finansach McCarthy'ego. Senator traci impet,
+          a prasa po raz pierwszy pisze o nim bez strachu.
+
+  - id: podkomisja
+    title: własna podkomisja
+    at: 1953-Q1
+    branches:
+      - id: glos-ameryki
+        title: McCarthy bierze się za Głos Ameryki
+        historical: true
+        weight: 10
+        effects:
+          - { indicator: WF, add: -2 }
+        text: >-
+          Po wyborach McCarthy dostaje własną podkomisję śledczą. Zaczyna od Głosu Ameryki,
+          a jego dwaj młodzi pomocnicy objeżdżają amerykańskie biblioteki w Europie i każą
+          usuwać z półek „podejrzane” książki.
+        reactions:
+          - actor: Sojusznicy
+            text: >-
+              Europejska prasa pisze o paleniu książek. Delegaci w Radzie Atlantyckiej pytają
+              półgłosem, czy ich naukowcy są w Ameryce bezpieczni.
+
   - id: cel_pace
     title: pytania o PACE
     at: 1953-Q2
+    decision:
+      title: 'Podkomisja pyta o cudzoziemców w PACE'
+      prompt: >-
+        Podkomisja śledcza żąda list wszystkich naukowców urodzonych za granicą, którzy
+        pracują w PACE, razem z ich aktami osobowymi. Na liście byłby zespół Brandta
+        i kilkunastu uczonych z państw sojuszniczych.
+      options:
+        - id: wydac
+          title: Wydać listy
+          effects:
+            - { faction: RN, disposition: -2 }
+            - { indicator: ZW, add: 2 }
+            - { indicator: WF, add: -3 }
+            - { flag: listy_wydane }
+          text: >-
+            PACE przekazuje listy. Podkomisja jest zadowolona, a w laboratoriach zapada cisza:
+            ludzie zaczynają uważać na słowa.
+          weights: { na_celowniku: { mul: 0.6 } }
+        - id: bas
+          title: Przekazać sprawę BAS
+          effects:
+            - { faction: BAS, disposition: 1 }
+            - { currency: KP, add: -1 }
+          text: >-
+            Anderson odpowiada, że sprawy bezpieczeństwa prowadzi Biuro Analiz Specjalnych
+            i to ono udzieli wyjaśnień za zamkniętymi drzwiami. Podkomisja niechętnie się zgadza.
+          weights: { na_celowniku: { mul: 0.5 } }
+        - id: odmowic
+          title: Odmówić
+          effects:
+            - { faction: RN, disposition: 1 }
+            - { indicator: ZW, add: -3 }
+            - { indicator: WF, add: 2 }
+          text: >-
+            Anderson odmawia, powołując się na umowy z państwami sojuszniczymi. Rada Naukowa
+            bije brawo, a senator zapowiada, że „jeszcze do tego wróci”.
+          weights: { na_celowniku: { mul: 2.5 } }
+      defaultOption: bas
+      inactionEffects:
+        - { indicator: ZW, add: -2 }
     branches:
       - id: omija_pace
-        title: Komisja zajmuje się innymi
+        title: PACE poza główną uwagą
         historical: true
-        weight: 8
-        text: Przesłuchania toczą się w Departamencie Stanu i w armii. PACE na razie unika uwagi.
-      - id: pace_na_celowniku
+        weight: 10
+        text: >-
+          Podkomisja zajmuje się Departamentem Stanu i laboratoriami łączności armii.
+          PACE przechodzi bokiem, przynajmniej na razie.
+      - id: na_celowniku
         title: PACE na celowniku
         weight: 3
         modifiers:
-          - { when: { indicator: WF, op: '<=', value: 50 }, mul: 2 }
           - { when: { var: antykomunizm, op: '>=', value: 8 }, mul: 2 }
+          - { when: { indicator: WF, op: '<=', value: 50 }, mul: 2 }
+          - { when: { flag: uciekinier_w_pace }, mul: 2 }
         effects:
-          - { indicator: WF, add: -5 }
-          - { faction: BAS, disposition: -1 }
-          - { flag: pace_przesluchanie }
+          - { indicator: ZW, add: -4 }
+          - { indicator: SO, add: -3 }
+          - { faction: RN, disposition: -1 }
+          - { flag: pace_przesluchania }
         text: >-
-          Podkomisja senacka żąda list niemieckich specjalistów PACE i pyta o „zagraniczne
-          wpływy” w organizacji. Biuro Analiz Specjalnych musi tłumaczyć się z każdej teczki.
+          Podkomisja wzywa pracowników PACE na przesłuchania przed kamerami. Senator pyta
+          o niemieckich specjalistów i o to, kto sprawdzał ich przeszłość.
+        ongoing:
+          title: Przesłuchania pracowników PACE
+          text: >-
+            Kolejni inżynierowie dostają wezwania. Zespoły tracą dni pracy, a ludzie zaufanie
+            do siebie nawzajem.
+          effects:
+            - { indicator: SO, add: -1 }
+          until: upadek
+          maxQuarters: 6
+
+  - id: oppenheimer
+    title: sprawa Oppenheimera
+    at: 1954-Q2
+    branches:
+      - id: odebrane
+        title: Oppenheimer traci poświadczenie
+        historical: true
+        weight: 10
+        effects:
+          - { var: pula_kadr, add: -1 }
+        text: >-
+          Komisja Energii Atomowej po kilkutygodniowym przesłuchaniu odbiera Robertowi
+          Oppenheimerowi poświadczenie bezpieczeństwa. Twórca bomby atomowej nie ma już
+          wstępu do własnych akt.
+        reactions:
+          - actor: RN
+            text: >-
+              W Radzie Naukowej krąży list protestacyjny. Kilku uczonych zapowiada, że nie
+              przyjmie już żadnej pracy wymagającej poświadczenia.
+            effects:
+              - { indicator: SO, add: -1 }
+      - id: utrzymane
+        title: Oppenheimer oczyszczony
+        weight: 1
+        modifiers:
+          - { when: { var: antykomunizm, op: '<=', value: 5 }, mul: 4 }
+        effects:
+          - { var: antykomunizm, add: -1 }
+        text: >-
+          Komisja Energii Atomowej utrzymuje poświadczenie Oppenheimera. Uczeni przyjmują to
+          jako sygnał, że gorączka opada.
+
+  - id: armia
+    title: armia kontra McCarthy
+    sameQuarter: true
+    branches:
+      - id: przesluchania
+        title: Przesłuchania w telewizji
+        historical: true
+        weight: 10
+        effects:
+          - { var: antykomunizm, add: -1 }
+        text: >-
+          Dwadzieścia milionów widzów ogląda, jak senator atakuje armię i młodego prawnika
+          z kancelarii jej obrońcy. Adwokat pyta go, czy nie zostało mu już ani trochę
+          przyzwoitości. Sala bije brawo.
+
   - id: upadek
     title: koniec ery
     at: 1954-Q4
@@ -72,15 +211,20 @@ stages:
           - { when: { flag: vp_smith }, mul: 1.5 }
         effects:
           - { var: antykomunizm, add: -2 }
+          - { faction: RN, disposition: 1 }
         text: >-
-          Senat formalnie potępia senatora McCarthy'ego. Strach nie znika od razu, ale słabnie.
+          Senat głosuje za potępieniem McCarthy'ego stosunkiem 67 do 22. Senator traci wpływy
+          z dnia na dzień, a naukowcy wracają do pracy bez oglądania się przez ramię.
       - id: przetrwanie
-        title: Fala trwa dalej
+        title: McCarthy przetrwał głosowanie
         weight: 2
         modifiers:
           - { when: { var: antykomunizm, op: '>=', value: 8 }, mul: 2 }
           - { when: { flag: vp_knowland }, mul: 1.5 }
+          - { when: { after: 1956-Q1 }, mul: 0 }
         effects:
           - { var: antykomunizm, add: 1 }
         delayQuarters: 4
-        text: Mimo krytyki przesłuchania trwają. Kolejne instytucje zaczynają kontrolować same siebie.
+        text: >-
+          Wniosek o potępienie McCarthy'ego upada w Senacie. Komisje śledcze dostają nowe
+          fundusze i zapowiadają kolejne przesłuchania.

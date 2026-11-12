@@ -11,6 +11,7 @@ import {
   CONTENT_FILES,
   WORLD_CONTENT_PATHS,
   dilemmasFileSchema,
+  launchSitesContentSchema,
   patternsFileSchema,
   threadContentSchema,
   threadTemplateContentSchema,
@@ -36,6 +37,9 @@ export class ContentLoadError extends Error {
 }
 
 type FileKey = keyof typeof CONTENT_FILES;
+
+/** Miejsca startu (decyzja 0016). Plik opcjonalny. */
+const LAUNCH_SITES_FILE = 'launch-sites.yaml';
 
 async function readYaml(dataDir: string, file: string, problems: ContentProblem[]): Promise<unknown> {
   let text: string;
@@ -136,6 +140,22 @@ export async function loadContent(dataDir: string): Promise<GameContent> {
   }
 
   const world = await loadWorld(dataDir, problems);
+  let launchSites: GameContent['launchSites'];
+  try {
+    await readFile(join(dataDir, LAUNCH_SITES_FILE), 'utf8');
+    const raw = await readYaml(dataDir, LAUNCH_SITES_FILE, problems);
+    launchSites = parseWith(launchSitesContentSchema, raw, LAUNCH_SITES_FILE, problems)?.sites;
+  } catch {
+    launchSites = undefined;
+  }
+  if (launchSites) {
+    const seenSites = new Set<string>();
+    for (const site of launchSites) {
+      if (seenSites.has(site.id))
+        problems.push({ file: LAUNCH_SITES_FILE, where: site.id, message: 'powtórzony identyfikator miejsca startu' });
+      seenSites.add(site.id);
+    }
+  }
   if (problems.length > 0) throw new ContentLoadError(problems);
 
   const p = parsed as {
@@ -152,6 +172,7 @@ export async function loadContent(dataDir: string): Promise<GameContent> {
     characters: p.characters.characters,
     registry: p.registry.entries,
     ...(world ? { world } : {}),
+    ...(launchSites ? { launchSites } : {}),
   };
 
   const refProblems = validateContentReferences(content);

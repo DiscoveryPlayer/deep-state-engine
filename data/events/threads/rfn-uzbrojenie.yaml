@@ -1,0 +1,220 @@
+id: rfn-uzbrojenie
+title: Uzbrojenie Niemiec Zachodnich
+kind: historical
+region: europa
+summary: >-
+  Zachód chce niemieckich dywizji, ale nie niemieckiej armii. Europejska Wspólnota Obronna
+  ma to pogodzić. Od wyniku zależy, kiedy niemieccy członkowie PACE przestaną działać
+  z ograniczeniami.
+historicalNote: >-
+  Nota Stalina o zjednoczeniu i neutralności Niemiec (10 marca 1952). Układ ogólny w Bonn
+  (26 maja) i traktat o Europejskiej Wspólnocie Obronnej w Paryżu (27 maja 1952). Bundestag
+  ratyfikuje traktaty (19 marca 1953). Francuskie Zgromadzenie Narodowe odrzuca EWO
+  (30 sierpnia 1954, 319 do 264). Konferencja londyńska i układy paryskie (23 października
+  1954). RFN odzyskuje suwerenność (5 maja) i wstępuje do NATO (9 maja 1955). Układ Warszawski
+  (14 maja 1955). KANON GRY: RFN jest członkiem PACE z ograniczeniami do 1955 roku.
+drivers: [jednosc_zachodu, ambicja_francji]
+start:
+  from: 1952-Q1
+stages:
+  - id: nota
+    title: nota Stalina
+    at: 1952-Q1
+    branches:
+      - id: odrzucona
+        title: Zachód odrzuca notę Stalina
+        historical: true
+        weight: 10
+        text: >-
+          Moskwa proponuje zjednoczone, neutralne Niemcy z własną armią. Mocarstwa zachodnie
+          odpowiadają pytaniem o wolne wybory i uznają notę za próbę storpedowania
+          Europejskiej Wspólnoty Obronnej.
+        reactions:
+          - actor: Bonn
+            text: >-
+              Kanclerz Adenauer nie chce nawet sprawdzać, czy oferta jest szczera. Opozycja
+              zarzuca mu, że wybrał Zachód kosztem jedności kraju.
+      - id: sprawdzona
+        title: Zachód sprawdza ofertę
+        weight: 1
+        effects:
+          - { var: jednosc_zachodu, add: -1 }
+          - { indicator: NG, add: 1 }
+        text: >-
+          Londyn i Paryż nalegają, żeby potraktować notę poważnie. Rozmowy czterech mocarstw
+          ciągną się przez lato i opóźniają podpisanie traktatów z Bonn.
+
+  - id: traktat
+    title: traktat o EWO
+    at: 1952-Q2
+    branches:
+      - id: podpisany
+        title: Traktaty podpisane
+        historical: true
+        weight: 10
+        effects:
+          - { var: jednosc_zachodu, add: 1 }
+        text: >-
+          W Bonn i w Paryżu podpisano traktaty: koniec okupacji RFN w zamian za niemieckie
+          dywizje w europejskiej armii pod wspólnym dowództwem. Teraz muszą je ratyfikować
+          parlamenty sześciu państw.
+
+  - id: bundestag
+    title: ratyfikacja w Bonn
+    at: 1953-Q1
+    branches:
+      - id: ratyfikowany
+        title: Bundestag ratyfikuje traktaty
+        historical: true
+        weight: 10
+        text: >-
+          Bundestag ratyfikuje traktaty po miesiącach sporów. Francja zwleka: rząd w Paryżu
+          boi się głosowania, które może przegrać.
+
+  - id: paryz
+    title: głosowanie w Paryżu
+    at: 1954-Q3
+    rumor:
+      quartersBefore: 1
+      reliability: B
+      credibility: 2
+      source: allies
+      topic: Europejska Wspólnota Obronna
+      text: >-
+        Francuski delegat mówi nieoficjalnie, że po Dien Bien Phu Zgromadzenie Narodowe nie
+        zagłosuje za oddaniem armii pod obce dowództwo. Premier nie zamierza wiązać
+        z traktatem losu swojego rządu.
+    decision:
+      title: 'Europejska armia: głos PACE'
+      prompt: >-
+        Departament Stanu prosi, żeby Anderson publicznie poparł Europejską Wspólnotę Obronną
+        jako wzór dla wspólnych programów. Francuski delegat ostrzega, że mieszanie się PACE
+        w głosowanie w Paryżu zostanie zapamiętane.
+      options:
+        - id: poprzec
+          title: Poprzeć publicznie
+          effects:
+            - { indicator: ZW, add: 3 }
+            - { var: ambicja_francji, add: 1 }
+            - { indicator: WF, add: -1 }
+          text: >-
+            Anderson mówi w Paryżu o „Europie, która buduje razem”. Waszyngton jest zadowolony.
+            Francuska prasa pisze o amerykańskim nacisku.
+          weights: { ratyfikacja: { mul: 1.3 } }
+        - id: milczec
+          title: Zachować milczenie
+          effects:
+            - { indicator: ZW, add: -1 }
+          text: >-
+            PACE nie zabiera głosu. Departament Stanu odnotowuje brak pomocy, a Paryż brak
+            nacisku.
+      defaultOption: milczec
+    branches:
+      - id: odrzucenie
+        title: Francja odrzuca EWO
+        historical: true
+        weight: 10
+        effects:
+          - { var: jednosc_zachodu, add: -1 }
+          - { var: ambicja_francji, add: 1 }
+        text: >-
+          Zgromadzenie Narodowe zdejmuje traktat z porządku obrad głosami 319 do 264.
+          Posłowie śpiewają Marsyliankę. Europejska armia umiera, a Waszyngton grozi
+          „bolesnym przewartościowaniem” swojej polityki.
+      - id: ratyfikacja
+        title: Francja ratyfikuje EWO
+        weight: 1
+        effects:
+          - { var: jednosc_zachodu, add: 2 }
+          - { var: ambicja_francji, add: -2 }
+          - { flag: ewo_powstala }
+        next: suwerennosc
+        text: >-
+          Zgromadzenie Narodowe ratyfikuje traktat niewielką większością. Powstaje europejska
+          armia z niemieckimi dywizjami, a wraz z nią pierwszy wspólny budżet obronny Europy.
+      - id: odlozone
+        title: Głosowanie odłożone
+        weight: 2
+        minor: true
+        delayQuarters: 2
+        text: >-
+          Rząd francuski zdejmuje traktat z porządku obrad, zanim dojdzie do głosowania.
+          Sprawa wróci po nowym roku.
+
+  - id: uklady-paryskie
+    title: układy paryskie
+    at: 1954-Q4
+    branches:
+      - id: podpisane
+        title: RFN wejdzie do NATO
+        historical: true
+        weight: 10
+        effects:
+          - { var: jednosc_zachodu, add: 1 }
+          - { var: sila_wielkiej_brytanii, add: 1 }
+        text: >-
+          W siedem tygodni dyplomaci znajdują wyjście: RFN wejdzie wprost do NATO, z własną
+          armią i bez broni atomowej. Wielka Brytania obiecuje trzymać cztery dywizje
+          na kontynencie.
+
+  - id: suwerennosc
+    title: suwerenność RFN
+    at: 1955-Q2
+    decision:
+      title: 'RFN: koniec ograniczeń w PACE'
+      prompt: >-
+        Z dniem odzyskania suwerenności przez RFN wygasają ograniczenia dla niemieckich
+        członków PACE. Bonn chce od razu odbudować przemysł lotniczy i prosi o kontrakty
+        oraz o „wypożyczenie” części niemieckich specjalistów pracujących w Ameryce.
+      options:
+        - id: kontrakty
+          title: Dać kontrakty, zatrzymać ludzi
+          effects:
+            - { faction: PRZ, disposition: -1 }
+            - { var: jednosc_zachodu, add: 1 }
+            - { indicator: WF, add: 2 }
+          text: >-
+            Niemieckie firmy dostają pierwsze zamówienia PACE. Specjaliści zostają w Ameryce.
+            Amerykańskie konsorcja liczą, ile na tym straciły.
+        - id: ludzie
+          title: Pozwolić specjalistom wrócić
+          effects:
+            - { var: pula_kadr, add: -1 }
+            - { var: jednosc_zachodu, add: 1 }
+            - { faction: DPO, disposition: -1 }
+          text: >-
+            Kilkunastu inżynierów wraca nad Ren. Bonn jest wdzięczne, a Dyrektoriat Programów
+            Obronnych pyta, kto pozwolił wypuścić ludzi z taką wiedzą.
+        - id: odmowa
+          title: Odmówić jednego i drugiego
+          effects:
+            - { var: jednosc_zachodu, add: -1 }
+            - { faction: PRZ, disposition: 1 }
+          text: >-
+            Anderson odpowiada, że na zmiany jest za wcześnie. Delegat RFN przypomina, że jego
+            kraj płaci składkę jak inni.
+      defaultOption: odmowa
+      inactionEffects:
+        - { indicator: WF, add: -2 }
+    branches:
+      - id: nato
+        title: RFN w NATO, Układ Warszawski w odpowiedzi
+        historical: true
+        weight: 10
+        requires: { not: { flag: ewo_powstala } }
+        effects:
+          - { flag: rfn_suwerenna }
+          - { var: kurs_kremla, add: 1 }
+        text: >-
+          Kończy się okupacja Niemiec Zachodnich, a RFN wstępuje do NATO. Pięć dni później
+          Moskwa i jej sojusznicy podpisują w Warszawie własny układ wojskowy.
+      - id: europejska-armia
+        title: Niemieckie dywizje w europejskiej armii
+        weight: 1
+        requires: { flag: ewo_powstala }
+        effects:
+          - { flag: rfn_suwerenna }
+          - { divergence: europa, add: 1 }
+        text: >-
+          Pierwsze niemieckie jednostki składają przysięgę pod flagą Europejskiej Wspólnoty
+          Obronnej. Układu Warszawskiego na razie nie ma: Moskwa szuka innej odpowiedzi.

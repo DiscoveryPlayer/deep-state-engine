@@ -1,0 +1,142 @@
+id: mrg
+title: Międzynarodowy Rok Geofizyczny
+kind: historical
+region: swiat
+summary: >-
+  Uczeni z kilkudziesięciu państw planują wspólny rok badań Ziemi. Od 1954 roku w planie są
+  sztuczne satelity. Dla PACE to rama dla satelity naukowego i pole popisu Rady Naukowej.
+  Sam satelita i wyścig należą do modelu wyścigu i do lotów gracza.
+historicalNote: >-
+  Pomysł z kwietnia 1950 roku (spotkanie u Jamesa Van Allena). Międzynarodowa Rada Związków
+  Naukowych powołuje komitet CSAGI (1952). Posiedzenie CSAGI w Rzymie (4 października 1954)
+  zaleca wystrzelenie sztucznych satelitów. Biały Dom zapowiada satelitę 29 lipca 1955,
+  radziecki uczony Leonid Siedow mówi o radzieckim satelicie 2 sierpnia 1955 w Kopenhadze.
+  Rok Geofizyczny trwa od 1 lipca 1957 do 31 grudnia 1958.
+drivers: [presja_wyscigu, kurs_kremla]
+start:
+  from: 1952-Q3
+stages:
+  - id: komitet
+    title: powstaje komitet
+    at: 1952-Q4
+    branches:
+      - id: csagi
+        title: Uczeni planują rok badań Ziemi
+        historical: true
+        weight: 10
+        effects:
+          - { faction: RN, disposition: 1 }
+        text: >-
+          Międzynarodowa Rada Związków Naukowych powołuje komitet, który przygotuje
+          Międzynarodowy Rok Geofizyczny: osiemnaście miesięcy wspólnych pomiarów od biegunów
+          po górne warstwy atmosfery. Rada Naukowa chce, żeby PACE była w środku.
+
+  - id: rzym
+    title: posiedzenie w Rzymie
+    at: 1954-Q4
+    rumor:
+      quartersBefore: 1
+      reliability: A
+      credibility: 2
+      source: open
+      text: >-
+        Uczeni przygotowujący Rok Geofizyczny mają na jesiennym posiedzeniu w Rzymie
+        głosować nad zaleceniem, żeby państwa uczestniczące wystrzeliły małe satelity naukowe.
+    branches:
+      - id: satelity
+        title: Komitet zaleca sztuczne satelity
+        historical: true
+        weight: 10
+        effects:
+          - { var: presja_wyscigu, add: 1 }
+          - { flag: mrg_satelity }
+        text: >-
+          Komitet Roku Geofizycznego zaleca, żeby państwa, które to potrafią, wystrzeliły
+          małe satelity do badań górnej atmosfery. Radziecki delegat słucha i nie zabiera głosu.
+      - id: bez-satelitow
+        title: Program bez satelitów
+        weight: 1
+        effects:
+          - { var: presja_wyscigu, add: -1 }
+        next: start-roku
+        text: >-
+          Komitet uznaje satelity za zbyt odległe i zbyt drogie. Rok Geofizyczny ograniczy
+          się do stacji naziemnych, balonów i rakiet sondujących.
+
+  - id: zapowiedzi
+    title: zapowiedzi satelitów
+    at: 1955-Q3
+    decision:
+      title: 'Rok Geofizyczny: satelita PACE'
+      quartersBefore: 2
+      prompt: >-
+        Biały Dom chce latem ogłosić, że Zachód wystrzeli satelitę naukowego w ramach Roku
+        Geofizycznego. Pyta, czy ma to być satelita PACE. Rada Naukowa naciska na „tak”.
+        Lotnictwo i Marynarka mają własne propozycje i czekają na potknięcie komisji.
+      options:
+        - id: z-terminem
+          title: Tak, z terminem do końca Roku Geofizycznego
+          effects:
+            - { faction: RN, disposition: 2 }
+            - { indicator: WF, add: 3 }
+            - { indicator: PP, add: 2 }
+            - { flag: satelita_pace_obiecany }
+            - { flag: satelita_pace_termin }
+          text: >-
+            Prezydent ogłasza, że PACE wystrzeli satelitę naukowego przed końcem 1958 roku.
+            Obietnica jest publiczna. Od dziś każdy miesiąc opóźnienia ma świadków.
+        - id: bez-terminu
+          title: Tak, ale bez terminu
+          effects:
+            - { faction: RN, disposition: 1 }
+            - { indicator: WF, add: 2 }
+            - { flag: satelita_pace_obiecany }
+          text: >-
+            Komunikat mówi, że PACE „prowadzi prace” nad satelitą naukowym. Prasa pyta kiedy.
+            Rzecznik odpowiada, że nauki się nie pogania.
+        - id: nie
+          title: Nie, niech ogłasza wojsko
+          effects:
+            - { faction: RN, disposition: -2 }
+            - { faction: DPO, disposition: 1 }
+            - { indicator: WF, add: -2 }
+          text: >-
+            PACE odstępuje pierwszeństwo Służbom. Satelitę zapowiada Marynarka, a Rada
+            Naukowa uznaje to za największe zaniechanie w historii komisji.
+      defaultOption: bez-terminu
+      inactionEffects:
+        - { faction: RN, disposition: -1 }
+    branches:
+      - id: obie-strony
+        title: Zachód i Moskwa zapowiadają satelity
+        historical: true
+        weight: 10
+        effects:
+          - { var: presja_wyscigu, add: 1 }
+          - { flag: wyscig_satelitarny_ogloszony }
+        text: >-
+          Biały Dom zapowiada wystrzelenie satelity naukowego w czasie Roku Geofizycznego.
+          Cztery dni później radziecki akademik mówi dziennikarzom w Kopenhadze, że Związek
+          Radziecki zrobi to samo, i dodaje: może wcześniej.
+      - id: tylko-moskwa
+        title: Zapowiada tylko Moskwa
+        weight: 1
+        effects:
+          - { var: presja_wyscigu, add: 2 }
+          - { indicator: PP, add: -2 }
+        text: >-
+          Waszyngton odkłada komunikat z powodu sporu o to, kto ma budować satelitę.
+          Pierwsza zapowiada go Moskwa. Zachodnia prasa pyta, kto tu kogo goni.
+
+  - id: start-roku
+    title: początek Roku Geofizycznego
+    at: 1957-Q3
+    anchor: true
+    branches:
+      - id: start
+        title: Rok Geofizyczny się zaczyna
+        historical: true
+        weight: 10
+        text: >-
+          Sześćdziesiąt siedem państw zaczyna wspólne pomiary Ziemi, oceanów i nieba.
+          W programie są dwa satelity: zachodni i radziecki. Nikt nie wie, który poleci pierwszy.

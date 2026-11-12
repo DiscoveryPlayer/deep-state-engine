@@ -1,2 +1,2 @@
-// Faza robocza: patrz docs/PLAN_BUDOWY.md (faza 4). Moduł celowo pusty na etapie 1A.
+// Symulator kampanii: Plan Budowy v3, plaster 4 (docs/PLAN_BUDOWY.md). Moduł celowo pusty.
 export {};

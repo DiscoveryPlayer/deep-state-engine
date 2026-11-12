@@ -240,3 +240,262 @@ patterns:
       Kongresmeni z Środkowego Zachodu pytają, dlaczego amerykański podatnik ma płacić za
       europejskie programy. PACE, jako organizacja międzynarodowa, jest łatwym celem.
     source: wydarzenia 1951, łańcuch E
+
+  # ── Druga partia wzorców (Dossier III, część IV; numery w polu source) ──────────────
+
+  - id: poprawka-budzetowa
+    title: Poprawka tnąca budżet
+    category: political
+    region: usa
+    conditions: { indicator: ZW, op: '<=', value: 50 }
+    chancePerQuarter: 0.06
+    cooldownQuarters: 6
+    effects:
+      - correction: { units: -0.4, quarters: 2, reason: 'Poprawka w Kongresie tnie jedną z linii budżetu PACE' }
+    text: >-
+      Kongresman z komisji środków zgłasza poprawkę, która obcina jedną z linii budżetu PACE.
+      Przechodzi bez dyskusji, późnym wieczorem, razem z dwudziestoma innymi.
+    source: Dossier III, wzorzec 5
+
+  - id: raport-kontrolerow
+    title: Raport kontrolerów o przetargach
+    category: political
+    region: usa
+    chancePerQuarter: 0.04
+    cooldownQuarters: 8
+    effects:
+      - { indicator: ZW, add: -2 }
+      - { faction: PRZ, disposition: -1 }
+    text: >-
+      Kontrolerzy rządowi publikują raport o marnotrawstwie w zamówieniach PACE. Wymieniają
+      trzy kontrakty przyznane bez przetargu. Konsorcja Przemysłowe mają żal, że Anderson
+      ich nie osłonił.
+    source: Dossier III, wzorzec 7
+
+  - id: general-z-wizja
+    title: Generał z wizją
+    category: military
+    conditions: { era: II, op: '<=' }
+    chancePerQuarter: 0.04
+    cooldownQuarters: 8
+    effects:
+      - { var: presja_wyscigu, add: 1 }
+    text: >-
+      Młody generał Lotnictwa wygłasza w klubie prasowym odczyt o wojnie prowadzonej rakietami.
+      Mówi, że bombowiec jest koniem kawalerii przyszłej wojny. Gazety drukują to z rysunkami.
+    source: Dossier III, wzorzec 22
+
+  - id: cwiczenia-obrony-cywilnej
+    title: Ćwiczenia obrony cywilnej
+    category: social
+    region: usa
+    conditions: { indicator: NG, op: '<=', value: 3 }
+    chancePerQuarter: 0.1
+    cooldownQuarters: 6
+    effects:
+      - { var: antykomunizm, add: 1 }
+      - { indicator: PP, add: 1 }
+    text: >-
+      W miastach wyją syreny, a dzieci w szkołach ćwiczą chowanie się pod ławki. Po takim
+      tygodniu nikt w Kongresie nie pyta, po co krajowi rakiety.
+    source: Dossier III, wzorzec 25
+
+  - id: spor-o-udzial
+    title: Spór o udział przemysłowy
+    category: political
+    region: europa
+    chancePerQuarter: 0.05
+    chanceModifiers:
+      - { when: { var: jednosc_zachodu, op: '<=', value: 4 }, mul: 2 }
+    cooldownQuarters: 6
+    effects:
+      - { indicator: SO, add: -2 }
+    text: >-
+      Delegat jednego z państw członkowskich przedstawia w Radzie Atlantyckiej tabelę: jego
+      kraj wpłaca osiem procent budżetu, a dostaje trzy procent zamówień. Żąda wyrównania.
+    source: Dossier III, wzorzec 43
+
+  - id: spor-o-woomere
+    title: Spór o koszty Woomery
+    category: political
+    chancePerQuarter: 0.03
+    cooldownQuarters: 10
+    effects:
+      - { faction: DOI, disposition: -1 }
+      - correction: { units: -0.3, quarters: 1, reason: 'Wyższe opłaty za poligon w Woomerze' }
+    text: >-
+      Rząd Australii przysyła nowy cennik za korzystanie z poligonu w Woomerze. Zarządcy
+      ośrodków liczą i dochodzą do wniosku, że taniej byłoby zbudować własną pustynię.
+    source: Dossier III, wzorzec 48
+
+  - id: przekroczenie-kosztow
+    title: Dostawca przekracza koszty
+    category: economic
+    chancePerQuarter: 0.07
+    cooldownQuarters: 4
+    effects:
+      - correction: { units: -0.4, quarters: 1, reason: 'Przekroczenie kosztów u dostawcy' }
+    text: >-
+      Jeden z dostawców zgłasza, że nie zmieści się w cenie kontraktu. Tłumaczy to nowymi
+      wymaganiami, których „nie było w pierwszej specyfikacji”.
+    source: Dossier III, wzorzec 64
+
+  - id: brak-materialu
+    title: Brak strategicznego materiału
+    category: economic
+    conditions:
+      any:
+        - { var: koniunktura, op: '>=', value: 8 }
+        - { var: napiecie_azja, op: '>=', value: 8 }
+    chancePerQuarter: 0.1
+    cooldownQuarters: 6
+    effects:
+      - correction: { units: -0.3, quarters: 2, reason: 'Niedobór niklu i tytanu: pierwszeństwo mają zamówienia wojenne' }
+    text: >-
+      Rząd wprowadza przydziały na nikiel i tytan. Pierwszeństwo mają zamówienia dla frontu,
+      a programy doświadczalne dostają to, co zostanie.
+    source: Dossier III, wzorzec 69
+
+  - id: nowy-stop
+    title: Nowy stop z laboratorium
+    category: technical
+    chancePerQuarter: 0.04
+    cooldownQuarters: 10
+    effects:
+      - { faction: RN, disposition: 1 }
+    text: >-
+      Laboratorium metalurgiczne jednego z dostawców ogłasza stop, który wytrzymuje temperatury
+      o dwieście stopni wyższe niż dotychczasowe. Konstruktorzy silników ustawiają się
+      w kolejce po próbki.
+    source: Dossier III, wzorzec 70
+
+  - id: geniusz-z-prowincji
+    title: Inżynier z prowincjonalnej uczelni
+    category: social
+    chancePerQuarter: 0.04
+    cooldownQuarters: 10
+    effects:
+      - { var: pula_kadr, add: 1 }
+    text: >-
+      Na biurko Rady Naukowej trafia praca dyplomowa studenta z małej uczelni na Środkowym
+      Zachodzie. Rozwiązuje w niej zagadnienie, nad którym od roku siedzi cały zespół.
+      Trzeba go zatrudnić, zanim zrobi to przemysł.
+    source: Dossier III, wzorzec 84
+
+  - id: ankieta-lojalnosci
+    title: Ankieta lojalności
+    category: political
+    region: usa
+    conditions: { var: antykomunizm, op: '>=', value: 7 }
+    chancePerQuarter: 0.08
+    cooldownQuarters: 8
+    effects:
+      - { faction: RN, disposition: -1 }
+      - { indicator: SO, add: -1 }
+    text: >-
+      Każdy pracownik agencji rządowych ma wypełnić nową ankietę lojalności: organizacje,
+      do których należał, i znajomi, którzy do nich należeli. Kilku uczonych odmawia
+      z zasady.
+    source: Dossier III, wzorzec 88
+
+  - id: reportaz-tygodnika
+    title: Reportaż ilustrowanego tygodnika
+    category: social
+    chancePerQuarter: 0.05
+    cooldownQuarters: 6
+    effects:
+      - { indicator: PP, add: 3 }
+    text: >-
+      Wielki tygodnik ilustrowany poświęca dwanaście stron ludziom PACE: pilotom
+      doświadczalnym, rachmistrzyniom i mechanikom z hangaru. Na okładce jest samolot
+      na tle wschodzącego słońca.
+    source: Dossier III, wzorzec 124
+
+  - id: felietonista
+    title: Felietonista przeciw rakietom
+    category: social
+    chancePerQuarter: 0.05
+    chanceModifiers:
+      - { when: { var: koniunktura, op: '<=', value: 4 }, mul: 2 }
+    cooldownQuarters: 6
+    effects:
+      - { indicator: PP, add: -2 }
+    text: >-
+      Znany felietonista pisze, że za cenę jednej próbnej rakiety można zbudować dwie szkoły.
+      Tekst przedrukowuje czterdzieści gazet.
+    source: Dossier III, wzorzec 125
+
+  - id: parada-w-moskwie
+    title: Parada w Moskwie
+    category: military
+    region: zsrr
+    chancePerQuarter: 0.06
+    chanceModifiers:
+      - { when: { var: kurs_kremla, op: '>=', value: 7 }, mul: 1.5 }
+    cooldownQuarters: 4
+    effects:
+      - { var: presja_wyscigu, add: 1 }
+    text: >-
+      Na placu Czerwonym przejeżdżają ciągniki z rakietami, jakich zachodni attaché jeszcze nie
+      widzieli. Nikt nie wie, czy to broń, czy makiety. Zdjęcia trafiają do BAS tego
+      samego dnia.
+    source: Dossier III, wzorzec 161
+
+  - id: oferta-pokojowa
+    title: Oferta pokojowa Moskwy
+    category: political
+    region: zsrr
+    conditions: { var: kurs_kremla, op: '<=', value: 6 }
+    chancePerQuarter: 0.08
+    cooldownQuarters: 8
+    effects:
+      - { indicator: NG, add: 1 }
+      - { var: presja_wyscigu, add: -1 }
+    text: >-
+      Moskwa proponuje nową rundę rozmów rozbrojeniowych i jednostronnie zmniejsza armię
+      o kilkaset tysięcy ludzi. W Waszyngtonie spierają się, czy to gest, czy oszczędność.
+    source: Dossier III, wzorzec 163
+
+  - id: huragan-floryda
+    title: Huragan nad Florydą
+    category: technical
+    region: usa
+    chancePerQuarter: 0.03
+    cooldownQuarters: 8
+    effects:
+      - correction: { units: -0.4, quarters: 1, reason: 'Szkody po huraganie w ośrodku na Florydzie' }
+    text: >-
+      Huragan przechodzi przez środkową Florydę. W ośrodku na przylądku woda stoi w hangarach,
+      a dwa maszty telemetryczne leżą na ziemi.
+    source: Dossier III, wzorzec 181
+
+  - id: szczepionka-polio
+    title: Szczepionka przeciw polio
+    category: social
+    conditions:
+      all:
+        - { after: 1955-Q2 }
+        - { before: 1956-Q1 }
+    chancePerQuarter: 0.6
+    maxTotal: 1
+    effects:
+      - { indicator: PP, add: 2 }
+      - { faction: RN, disposition: 1 }
+    text: >-
+      Ogłoszono wyniki wielkiej próby: szczepionka doktora Salka chroni dzieci przed polio.
+      Dzwony biją w kościołach, a słowo „naukowiec” brzmi w Ameryce lepiej niż kiedykolwiek.
+    source: Dossier III, wzorzec 194 (historycznie 12 kwietnia 1955)
+
+  - id: dobry-kwartal
+    title: Spokojny kwartał
+    category: social
+    conditions: { indicator: SO, op: '>=', value: 65 }
+    chancePerQuarter: 0.15
+    cooldownQuarters: 4
+    effects:
+      - { indicator: SO, add: 1 }
+      - { currency: KP, add: 1 }
+    text: >-
+      Rzadkość: kwartał bez awantur. Zespoły dotrzymują terminów, dyrektorzy ze sobą
+      rozmawiają, a sekretariat Andersona nadrabia zaległą pocztę.
+    source: Dossier III, wzorzec 200

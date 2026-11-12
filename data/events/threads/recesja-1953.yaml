@@ -1,0 +1,91 @@
+id: recesja-1953
+title: Gospodarka po Korei
+kind: historical
+region: usa
+summary: >-
+  Koniec wojny koreańskiej oznacza koniec zamówień wojennych. Recesja obniża wpływy
+  budżetu, ale uwalnia ludzi i moce produkcyjne.
+historicalNote: >-
+  Zniesienie kontroli płac i cen (luty–marzec 1953). Recesja od lipca 1953 do maja 1954:
+  spadek wydatków obronnych po rozejmie w Korei, bezrobocie do około 6 procent.
+  Ustawa podatkowa z sierpnia 1954 i ożywienie w drugiej połowie roku.
+drivers: [koniunktura]
+start:
+  from: 1953-Q1
+  conditions: { flag: administracja_eisenhower }
+stages:
+  - id: kontrola
+    title: koniec kontroli cen
+    at: 1953-Q1
+    branches:
+      - id: zniesiona
+        title: Rząd znosi kontrolę płac i cen
+        historical: true
+        weight: 10
+        text: >-
+          Nowa administracja znosi wojenną kontrolę płac i cen. Ceny stali i miedzi rosną,
+          a dostawcy zapowiadają nowe cenniki.
+
+  - id: recesja
+    title: recesja
+    at: 1953-Q3
+    branches:
+      - id: spadek
+        title: Recesja po rozejmie
+        historical: true
+        weight: 10
+        requires: { stage: korea.rozejm }
+        effects:
+          - { var: koniunktura, add: -2 }
+          - { var: pula_kadr, add: 1 }
+        text: >-
+          Zamówienia wojenne spadają, a fabryki zwalniają ludzi. Bezrobocie rośnie do
+          najwyższego poziomu od wojny. Na rynku pojawiają się inżynierowie, o których
+          rok temu trzeba było walczyć.
+        ongoing:
+          title: Recesja
+          text: >-
+            Wpływy podatkowe spadają i Biuro Budżetu szuka oszczędności w każdej agencji.
+          effects:
+            - correction: { units: -0.3, quarters: 1, reason: 'Oszczędności budżetowe w czasie recesji' }
+          until: odbicie
+          maxQuarters: 4
+      - id: wojenna
+        title: Wojna podtrzymuje koniunkturę
+        weight: 1
+        requires: { not: { stage: korea.rozejm } }
+        text: >-
+          Dopóki trwa wojna w Korei, fabryki pracują na trzy zmiany. Ekonomiści ostrzegają,
+          że rachunek przyjdzie razem z rozejmem.
+      - id: miekkie-ladowanie
+        title: Miękkie lądowanie
+        weight: 2
+        minor: true
+        requires: { stage: korea.rozejm }
+        effects:
+          - { var: koniunktura, add: -1 }
+        text: >-
+          Spadek zamówień wojennych pokrywa popyt cywilny: samochody, domy, telewizory.
+          Gospodarka zwalnia, ale nie wpada w recesję.
+
+  - id: odbicie
+    title: ożywienie
+    at: 1954-Q3
+    branches:
+      - id: ozywienie
+        title: Gospodarka rusza
+        historical: true
+        weight: 10
+        effects:
+          - { var: koniunktura, add: 2 }
+        text: >-
+          Obniżka podatków i tani kredyt robią swoje. Sprzedaż samochodów bije rekordy,
+          a zakłady lotnicze znów szukają ludzi.
+      - id: zastoj
+        title: Zastój się przedłuża
+        weight: 2
+        minor: true
+        delayQuarters: 2
+        text: >-
+          Ożywienie nie nadchodzi. Bezrobocie utrzymuje się, a Kongres przed wyborami szuka
+          winnych.

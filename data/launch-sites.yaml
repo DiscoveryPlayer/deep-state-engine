@@ -1,0 +1,43 @@
+# Miejsca startu z instalacji autora (KSCSwitcher, LaunchSites.cfg) i ich rola w świecie gry.
+# Opis: docs/design/miejsca-startu.md, decyzja 0016. Daty według historii; „from” to kwartał
+# pierwszych startów albo uruchomienia poligonu.
+#
+# role:
+#   west          — PACE i Zachód: gracz może stąd startować, gdy miejsce działa,
+#   east          — blok wschodni i Chiny: tylko model ZSRR, wywiad i wątki,
+#   out_of_period — miejsce powstało po 1980 roku, w kampanii nie istnieje.
+
+sites:
+  - { id: us_cape_canaveral, name: Cape Canaveral, country: US, role: west, from: 1950-Q3, host: 'PACE' }
+  - { id: us_whitesands, name: White Sands, country: US, role: west, from: 1946-Q2, host: 'DPO i Armia' }
+  - { id: us_wallops, name: Wallops, country: US, role: west, from: 1945-Q3, host: 'Rada Naukowa i NACA' }
+  - { id: us_vandenburg, name: Vandenberg, country: US, role: west, from: 1958-Q4, host: 'DPO i BAS' }
+  - { id: mh_omelek, name: Omelek (Kwajalein), country: MH, role: west, from: 1962-Q1, host: 'DPO (poligon Armii USA)' }
+  - { id: au_woomera, name: Woomera, country: AU, role: west, from: 1947-Q2, host: 'Wielka Brytania i Australia' }
+  - { id: dz_hammaguir, name: Hammaguir, country: DZ, role: west, from: 1947-Q2, until: 1967-Q2, host: 'Francja' }
+  - { id: fr_kourou, name: Kourou, country: FR, role: west, from: 1968-Q2, host: 'Francja' }
+  - { id: ca_churchill, name: Churchill, country: CA, role: west, from: 1956-Q4, host: 'Kanada' }
+  - { id: no_andoya, name: Andøya, country: 'NO', role: west, from: 1962-Q3, host: 'Norwegia (umowa)' }
+  - { id: se_esrange, name: Esrange, country: SE, role: west, from: 1966-Q4, host: 'Szwecja (partner)' }
+  - { id: jp_uchinoura, name: Uchinoura, country: JP, role: west, from: 1962-Q1, host: 'Japonia (obserwator)' }
+  - { id: jp_tanegashima, name: Tanegashima, country: JP, role: west, from: 1969-Q4, host: 'Japonia' }
+  - { id: in_satish_dhawan, name: Sriharikota, country: IN, role: west, from: 1971-Q4, host: 'Indie (możliwy partner)' }
+  - { id: il_palmachim, name: Palmachim, country: IL, role: west, from: 1961-Q3, host: 'Izrael (możliwy partner)' }
+
+  - { id: kz_baikonur, name: Bajkonur (Tiuratam), country: KZ, role: east, from: 1957-Q2, host: 'ZSRR' }
+  - { id: ru_kasputin_yar, name: Kapustin Jar, country: RU, role: east, from: 1947-Q4, host: 'ZSRR' }
+  - { id: ru_plesetsk, name: Plesieck, country: RU, role: east, from: 1966-Q1, host: 'ZSRR' }
+  - { id: ru_yasny, name: Jasny (Dombarowski), country: RU, role: east, from: 1966-Q1, host: 'ZSRR (baza pocisków)' }
+  - { id: cn_jiuquan, name: Jiuquan, country: CN, role: east, from: 1960-Q4, host: 'Chiny' }
+  - { id: cn_taiyuan, name: Taiyuan, country: CN, role: east, from: 1968-Q1, host: 'Chiny' }
+
+  - { id: br_alcantara, name: Alcântara, country: BR, role: out_of_period, from: 1990-Q1, host: 'Brazylia' }
+  - { id: cn_xichang, name: Xichang, country: CN, role: out_of_period, from: 1984-Q1, host: 'Chiny' }
+  - { id: cn_wenchang, name: Wenchang, country: CN, role: out_of_period, from: 2014-Q4, host: 'Chiny' }
+  - { id: ir_semnan, name: Semnan, country: IR, role: out_of_period, from: 2008-Q1, host: 'Iran' }
+  - { id: kp_sohae, name: Sohae, country: KP, role: out_of_period, from: 2012-Q2, host: 'Korea Północna' }
+  - { id: kr_naro, name: Naro, country: KR, role: out_of_period, from: 2009-Q3, host: 'Korea Południowa' }
+  - { id: nz_mahia, name: Mahia, country: NZ, role: out_of_period, from: 2017-Q2, host: 'Nowa Zelandia' }
+  - { id: ru_svobodny, name: Swobodny / Wostocznyj, country: RU, role: out_of_period, from: 1997-Q1, host: 'Rosja' }
+  - { id: us_brownsville, name: Brownsville, country: US, role: out_of_period, from: 2019-Q1, host: 'USA' }
+  - { id: us_kodiak, name: Kodiak, country: US, role: out_of_period, from: 1998-Q4, host: 'USA' }

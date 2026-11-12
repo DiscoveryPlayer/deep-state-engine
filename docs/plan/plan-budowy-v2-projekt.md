@@ -1,4 +1,4 @@
-> **Status:** dokument roboczy z 30.10.2026. Odpowiedzi autora i rozstrzygnięcia są w [rozstrzygniecia-2026-11.md](rozstrzygniecia-2026-11.md) i w decyzjach 0007–0015. Ostateczny Plan Budowy v3 zastąpi ten plik.
+> **Status:** dokument roboczy z 30.10.2026, zachowany dla analizy problemów (rozdział 2). Obowiązuje [Plan Budowy v3](../PLAN_BUDOWY.md).
 
 # THE DEEP STATE ENGINE — Plan budowy aplikacji
 

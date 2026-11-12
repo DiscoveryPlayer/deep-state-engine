@@ -28,10 +28,9 @@
 | Warstwa faktyczna | — | `GameState` | pełny stan |
 | Wiedza Andersona | — | `PlayerView`, `toPlayerView()` | jedyna droga do interfejsu i AI |
 | Rejestr Korekt (dawniej `kspOffsets`) | — | faza 7 | zmiany zapisywane do pliku KSP |
-| Migawka | — | faza 1B | znormalizowany stan techniczny z KSP |
 | Wątek świata | — | `threads/<id>.yaml`, `world.threads[id]` | etapy z datami, gałąź historyczna i alternatywne (decyzja 0015) |
 | Etap alternatywny | — | `alternative: true` | wejście tylko przez `next` |
-| Kotwica | — | `kind: anchor` | jedna gałąź w każdym etapie |
+| Kotwica | — | `anchor: true` w etapie | etap z jedną gałęzią historyczną, bez decyzji |
 | Szablon wątku | — | `templates/<id>.yaml`, instancja `<id>#<n>` | parametry, np. `{kraj}` |
 | Wzorzec | — | `patterns.yaml`, `world.patternLog` | zdarzenie bez daty |
 | Dylemat | — | `dilemmas.yaml`, `world.pendingDilemmas` | bez decyzji: opcja domyślna |
@@ -39,3 +38,21 @@
 | Rozbieżność | D | `world.divergence[region]` | 0–10, ukryta |
 | Korekta budżetu | — | `world.corrections` | jednostki robocze (decyzja 0012) |
 | Wiadomości ze świata | — | `PlayerView.worldNews` | tylko wpisy publiczne |
+| Wątek głęboki | — | `rumor`, `decision`, `sameQuarter`, `reactions`, `ongoing` | standard treści (decyzje 0016, 0017) |
+| Wątek-echo | — | `kind: reactive` | startuje od flagi, etapy z `offset` |
+| Gałęzie H/P/O/X/A | — | `branchKind()` | historyczna, przyspieszona, opóźniona, przerwana, alternatywna |
+| Gałąź szczegółu | — | `minor: true` | niehistoryczna, ale nie podnosi Rozbieżności |
+| Sytuacja trwająca | — | `world.situations`, `PlayerView.situations` | skutki co kwartał aż do etapu `until` |
+| Reakcja strony | — | `reactions`, wpis `kind: reaction` | kto i jak odpowiedział na rozstrzygnięcie |
+| Pogłoska | — | `rumor` → `knowledge.assessments` | Ocena wywiadowcza przed etapem |
+| Sprawa do decyzji | — | `PlayerView.pendingDilemmas` | dylemat samodzielny albo decyzja etapu (`fromThread`) |
+| Uwaga Dowódcy | UD | `currencies.UD`, `BASE_UD` | 6 na kwartał |
+| Akcja Biurka | — | `performDeskAction`, `desk.log` | pięć akcji z GDD 10.2 |
+| Otwarcie i zamknięcie kwartału | — | `beginQuarter`, `closeQuarter` | pętla tury (decyzja 0017) |
+| Raport kwartału | — | `reports`, `QuarterReport` | zmiany od otwarcia kwartału |
+| Księga Korekt | — | `budget.ledger`, `settleCorrection` | tryb Honorowy: gracz oznacza Korektę jako zastosowaną |
+| Jednostka Korekty | jedn. | `correctionUnitFunds` | 20% miesięcznych wynagrodzeń z ostatniej Migawki |
+| Migawka | — | `ksp.snapshots`, `KspSnapshot`, `readCareerFile` | stan kariery KSP na koniec kwartału |
+| Bilans lotów | — | `closeQuarter` | reguła tymczasowa (decyzja 0017, punkt 7) |
+| Miejsce startu | — | `data/launch-sites.yaml`, `launchSiteProblem` | strony: `west`, `east`, `out_of_period` |
+| Naruszenie zasad uczciwości | — | wpis Kroniki z tagiem `naruszenie` | GDD 22; gra nie blokuje |

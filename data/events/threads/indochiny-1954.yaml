@@ -1,0 +1,223 @@
+id: indochiny-1954
+title: Wojna w Indochinach
+kind: historical
+region: azja
+summary: >-
+  Francja przegrywa wojnę kolonialną. Dla PACE to cięcia francuskiej składki, osłabiony
+  i urażony sojusznik oraz początek amerykańskiego zaangażowania w Wietnamie.
+historicalNote: >-
+  Operacja Castor: spadochroniarze zajmują Dien Bien Phu (20 listopada 1953). Oblężenie od
+  13 marca 1954, upadek twierdzy 7 maja 1954. Rozważana operacja Vulture (naloty USA);
+  warunek „zjednoczonego działania” odrzucony przez Londyn, brak zgody Kongresu. Rząd
+  Mendès-France'a (18 czerwca 1954). Porozumienia genewskie (21 lipca 1954): podział wzdłuż
+  17. równoleżnika. Pakt z Manili, SEATO (8 września 1954). Referendum i Republika Wietnamu
+  z prezydentem Diemem (23–26 października 1955).
+drivers: [napiecie_azja, zaangazowanie_usa, ambicja_francji]
+start:
+  from: 1953-Q4
+stages:
+  - id: castor
+    title: spadochroniarze w dolinie
+    at: 1953-Q4
+    branches:
+      - id: zajecie
+        title: Francuzi zajmują Dien Bien Phu
+        historical: true
+        weight: 10
+        text: >-
+          Francuscy spadochroniarze zajmują dolinę Dien Bien Phu w górach przy granicy
+          z Laosem. Dowództwo chce zwabić Viet Minh do bitwy, w której zdecyduje artyleria
+          i lotnictwo.
+
+  - id: oblezenie
+    title: oblężenie
+    at: 1954-Q1
+    branches:
+      - id: okrazenie
+        title: Twierdza w okrążeniu
+        historical: true
+        weight: 10
+        effects:
+          - { var: napiecie_azja, add: 1 }
+          - { var: ambicja_francji, add: -1 }
+        text: >-
+          Viet Minh wciągnął ciężkie działa na wzgórza wokół doliny, czego francuski sztab
+          nie uważał za możliwe. W dwa dni padają dwa wysunięte forty, a lotnisko jest
+          pod ostrzałem.
+        ongoing:
+          title: Francja płaci za Indochiny
+          text: >-
+            Paryż wydaje na wojnę więcej, niż dostaje pomocy. Składki na wspólne programy
+            wpływają z opóźnieniem.
+          effects:
+            - correction: { units: -0.3, quarters: 1, reason: 'Francja opóźnia składkę: wojna w Indochinach' }
+          until: genewa
+          maxQuarters: 4
+
+  - id: vulture
+    title: sprawa interwencji
+    at: 1954-Q2
+    rumor:
+      quartersBefore: 1
+      reliability: B
+      credibility: 3
+      source: humint
+      topic: Indochiny
+      text: >-
+        Admirał Radford przedstawił Francuzom plan nocnego nalotu kilkudziesięciu bombowców
+        z Filipin na pozycje wokół twierdzy. Prezydent stawia warunki: zgoda Kongresu
+        i udział Brytyjczyków.
+    decision:
+      title: 'Dien Bien Phu: prośba Francuzów'
+      prompt: >-
+        Francuski sztab prosi PACE o zdjęcia doliny z samolotów wysokościowych i o pomoc
+        w obliczeniach zrzutów zaopatrzenia. To nie broń, ale pomoc w wojnie kolonialnej.
+        Paryż jest członkiem założycielskim i pamięta, kto mu pomógł.
+      options:
+        - id: pomoc
+          title: Przekazać zdjęcia i obliczenia
+          effects:
+            - { var: ambicja_francji, add: -1 }
+            - { indicator: WF, add: -3 }
+            - { faction: RN, disposition: -1 }
+            - { flag: pace_pomogla_francji }
+          text: >-
+            PACE przekazuje Francuzom zdjęcia i tablice zrzutów. Paryż dziękuje dyskretnie.
+            Delegaci Kanady i Włoch pytają, czy komisja ma teraz własną politykę kolonialną.
+        - id: odmowa
+          title: Odmówić
+          effects:
+            - { var: ambicja_francji, add: 1 }
+            - { indicator: WF, add: 1 }
+          text: >-
+            Anderson odmawia: PACE nie bierze udziału w wojnach. Francuski delegat odpowiada,
+            że zapamięta tę zasadę, gdy Ameryka poprosi o coś Francję.
+      defaultOption: odmowa
+      inactionEffects:
+        - { var: ambicja_francji, add: 1 }
+    branches:
+      - id: bez-interwencji
+        title: Ameryka nie interweniuje
+        historical: true
+        weight: 10
+        text: >-
+          Londyn odmawia udziału, a przywódcy Kongresu nie chcą „drugiej Korei”. Bombowce
+          zostają na Filipinach. Francja jest sama.
+      - id: naloty
+        title: Amerykańskie naloty
+        weight: 1
+        modifiers:
+          - { when: { var: zaangazowanie_usa, op: '>=', value: 7 }, mul: 3 }
+        effects:
+          - { var: napiecie_azja, add: 2 }
+          - { var: zaangazowanie_usa, add: 1 }
+          - { indicator: NG, add: -1 }
+          - { flag: usa_w_indochinach }
+        text: >-
+          Amerykańskie bombowce atakują pozycje Viet Minhu wokół twierdzy. Pekin ostrzega,
+          że „nie będzie się przyglądał bezczynnie”.
+
+  - id: upadek
+    title: los twierdzy
+    sameQuarter: true
+    branches:
+      - id: kapitulacja
+        title: Dien Bien Phu pada
+        historical: true
+        weight: 10
+        requires: { not: { flag: usa_w_indochinach } }
+        effects:
+          - { var: ambicja_francji, add: 1 }
+          - { var: dekolonizacja, add: 1 }
+        text: >-
+          Po 56 dniach oblężenia twierdza milknie. Do niewoli idzie ponad dziesięć tysięcy
+          żołnierzy. Nazajutrz w Genewie zaczyna się konferencja w sprawie Indochin.
+      - id: upadek-pozny
+        title: Twierdza trzyma się dłużej
+        weight: 0
+        minor: true
+        requires: { not: { flag: usa_w_indochinach } }
+        modifiers:
+          - { when: { flag: pace_pomogla_francji }, add: 6 }
+        effects:
+          - { var: dekolonizacja, add: 1 }
+        text: >-
+          Dzięki lepszym zrzutom twierdza broni się trzy tygodnie dłużej, niż przewidywał
+          sztab. Pada, gdy w Genewie rozmowy już trwają. Francuzi negocjują z nieco
+          mocniejszej pozycji.
+      - id: odsiecz
+        title: Twierdza ocalona
+        weight: 1
+        requires: { flag: usa_w_indochinach }
+        effects:
+          - { divergence: azja, add: 1 }
+        text: >-
+          Pod osłoną amerykańskich bombowców kolumna z Laosu dociera do doliny. Twierdza
+          jest ocalona, ale wojna trwa, a Ameryka jest w niej po kolana.
+
+  - id: mendes
+    title: nowy rząd w Paryżu
+    sameQuarter: true
+    branches:
+      - id: obietnica
+        title: Mendès-France obiecuje pokój w miesiąc
+        historical: true
+        weight: 10
+        text: >-
+          Rząd francuski upada. Nowy premier, Pierre Mendès-France, obiecuje, że w trzydzieści
+          dni zawrze pokój albo poda się do dymisji.
+
+  - id: genewa
+    title: konferencja genewska
+    at: 1954-Q3
+    branches:
+      - id: podzial
+        title: Wietnam podzielony
+        historical: true
+        weight: 10
+        effects:
+          - { var: napiecie_azja, add: -1 }
+          - { indicator: NG, add: 1 }
+        text: >-
+          W Genewie podpisano zawieszenie broni. Wietnam zostaje tymczasowo podzielony wzdłuż
+          17. równoleżnika, a za dwa lata mają się odbyć wybory. Stany Zjednoczone nie
+          podpisują porozumień.
+      - id: fiasko
+        title: Konferencja bez porozumienia
+        weight: 1
+        modifiers:
+          - { when: { flag: usa_w_indochinach }, mul: 6 }
+        effects:
+          - { var: napiecie_azja, add: 1 }
+          - { var: ambicja_francji, add: -1 }
+          - correction: { units: -0.3, quarters: 4, reason: 'Francja dalej płaci za wojnę w Indochinach' }
+        text: >-
+          Konferencja genewska rozjeżdża się bez porozumienia. Wojna w Indochinach trwa,
+          a Francja wykrwawia się dalej.
+
+  - id: seato
+    title: pakt z Manili
+    sameQuarter: true
+    branches:
+      - id: pakt
+        title: Powstaje SEATO
+        historical: true
+        weight: 10
+        effects:
+          - { var: zaangazowanie_usa, add: 1 }
+        text: >-
+          W Manili osiem państw podpisuje pakt obrony Azji Południowo-Wschodniej.
+          Waszyngton rozciąga parasol nad Wietnamem Południowym, Laosem i Kambodżą.
+
+  - id: diem
+    title: Wietnam Południowy
+    at: 1955-Q4
+    branches:
+      - id: republika
+        title: Diem prezydentem, wyborów nie będzie
+        historical: true
+        weight: 10
+        text: >-
+          Po referendum, w którym dostał ponad 98 procent głosów, Ngo Dinh Diem ogłasza
+          Republikę Wietnamu. Zapowiada, że wyborów zjednoczeniowych przewidzianych
+          w Genewie nie będzie.

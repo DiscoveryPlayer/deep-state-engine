@@ -1,0 +1,187 @@
+id: bomba-wodorowa
+title: Wyścig termojądrowy
+kind: historical
+region: swiat
+summary: >-
+  Bomba wodorowa zmienia rachunek strategiczny: jedna głowica niszczy miasto nawet przy
+  małej celności. To ona nadaje sens pociskowi międzykontynentalnemu.
+historicalNote: >-
+  Ivy Mike (1 listopada 1952, atol Eniwetok; około 10 megaton, wyspa Elugelab znika).
+  Radziecka RDS-6s, „Joe-4” (12 sierpnia 1953, Semipałatyńsk; około 400 kiloton).
+  Castle Bravo (1 marca 1954, atol Bikini; 15 megaton zamiast przewidywanych 6); skażenie
+  kutra Daigo Fukuryū Maru, śmierć radiooperatora Aikichiego Kuboyamy (23 września 1954).
+  Manifest Russella–Einsteina (9 lipca 1955). RDS-37, radziecka dwustopniowa bomba wodorowa
+  (22 listopada 1955). KANON GRY: w 1945 roku bomby spadły na Hiroszimę, Nagasaki i Kobe.
+  Kotwica K9: ZSRR ma bombę wodorową przed 1956 rokiem.
+drivers: [wyscig_atomowy, kurs_kremla]
+start:
+  from: 1952-Q3
+stages:
+  - id: mike
+    title: Ivy Mike
+    at: 1952-Q4
+    branches:
+      - id: wybuch
+        title: Pierwszy wybuch termojądrowy
+        historical: true
+        weight: 10
+        effects:
+          - { var: wyscig_atomowy, add: 1 }
+          - { faction: DPO, disposition: 1 }
+        text: >-
+          Na atolu Eniwetok Amerykanie odpalają pierwsze urządzenie termojądrowe. Ma moc
+          dziesięciu milionów ton trotylu i wielkość budynku. Wyspa, na której stało,
+          przestaje istnieć.
+        reactions:
+          - actor: RN
+            text: >-
+              W Radzie Naukowej zapada cisza. Kilku fizyków, którzy pracowali przy bombie
+              atomowej, mówi, że tej broni nie da się już nazwać wojskową.
+          - actor: DPO
+            text: >-
+              Dyrektoriat Programów Obronnych liczy: jeśli taką moc da się zmieścić w tonie
+              ładunku, rakieta nie musi trafiać w cel. Wystarczy, że trafi w okolicę.
+      - id: odlozony
+        title: Próba odłożona
+        weight: 1
+        delayQuarters: 3
+        text: >-
+          Doradcy prezydenta przekonują go, żeby nie odpalać ładunku tuż przed wyborami.
+          Próba zostaje przesunięta na wiosnę.
+
+  - id: joe4
+    title: odpowiedź Moskwy
+    at: 1953-Q3
+    rumor:
+      quartersBefore: 1
+      reliability: C
+      credibility: 3
+      source: sigint
+      topic: Radziecki program atomowy
+      text: >-
+        Nasłuch notuje wzmożony ruch na poligonie pod Semipałatyńskiem. BAS ocenia, że
+        Moskwa przygotowuje próbę większą niż dotychczasowe.
+    branches:
+      - id: wybuch
+        title: Radziecka próba termojądrowa
+        historical: true
+        weight: 10
+        effects:
+          - { var: wyscig_atomowy, add: 1 }
+          - { var: presja_wyscigu, add: 1 }
+          - { indicator: ZW, add: -1 }
+        text: >-
+          Moskwa ogłasza, że Stany Zjednoczone nie mają już monopolu na bombę wodorową.
+          Cztery dni później samoloty zbierające pył potwierdzają: w Kazachstanie wybuchł
+          ładunek z paliwem termojądrowym, i to taki, który da się zrzucić z samolotu.
+      - id: opozniona
+        title: Moskwa potrzebuje więcej czasu
+        weight: 2
+        modifiers:
+          - { when: { flag: stalin_zyje }, mul: 0.5 }
+        delayQuarters: 4
+        text: >-
+          Zapowiadana próba nie następuje. BAS uznaje, że walka o władzę na Kremlu spowolniła
+          program, i ostrzega, żeby na to nie liczyć.
+
+  - id: bravo
+    title: Castle Bravo
+    at: 1954-Q1
+    branches:
+      - id: skazenie
+        title: Wybuch większy, niż obliczono
+        historical: true
+        weight: 10
+        effects:
+          - { var: wyscig_atomowy, add: 1 }
+          - { indicator: PP, add: -2 }
+          - { flag: bravo_skazenie }
+        text: >-
+          Próba na atolu Bikini daje piętnaście megaton, ponad dwa razy więcej, niż obliczono.
+          Radioaktywny popiół spada na zamieszkane atole i na japoński kuter rybacki, który
+          łowił poza strefą zamkniętą.
+        reactions:
+          - actor: Tokio
+            text: >-
+              Kuter wraca do portu z poparzoną załogą. Japonia, która pamięta Hiroszimę,
+              Nagasaki i Kobe, wycofuje tuńczyka z targów, a kobiety z tokijskiej dzielnicy
+              Suginami zaczynają zbierać podpisy przeciw bombom.
+            effects:
+              - { var: nastroje_spoleczne, add: 1 }
+          - actor: RN
+            text: >-
+              Rada Naukowa żąda danych o opadzie. Komisja Energii Atomowej odpowiada, że
+              są tajne.
+            effects:
+              - { faction: RN, disposition: -1 }
+      - id: bez-incydentu
+        title: Próba bez incydentu
+        weight: 2
+        effects:
+          - { var: wyscig_atomowy, add: 1 }
+        text: >-
+          Próba na atolu Bikini przebiega zgodnie z obliczeniami. Opad zostaje w strefie
+          zamkniętej, a świat dowiaduje się tylko, że Ameryka ma bombę, którą da się
+          przewieźć samolotem.
+
+  - id: kuter
+    title: po Bravo
+    at: 1954-Q3
+    branches:
+      - id: kuboyama
+        title: Śmierć radiooperatora kutra
+        historical: true
+        weight: 10
+        requires: { flag: bravo_skazenie }
+        effects:
+          - { indicator: WF, add: -2 }
+          - { flag: ruch_antyatomowy }
+        text: >-
+          W tokijskim szpitalu umiera radiooperator skażonego kutra. Petycję przeciw bombom
+          atomowym i wodorowym podpisały już miliony Japończyków.
+      - id: cisza
+        title: Sprawa przycicha
+        weight: 1
+        minor: true
+        text: >-
+          Świat przyzwyczaja się do megaton. Gazety piszą o próbach na Pacyfiku w rubryce
+          naukowej.
+
+  - id: manifest
+    title: głos uczonych
+    at: 1955-Q3
+    branches:
+      - id: russell-einstein
+        title: Manifest Russella i Einsteina
+        historical: true
+        weight: 10
+        effects:
+          - { faction: RN, disposition: 1 }
+          - { var: nastroje_spoleczne, add: 1 }
+        text: >-
+          Jedenastu uczonych, wśród nich Bertrand Russell i zmarły przed trzema miesiącami
+          Albert Einstein, wzywa rządy do wyrzeczenia się wojny. „Pamiętajcie o swoim
+          człowieczeństwie, a zapomnijcie o reszcie”.
+
+  - id: rds37
+    title: radziecka superbomba
+    at: 1955-Q4
+    anchor: true
+    branches:
+      - id: wybuch
+        title: ZSRR ma prawdziwą bombę wodorową
+        historical: true
+        weight: 10
+        effects:
+          - { var: wyscig_atomowy, add: 1 }
+          - { var: presja_wyscigu, add: 1 }
+        text: >-
+          Radziecki bombowiec zrzuca nad Kazachstanem ładunek o mocy ponad półtorej megatony.
+          Obie strony mają teraz broń, która niszczy miasto jednym uderzeniem.
+        reactions:
+          - actor: DPO
+            text: >-
+              Dyrektoriat Programów Obronnych składa memorandum: kto pierwszy połączy taką
+              głowicę z rakietą dalekiego zasięgu, ten podyktuje warunki.
+            effects:
+              - { faction: DPO, disposition: 1 }

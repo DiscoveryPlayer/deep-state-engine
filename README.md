@@ -7,7 +7,30 @@ Grasz Eugene'em Andersonem, Dowódcą Operacyjnym **PACE** — *Pan-Atlantic Com
 Experimentation* — i prowadzisz zachodni program kosmiczny przez zimną wojnę, od 1951 roku.
 W KSP budujesz rakiety i latasz. Tutaj płacisz za to polityczną cenę.
 
-> Stan projektu: **faza 1A domknięta**, w toku system wydarzeń świata i parser zapisów. Szczegóły w [docs/STATUS.md](docs/STATUS.md).
+> Stan projektu: **da się grać w lata 1951–1955** w przeglądarce (plaster 1 Planu Budowy v3). Szczegóły w [docs/STATUS.md](docs/STATUS.md).
+
+## Jak zagrać
+
+Potrzebujesz **Node.js w wersji LTS** (22 lub nowszej, instalator ze strony nodejs.org; wystarczy klikać „Dalej”).
+
+1. Pobierz repozytorium: w GitHub Desktop wybierz *Clone repository*, a jeśli już je masz, *Fetch origin* i *Pull*.
+2. Otwórz folder `deep-state-engine` i uruchom dwukrotnym kliknięciem plik **`Uruchom-DSE.bat`**.
+3. Przy pierwszym uruchomieniu skrypt pobierze potrzebne pakiety (minuta lub dwie). Potem przeglądarka otworzy się sama pod adresem `http://127.0.0.1:4780`.
+4. Czarne okno musi zostać otwarte, dopóki grasz. Zamknięcie okna kończy grę. Kampania zapisuje się sama po każdym ruchu.
+
+Na macOS i Linuksie: `npm install`, potem `npm start` w terminalu w folderze projektu.
+
+### Jeden kwartał
+
+1. **Depesze:** przeczytaj, co się wydarzyło na świecie. Zakładka *Wywiad* pokazuje pogłoski z oceną wiarygodności.
+2. **Sprawy do decyzji** (prawa kolumna): wybierz opcję i zatwierdź. Sprawa zostawiona bez decyzji rozstrzygnie się sama, zwykle z kosztem.
+3. **Biurko:** wydaj Uwagę Dowódcy (6 punktów na kwartał) na spotkania, lobbing, konferencję prasową albo zlecenie dla wywiadu. Na wszystko nie wystarczy.
+4. **KSP:** zagraj kwartał w swojej karierze RP-1. W zakładce *Budżet* znajdziesz Korekty do wpisania w KSP (tryb Honorowy), a w zakładce *Loty (KSP)* wczytasz plik zapisu, podając jego ścieżkę, na przykład `C:\Gry\KSP\saves\PACE\persistent.sfs`.
+5. **Zamknij kwartał.** Raport pokaże, co się zmieniło. Gra kończy się, gdy Zaufanie Waszyngtonu albo Spójność Organizacji spadną do zera.
+
+Ustawienia wyglądu (motyw ciemny i jasny, rozmiar tekstu, układ, kontrast, animacje) są pod przyciskiem *Ustawienia*. Powiększanie strony (Ctrl i plus, Ctrl i minus) przestawia układ, zamiast go rozlewać.
+
+Pliki kampanii (`campaigns/`) i klucze API (`.env`) zostają wyłącznie na Twoim dysku. Repozytorium je ignoruje, a gra nie łączy się z internetem.
 
 ## Dokumenty
 
@@ -15,51 +38,40 @@ W KSP budujesz rakiety i latasz. Tutaj płacisz za to polityczną cenę.
 |---|---|
 | [docs/gdd/GDD_v1.0.md](docs/gdd/GDD_v1.0.md) | Pełny projekt gry: systemy, frakcje, pętla, AI, zakończenia |
 | [docs/gdd/Dokument_Decyzyjny_v1.1.md](docs/gdd/Dokument_Decyzyjny_v1.1.md) | Decyzje przed fazą 1 i poprawki do GDD (ma pierwszeństwo przed GDD) |
-| [docs/PLAN_BUDOWY.md](docs/PLAN_BUDOWY.md) | Fazy robocze, architektura, sposób pracy |
+| [docs/PLAN_BUDOWY.md](docs/PLAN_BUDOWY.md) | Plan Budowy v3: co działa, co dalej, w jakiej kolejności |
 | [docs/STATUS.md](docs/STATUS.md) | Co jest zrobione, co jest następne |
 | [docs/decisions/](docs/decisions/) | Rejestr decyzji technicznych i projektowych |
-| [docs/plan/](docs/plan/) | Plan Budowy v2 (roboczy), pytania i rozstrzygnięcia |
-| [docs/design/](docs/design/) | Projekty systemów: przemysł i sponsorzy, wydarzenia świata |
+| [docs/plan/](docs/plan/) | Wcześniejsze wersje planu, pytania i rozstrzygnięcia |
+| [docs/design/](docs/design/) | Projekty systemów: wydarzenia świata, miejsca startu, przemysł i sponsorzy |
 | [docs/research/](docs/research/) | Materiał źródłowy: dossier, analizy |
 | [CHANGELOG.md](CHANGELOG.md) | Dziennik zmian |
 | [docs/GLOSARIUSZ.md](docs/GLOSARIUSZ.md) | Pojęcia z gry i ich nazwy w kodzie |
 
-## Uruchomienie na Twoim komputerze
+## Narzędzia w terminalu
 
-Potrzebujesz **Node.js w wersji LTS** (22 lub nowszej, instalator z nodejs.org) i **Git**
-(albo GitHub Desktop).
-
-```bash
-git clone https://github.com/DiscoveryPlayer/deep-state-engine.git
-cd deep-state-engine
-npm install
-npm run check          # sprawdzenie typów i wszystkie testy
-```
-
-Pierwsza kampania:
+Dla sprawdzania treści i strojenia. Do samej gry nie są potrzebne.
 
 ```bash
+npm run check                                        # sprawdzenie typów i wszystkie testy
 npm run dse -- waliduj                               # sprawdza treść gry w data/
-npm run dse -- nowa-kampania --ziarno PACE-1951      # tworzy campaigns/pace-1951.json
-npm run dse -- stan campaigns/pace-1951.json         # pokazuje stan oczami Andersona
+npm run dse -- swiat --do 1955-Q4 --prawda           # jedna symulacja świata z warstwą ukrytą
+npm run dse -- swiat --serie 300 --do 1955-Q4        # statystyka gałęzi z 300 symulacji
+npm start -- --port 4790 --bez-przegladarki          # serwer na innym porcie, bez otwierania przeglądarki
 ```
-
-Pliki kampanii (`campaigns/`) i klucze API (`.env`) zostają wyłącznie na Twoim dysku —
-repozytorium je ignoruje.
 
 ## Struktura
 
 ```
-data/                 treść gry w YAML — frakcje, postaci, cechy, Rejestr startowy
-packages/core         silnik: stan, reguły, losowanie z ziarnem (bez plików i sieci)
+data/                 treść gry w YAML: frakcje, postaci, wydarzenia świata, miejsca startu
+packages/core         silnik: stan, świat, pętla kwartału, Biurko (bez plików i sieci)
 packages/content      wczytywanie i walidacja treści z data/
-packages/ksp-bridge   most do KSP RP-1 (faza 1B)
-packages/narrator     narrator AI (faza 3)
-packages/server       lokalny serwer (faza 2)
-packages/ui           interfejs w przeglądarce (faza 2)
+packages/ksp-bridge   odczyt zapisów KSP RP-1 (.sfs)
+packages/server       lokalny serwer: kampanie na dysku, API, interfejs
+packages/ui           interfejs w przeglądarce
+packages/narrator     narrator AI (plaster 5)
 tools/cli             polecenia `npm run dse -- …`
-tools/sim             symulator kampanii bez KSP (faza 4)
-samples/saves         przykładowe zapisy RP-1 4.8.1 do testów parsera
+tools/sim             symulator kampanii z profilem gracza (plaster 4)
+samples/saves         zapisy RP-1 4.8.1 do testów odczytu
 ```
 
 ## Treść gry

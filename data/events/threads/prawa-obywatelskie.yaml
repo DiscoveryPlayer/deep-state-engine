@@ -1,0 +1,129 @@
+id: prawa-obywatelskie
+title: Prawa obywatelskie
+kind: historical
+region: usa
+summary: >-
+  Sąd Najwyższy uznaje segregację w szkołach za niezgodną z konstytucją. Ośrodki PACE
+  na Południu działają według miejscowych praw, a radziecka propaganda pilnie to notuje.
+historicalNote: >-
+  Wyrok w sprawie Brown przeciwko Radzie Edukacji (17 maja 1954, jednogłośnie). Drugi wyrok,
+  o wykonaniu „z całą rozważną szybkością” (31 maja 1955). Aresztowanie Rosy Parks (1 grudnia
+  1955) i bojkot autobusów w Montgomery (do grudnia 1956). Little Rock: prezydent wysyła
+  101. Dywizję Powietrznodesantową (24 września 1957).
+drivers: [nastroje_spoleczne]
+start:
+  from: 1954-Q2
+stages:
+  - id: brown
+    title: wyrok w sprawie Brown
+    at: 1954-Q2
+    decision:
+      title: 'Segregacja w ośrodkach PACE'
+      prompt: >-
+        Ośrodki PACE w Alabamie i na Florydzie mają osobne stołówki i wejścia, bo tak
+        każe prawo stanowe. Po wyroku Sądu Najwyższego Rada Naukowa i europejscy delegaci
+        chcą, żeby komisja zniosła segregację u siebie od razu. Zarządcy ośrodków ostrzegają
+        przed wojną z władzami stanowymi.
+      options:
+        - id: zniesc
+          title: Znieść segregację w ośrodkach
+          effects:
+            - { faction: RN, disposition: 1 }
+            - { faction: DOI, disposition: -1 }
+            - { indicator: WF, add: 3 }
+            - { indicator: ZW, add: -1 }
+            - { var: pula_kadr, add: 1 }
+            - { flag: pace_bez_segregacji }
+          text: >-
+            Anderson wydaje rozkaz: w ośrodkach PACE jest jedna stołówka i jedno wejście.
+            Gubernator Alabamy protestuje, kilku senatorów z Południa także. Europejskie
+            gazety drukują to na pierwszych stronach.
+        - id: po-cichu
+          title: Zmieniać po cichu, bez rozkazu
+          effects:
+            - { currency: KP, add: -1 }
+          text: >-
+            Tablice znikają stopniowo i bez komunikatów. Nikt nie protestuje, ale nikt też
+            nie może się na nic powołać.
+        - id: czekac
+          title: Czekać na władze stanowe
+          effects:
+            - { faction: RN, disposition: -1 }
+            - { indicator: WF, add: -2 }
+          text: >-
+            PACE ogłasza, że stosuje się do prawa miejscowego. Radio Moskwa cytuje
+            komunikat w czterech językach.
+      defaultOption: czekac
+    branches:
+      - id: wyrok
+        title: Sąd Najwyższy przeciw segregacji w szkołach
+        historical: true
+        weight: 10
+        effects:
+          - { var: nastroje_spoleczne, add: 1 }
+        text: >-
+          Sąd Najwyższy orzeka jednogłośnie, że osobne szkoły dla białych i czarnych dzieci
+          są z natury nierówne. Południe zapowiada opór.
+      - id: odroczony
+        title: Sąd odracza wyrok
+        weight: 1
+        minor: true
+        delayQuarters: 4
+        text: >-
+          Sędziowie nie osiągają jednomyślności i wyznaczają trzecią rozprawę. Segregacja
+          w szkołach zostaje na kolejny rok.
+
+  - id: wykonanie
+    title: wykonanie wyroku
+    at: 1955-Q2
+    branches:
+      - id: rozwazna-szybkosc
+        title: „Z całą rozważną szybkością”
+        historical: true
+        weight: 10
+        text: >-
+          Sąd Najwyższy poleca znosić segregację „z całą rozważną szybkością” i zostawia
+          terminy sądom okręgowym. Południe czyta to jako zgodę na zwłokę.
+
+  - id: montgomery
+    title: Montgomery
+    at: 1955-Q4
+    branches:
+      - id: bojkot
+        title: Bojkot autobusów w Montgomery
+        historical: true
+        weight: 10
+        effects:
+          - { var: nastroje_spoleczne, add: 1 }
+        text: >-
+          W Montgomery w Alabamie krawcowa Rosa Parks odmawia ustąpienia miejsca białemu
+          pasażerowi i trafia do aresztu. Czarni mieszkańcy miasta przestają jeździć
+          autobusami. Bojkotem kieruje dwudziestosześcioletni pastor.
+        reactions:
+          - actor: DOI
+            text: >-
+              Zarządca ośrodka w Alabamie melduje, że stu czterdziestu pracowników chodzi
+              do pracy pieszo albo dojeżdża wspólnymi samochodami. Pyta, czy ma to zauważać.
+
+  - id: little-rock
+    title: Little Rock
+    at: 1957-Q3
+    branches:
+      - id: wojsko
+        title: Spadochroniarze przed szkołą
+        historical: true
+        weight: 10
+        effects:
+          - { var: nastroje_spoleczne, add: 1 }
+          - { indicator: WF, add: -2 }
+        text: >-
+          Gubernator Arkansas stawia gwardię stanową przed szkołą, żeby nie wpuścić
+          dziewięciorga czarnych uczniów. Prezydent wysyła spadochroniarzy. Zdjęcia
+          obiegają świat.
+      - id: ustepstwo
+        title: Gubernator ustępuje
+        weight: 2
+        minor: true
+        text: >-
+          Po rozmowie z prezydentem gubernator Arkansas wycofuje gwardię. Dziewięcioro
+          uczniów wchodzi do szkoły pod ochroną policji miejskiej.

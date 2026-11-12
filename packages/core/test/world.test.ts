@@ -382,7 +382,8 @@ test('migracja: stan w wersji 1 dostaje pusty świat i działa dalej', () => {
   delete raw.world;
   raw.schemaVersion = 1;
   const migrated = deserializeState(JSON.stringify(raw));
-  assert.equal(migrated.schemaVersion, 2);
+  assert.equal(migrated.schemaVersion, 3);
+  assert.deepEqual(migrated.budget.ledger, []);
   assert.deepEqual(migrated.world.threads, {});
   const w = worldFixture();
   const after = advanceWorld(migrated, w).state;

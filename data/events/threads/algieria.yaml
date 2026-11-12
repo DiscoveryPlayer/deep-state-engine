@@ -1,0 +1,93 @@
+id: algieria
+title: Wojna w Algierii
+kind: historical
+region: europa
+summary: >-
+  Powstanie w Algierii zaczyna ośmioletnią wojnę. Poligon rakietowy w Hammaguir leży
+  na algierskiej Saharze, więc dla PACE to sprawa bezpieczeństwa i przyszłości poligonu.
+historicalNote: >-
+  „Czerwony dzień Wszystkich Świętych”: seria zamachów Frontu Wyzwolenia Narodowego
+  (1 listopada 1954). Stan wyjątkowy (kwiecień 1955). Masakry w okolicach Philippeville
+  (20 sierpnia 1955) i odwet. Dalszy ciąg: kryzys majowy 1958 i powrót de Gaulle'a,
+  porozumienia z Évian (1962); poligony saharyjskie działają do 1967 roku.
+drivers: [ambicja_francji, dekolonizacja]
+start:
+  from: 1954-Q4
+stages:
+  - id: powstanie
+    title: 1 listopada
+    at: 1954-Q4
+    branches:
+      - id: zamachy
+        title: Wybucha powstanie w Algierii
+        historical: true
+        weight: 10
+        effects:
+          - { var: dekolonizacja, add: 1 }
+        text: >-
+          W nocy w całej Algierii wybucha siedemdziesiąt bomb i płoną posterunki. Nieznana
+          dotąd organizacja ogłasza walkę o niepodległość. Premier Francji odpowiada:
+          Algieria to Francja.
+        reactions:
+          - actor: DOI
+            text: >-
+              Zarządca poligonu w Hammaguir melduje spokój: do najbliższych walk jest tysiąc
+              kilometrów. Prosi jednak o plan ewakuacji aparatury.
+
+  - id: philippeville
+    title: wojna się rozlewa
+    at: 1955-Q3
+    decision:
+      title: 'Hammaguir: poligon w kraju ogarniętym wojną'
+      prompt: >-
+        Wojna w Algierii się rozszerza. Francuskie dowództwo proponuje, że weźmie poligon
+        w Hammaguir pod ochronę wojska, a w zamian dostanie pierwszeństwo w harmonogramie
+        prób. Zarządcy ośrodków wolą przenieść część programu do Woomery.
+      options:
+        - id: wojsko
+          title: Przyjąć ochronę francuskiego wojska
+          effects:
+            - { var: ambicja_francji, add: 1 }
+            - { faction: DOI, disposition: -1 }
+            - { indicator: WF, add: -2 }
+          text: >-
+            Legia Cudzoziemska staje przy bramie poligonu. Francuskie próby mają pierwszeństwo,
+            a zdjęcie komisji „do eksperymentów” pod ochroną wojsk kolonialnych obiega
+            arabską prasę.
+        - id: przeniesc
+          title: Przenieść część prób do Woomery
+          effects:
+            - { faction: DOI, disposition: 1 }
+            - { var: ambicja_francji, add: 1 }
+            - correction: { units: -0.5, quarters: 2, reason: 'Przeniesienie części prób z Hammaguir do Woomery' }
+            - { flag: hammaguir_ograniczony }
+          text: >-
+            Część aparatury płynie do Australii. Paryż przyjmuje to jako wotum nieufności.
+        - id: bez-zmian
+          title: Niczego nie zmieniać
+          effects:
+            - { currency: KP, add: 1 }
+          text: >-
+            Poligon pracuje jak dotąd, z własną strażą. Anderson zakłada, że Sahara jest
+            dość duża, żeby wojna go ominęła.
+      defaultOption: bez-zmian
+    branches:
+      - id: masakry
+        title: Masakry i odwet
+        historical: true
+        weight: 10
+        effects:
+          - { var: ambicja_francji, add: -1 }
+          - { var: dekolonizacja, add: 1 }
+        text: >-
+          Powstańcy zabijają w okolicach Philippeville ponad stu cywilów. Odwet wojska
+          i osadników pochłania tysiące ofiar. Po tym lecie nikt już nie mówi o „wydarzeniach”,
+          tylko o wojnie.
+        ongoing:
+          title: Wojna w Algierii
+          text: >-
+            Francja trzyma w Algierii setki tysięcy żołnierzy i szuka pieniędzy wszędzie,
+            także w składkach na wspólne programy.
+          effects:
+            - correction: { units: -0.2, quarters: 1, reason: 'Francja oszczędza na składce: wojna w Algierii' }
+          maxQuarters: 12

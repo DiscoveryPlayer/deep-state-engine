@@ -1,0 +1,145 @@
+id: stal-1952
+title: Spór w hutach stali
+kind: historical
+region: usa
+summary: >-
+  Związek hutników żąda podwyżek, huty żądają wyższych cen, a wojna w Korei trwa.
+  Prezydent przejmuje huty, sąd mu tego zabrania i wybucha strajk.
+historicalNote: >-
+  Rada Stabilizacji Płac zaleca podwyżki (20 marca 1952). Truman przejmuje huty rozporządzeniem
+  (8 kwietnia 1952). Sąd Najwyższy w sprawie Youngstown Sheet & Tube przeciwko Sawyerowi uznaje
+  przejęcie za niezgodne z konstytucją (2 czerwca 1952, stosunkiem 6 do 3). Strajk 560 tysięcy
+  hutników trwa 53 dni, do 24 lipca 1952.
+drivers: [koniunktura, nastroje_spoleczne]
+start:
+  from: 1952-Q1
+stages:
+  - id: spor
+    title: spór o płace
+    at: 1952-Q1
+    branches:
+      - id: zalecenie
+        title: Rada zaleca podwyżki, huty odmawiają
+        historical: true
+        weight: 10
+        text: >-
+          Rządowa Rada Stabilizacji Płac zaleca podwyżki dla hutników. Koncerny stalowe
+          odpowiadają, że zapłacą tylko wtedy, gdy rząd pozwoli im podnieść ceny stali.
+
+  - id: przejecie
+    title: przejęcie hut
+    at: 1952-Q2
+    branches:
+      - id: przejete
+        title: Prezydent przejmuje huty
+        historical: true
+        weight: 10
+        text: >-
+          Na kilka godzin przed strajkiem prezydent Truman przejmuje huty stali w imieniu rządu.
+          Tłumaczy, że żołnierze w Korei nie mogą czekać na amunicję.
+        reactions:
+          - actor: PRZ
+            text: >-
+              Konsorcja Przemysłowe są wstrząśnięte. Jeśli rząd może zabrać hutę, może zabrać
+              i fabrykę samolotów. Prawnicy koncernów jeszcze tej nocy jadą do sądu.
+          - actor: Kongres
+            text: >-
+              W Izbie padają wnioski o impeachment. Nawet przyjaciele prezydenta pytają,
+              z jakiego przepisu skorzystał.
+      - id: ugoda
+        title: Ugoda w ostatniej chwili
+        weight: 2
+        modifiers:
+          - { when: { var: koniunktura, op: '>=', value: 8 }, mul: 2 }
+        next: end
+        text: >-
+          Rząd zgadza się na umiarkowaną podwyżkę cen stali, a huty podpisują układ zbiorowy.
+          Strajku nie będzie.
+
+  - id: youngstown
+    title: wyrok Sądu Najwyższego
+    sameQuarter: true
+    branches:
+      - id: niezgodne
+        title: Sąd Najwyższy przeciw prezydentowi
+        historical: true
+        weight: 10
+        effects:
+          - { var: nastroje_spoleczne, add: 1 }
+        text: >-
+          Sąd Najwyższy orzeka, że prezydent nie miał prawa przejąć hut bez zgody Kongresu.
+          Huty wracają do właścicieli i tego samego dnia hutnicy odchodzą od pieców.
+      - id: zgodne
+        title: Sąd podtrzymuje przejęcie
+        weight: 1
+        effects:
+          - { faction: PRZ, disposition: -1 }
+        next: end
+        text: >-
+          Sąd Najwyższy uznaje, że w czasie wojny prezydent mógł przejąć huty. Rząd sam
+          podnosi płace hutnikom, a przemysł zaczyna się bać własnego rządu.
+
+  - id: strajk
+    title: strajk hutników
+    at: 1952-Q3
+    decision:
+      title: 'Strajk w hutach: terminy dostaw'
+      prompt: >-
+        Stal nie płynie od tygodni. Dwaj dostawcy PACE proszą o przesunięcie terminów bez kar
+        umownych. Kontrolerzy radzą egzekwować umowy co do dnia.
+      options:
+        - id: przesunac
+          title: Przesunąć terminy bez kar
+          effects:
+            - { faction: PRZ, disposition: 1 }
+            - correction: { units: -0.3, quarters: 1, reason: 'Opóźnienia dostaw po strajku hutników' }
+          text: >-
+            PACE przesuwa terminy. Dostawcy zapamiętują, że komisja nie zostawiła ich w potrzebie.
+        - id: kary
+          title: Egzekwować kary umowne
+          effects:
+            - { faction: PRZ, disposition: -1 }
+            - correction: { units: 0.3, quarters: 1, reason: 'Kary umowne od dostawców za opóźnienia' }
+          text: >-
+            PACE nalicza kary. Pieniądze wpływają do kasy, a prezesi obiecują sobie, że następną
+            ofertę wycenią ostrożniej.
+        - id: polowa
+          title: Podzielić stratę po połowie
+          effects:
+            - { currency: KP, add: -1 }
+          text: >-
+            Po kilku rozmowach strony dzielą koszty opóźnień po połowie. Nikt nie jest zachwycony,
+            ale nikt nie czuje się oszukany.
+      defaultOption: przesunac
+      inactionEffects:
+        - { faction: PRZ, disposition: -1 }
+    branches:
+      - id: piecdziesiat-trzy-dni
+        title: Strajk trwa 53 dni
+        historical: true
+        weight: 10
+        effects:
+          - { var: koniunktura, add: -1 }
+          - correction: { units: -0.5, quarters: 2, reason: 'Brak stali i droższe stopy po strajku hutników' }
+        text: >-
+          Strajk kończy się po 53 dniach podwyżką płac i cen. Przemysł zbrojeniowy przez
+          kolejne miesiące nadrabia braki stali.
+      - id: krotki
+        title: Szybka ugoda
+        weight: 2
+        minor: true
+        text: >-
+          Po dwóch tygodniach strajku Biały Dom doprowadza do ugody. Straty są mniejsze,
+          niż się obawiano.
+      - id: dlugi
+        title: Strajk się przedłuża
+        weight: 2
+        minor: true
+        modifiers:
+          - { when: { var: nastroje_spoleczne, op: '>=', value: 5 }, mul: 2 }
+        delayQuarters: 1
+        effects:
+          - { var: koniunktura, add: -1 }
+          - correction: { units: -0.6, quarters: 1, reason: 'Przedłużający się strajk hutników' }
+        text: >-
+          Rozmowy zostają zerwane. Fabryki samolotów i stocznie ogłaszają przestoje z braku stali.

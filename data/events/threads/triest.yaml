@@ -1,0 +1,117 @@
+id: triest
+title: Spór o Triest
+kind: historical
+region: europa
+summary: >-
+  Włochy i Jugosławia spierają się o Wolne Terytorium Triestu. Włochy są członkiem
+  założycielskim PACE z prawem weta, więc kryzys w Rzymie odbija się w Radzie Atlantyckiej.
+historicalNote: >-
+  Deklaracja brytyjsko-amerykańska o przekazaniu strefy A Włochom (8 października 1953),
+  mobilizacja wojsk jugosłowiańskich i włoskich, zamieszki w Trieście 5–6 listopada 1953
+  (sześciu zabitych). Memorandum londyńskie (5 października 1954): strefa A z miastem dla Włoch,
+  strefa B dla Jugosławii.
+drivers: [jednosc_zachodu]
+start:
+  from: 1953-Q4
+stages:
+  - id: kryzys
+    title: kryzys październikowy
+    at: 1953-Q4
+    branches:
+      - id: mobilizacja
+        title: Mobilizacja i zamieszki
+        historical: true
+        weight: 10
+        effects:
+          - { var: jednosc_zachodu, add: -1 }
+        text: >-
+          Brytyjczycy i Amerykanie zapowiadają przekazanie Triestu Włochom. Tito wysyła
+          wojsko nad granicę, Rzym odpowiada tym samym, a w Trieście policja strzela do
+          demonstrantów.
+      - id: starcie
+        title: Starcie graniczne
+        weight: 1
+        effects:
+          - { var: jednosc_zachodu, add: -2 }
+          - { indicator: NG, add: -1 }
+        text: >-
+          Na granicy stref dochodzi do wymiany ognia między patrolami włoskimi
+          i jugosłowiańskimi. Rada Atlantycka zbiera się w trybie pilnym.
+
+  - id: weto
+    title: Rzym szuka dźwigni
+    at: 1954-Q1
+    decision:
+      title: 'Triest: prośba Rzymu'
+      prompt: >-
+        Rząd włoski, osłabiony sporem o Triest, potrzebuje sukcesu. Delegat Włoch daje do
+        zrozumienia, że głos Rzymu za budżetem PACE zależy od „gestu”: kontraktu dla
+        turyńskich i mediolańskich zakładów.
+      options:
+        - id: kontrakt
+          title: Dać włoskim zakładom kontrakt
+          effects:
+            - { faction: PRZ, disposition: -1 }
+            - { indicator: WF, add: 2 }
+            - correction: { units: -0.3, quarters: 2, reason: 'Kontrakt polityczny dla włoskiego przemysłu' }
+          text: >-
+            PACE zamawia we Włoszech partię aparatury po cenie wyższej niż amerykańska.
+            Rzym głosuje za budżetem.
+          weights: { blokada: { mul: 0 } }
+        - id: obietnica
+          title: Obiecać udział w następnym programie
+          effects:
+            - { currency: KP, add: -1 }
+          text: >-
+            Anderson obiecuje Włochom miejsce w następnym programie. Obietnica trafia do
+            protokołu, a delegat zapowiada, że o niej przypomni.
+          weights: { blokada: { mul: 0.4 } }
+        - id: odmowa
+          title: Odmówić
+          effects:
+            - { faction: PRZ, disposition: 1 }
+          text: >-
+            Anderson odpowiada, że PACE nie kupuje głosów. Delegat Włoch składa notatkę
+            i wychodzi bez słowa.
+          weights: { blokada: { mul: 3 } }
+      defaultOption: odmowa
+    branches:
+      - id: zgoda
+        title: Włochy głosują za budżetem
+        historical: true
+        weight: 10
+        text: >-
+          Na posiedzeniu Rady Atlantyckiej delegat Włoch podnosi rękę za budżetem PACE.
+          Sprawa Triestu wraca do dyplomatów.
+      - id: blokada
+        title: Włochy blokują budżet
+        weight: 3
+        minor: true
+        effects:
+          - { indicator: SO, add: -2 }
+          - correction: { units: -0.5, quarters: 2, reason: 'Włoskie weto wstrzymuje część wspólnego budżetu' }
+        text: >-
+          Włochy korzystają z prawa weta i wstrzymują uchwałę budżetową do czasu „wyjaśnienia
+          zasad podziału zamówień”. Część wspólnych pieniędzy zostaje zamrożona.
+
+  - id: memorandum
+    title: memorandum londyńskie
+    at: 1954-Q4
+    branches:
+      - id: podzial
+        title: Triest wraca do Włoch
+        historical: true
+        weight: 10
+        effects:
+          - { var: jednosc_zachodu, add: 1 }
+        text: >-
+          W Londynie podpisano memorandum: miasto i strefa A przypadają Włochom, strefa B
+          Jugosławii. Włoskie wojsko wkracza do Triestu witane przez tłumy.
+      - id: impas
+        title: Rozmowy się przeciągają
+        weight: 2
+        minor: true
+        delayQuarters: 4
+        text: >-
+          Rozmowy w Londynie utknęły na kilku wsiach przy granicy. Rzym i Belgrad
+          odkładają podpis o kolejny rok.

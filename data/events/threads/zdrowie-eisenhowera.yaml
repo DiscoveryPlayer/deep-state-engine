@@ -1,0 +1,49 @@
+id: zdrowie-eisenhowera
+title: Zdrowie prezydenta
+kind: historical
+region: usa
+summary: >-
+  Prezydent ma 64 lata i chore serce. Od jego zdrowia zależy, kto podpisuje budżet i kto
+  startuje w 1956 roku.
+historicalNote: >-
+  Zawał serca Eisenhowera w Denver (24 września 1955); siedem tygodni w szpitalu, rządem
+  kieruje kolegialnie gabinet, posiedzenia prowadzi wiceprezydent. Operacja jelita
+  (9 czerwca 1956). Lekki udar (25 listopada 1957). Kotwica K3: prezydentem do 1960 roku
+  jest wyłącznie prawdziwa osoba (Eisenhower albo jego wiceprezydent).
+drivers: []
+start:
+  from: 1955-Q3
+  conditions: { flag: administracja_eisenhower }
+stages:
+  - id: zawal
+    title: zawał w Denver
+    at: 1955-Q3
+    branches:
+      - id: powrot
+        title: Prezydent wraca do zdrowia
+        historical: true
+        weight: 10
+        effects:
+          - { indicator: ZW, add: -1 }
+        text: >-
+          Prezydent Eisenhower przechodzi zawał serca podczas urlopu w Denver. Giełda notuje
+          największy spadek od 1929 roku. Przez siedem tygodni posiedzenia gabinetu prowadzi
+          wiceprezydent, a decyzje czekają.
+        ongoing:
+          title: Prezydent w szpitalu
+          text: >-
+            Biały Dom pracuje na pół gwizdka. Sprawy, które wymagają podpisu prezydenta,
+            leżą w teczkach.
+          effects:
+            - { indicator: ZW, add: -1 }
+          maxQuarters: 1
+      - id: rezygnacja
+        title: Prezydent nie wystartuje w 1956 roku
+        weight: 1
+        effects:
+          - { flag: eisenhower_nie_startuje }
+          - { indicator: ZW, add: -2 }
+        text: >-
+          Lekarze są ostrożni. Prezydent wraca do pracy, ale ogłasza, że nie będzie się
+          ubiegał o drugą kadencję. Partia republikańska szuka kandydata, a wszyscy
+          patrzą na wiceprezydenta.

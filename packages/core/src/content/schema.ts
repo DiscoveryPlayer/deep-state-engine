@@ -141,6 +141,28 @@ export const registryContentSchema = z.object({
   entries: z.array(registryEntryContentSchema).default([]),
 });
 
+// ── Miejsca startu (decyzja 0016, docs/design/miejsca-startu.md) ────────────
+
+export const launchSiteSchema = z
+  .object({
+    /** Identyfikator z pliku LaunchSites.cfg KSCSwitchera, np. us_cape_canaveral. */
+    id: z.string().regex(/^[a-z]{2}_[a-z0-9_]+$/, 'identyfikator miejsca startu, np. us_cape_canaveral'),
+    name: z.string().min(1),
+    country: z.string().regex(/^[A-Z]{2}$/),
+    /** west — PACE i Zachód; east — blok wschodni i Chiny; out_of_period — po 1980 roku. */
+    role: z.enum(['west', 'east', 'out_of_period']),
+    from: z.string().regex(/^\d{4}-Q[1-4]$/),
+    until: z
+      .string()
+      .regex(/^\d{4}-Q[1-4]$/)
+      .optional(),
+    host: z.string().min(1),
+  })
+  .strict();
+
+export const launchSitesContentSchema = z.object({ sites: z.array(launchSiteSchema).min(1) }).strict();
+export type LaunchSite = z.infer<typeof launchSiteSchema>;
+
 // ── Całość ──────────────────────────────────────────────────────────────────
 
 export type CampaignContent = z.infer<typeof campaignContentSchema>;
@@ -157,6 +179,8 @@ export interface GameContent {
   registry: RegistryEntryContent[];
   /** Treść świata: wątki, szablony, wzorce, dylematy (folder data/events/). Opcjonalna w testach. */
   world?: WorldContent;
+  /** Miejsca startu (data/launch-sites.yaml). Opcjonalne w testach. */
+  launchSites?: LaunchSite[];
 }
 
 /** Pliki treści i ich schematy — wspólna lista dla loadera i testów. */

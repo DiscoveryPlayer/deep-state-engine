@@ -3,7 +3,14 @@
  */
 import type { GameState, SimulatedQuarter, WorldContent } from '@dse/core';
 
-const KIND_LABEL = { thread: 'wątek', template: 'szablon', pattern: 'wzorzec', dilemma: 'dylemat' } as const;
+const KIND_LABEL = {
+  thread: 'wątek',
+  template: 'szablon',
+  pattern: 'wzorzec',
+  dilemma: 'dylemat',
+  reaction: 'reakcja',
+  situation: 'sytuacja',
+} as const;
 
 function wrap(text: string, indent: string, width = 96): string {
   const words = text.split(/\s+/);

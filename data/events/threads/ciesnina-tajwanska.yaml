@@ -1,0 +1,109 @@
+id: ciesnina-tajwanska
+title: Cieśnina Tajwańska
+kind: historical
+region: azja
+exclusiveGroup: blokady
+summary: >-
+  Chiny ostrzeliwują wyspy trzymane przez Czang Kaj-szeka, a Waszyngton grozi bronią atomową.
+  Pierwszy kryzys, w którym pociski kierowane i głowice są tematem gazet.
+historicalNote: >-
+  Ostrzał Kinmen (Quemoy) od 3 września 1954. Układ obronny USA–Republika Chińska
+  (2 grudnia 1954). Upadek wyspy Yijiangshan (18 stycznia 1955), rezolucja w sprawie Formozy
+  (29 stycznia 1955), ewakuacja wysp Dachen (luty 1955). Publiczne groźby użycia broni atomowej
+  (marzec 1955). Oferta rozmów Zhou Enlaia na konferencji w Bandungu (23 kwietnia 1955),
+  wstrzymanie ostrzału 1 maja 1955. Drugi kryzys: od 23 sierpnia 1958.
+drivers: [napiecie_azja, zaangazowanie_usa]
+start:
+  from: 1954-Q3
+stages:
+  - id: ostrzal
+    title: ostrzał Kinmen
+    at: 1954-Q3
+    branches:
+      - id: kinmen
+        title: Chińska artyleria ostrzeliwuje Kinmen
+        historical: true
+        weight: 10
+        effects:
+          - { var: napiecie_azja, add: 1 }
+        text: >-
+          Chińskie baterie otwierają ogień do wyspy Kinmen, którą od lądu dzieli kilka
+          kilometrów wody. Ginie dwóch amerykańskich doradców.
+
+  - id: uklad
+    title: układ z Tajpej
+    at: 1954-Q4
+    branches:
+      - id: podpisany
+        title: Układ obronny z Czang Kaj-szekiem
+        historical: true
+        weight: 10
+        effects:
+          - { var: zaangazowanie_usa, add: 1 }
+        text: >-
+          Stany Zjednoczone podpisują układ o obronie Tajwanu i Peskadorów. O małych
+          wyspach przy brzegu układ celowo milczy.
+
+  - id: rezolucja
+    title: rezolucja w sprawie Formozy
+    at: 1955-Q1
+    branches:
+      - id: grozby
+        title: Kongres daje prezydentowi wolną rękę
+        historical: true
+        weight: 10
+        effects:
+          - { indicator: NG, add: -1 }
+          - { var: wyscig_atomowy, add: 1 }
+        text: >-
+          Kongres upoważnia prezydenta do użycia siły w obronie Tajwanu. Siódma Flota
+          ewakuuje wyspy Dachen, a prezydent mówi na konferencji prasowej, że broni
+          atomowej można użyć „jak pocisku albo czegokolwiek innego”.
+        reactions:
+          - actor: Sojusznicy
+            text: >-
+              Londyn i Ottawa dają do zrozumienia, że nie pójdą na wojnę o kilka skał przy
+              chińskim brzegu.
+            effects:
+              - { var: jednosc_zachodu, add: -1 }
+          - actor: RN
+            text: >-
+              Rada Naukowa odnotowuje, że po raz pierwszy mówi się publicznie o głowicach
+              atomowych jak o zwykłej amunicji. Kilku uczonych pyta, czemu naprawdę służą
+              ich rakiety.
+      - id: eskalacja
+        title: Naloty na chińskie baterie
+        weight: 1
+        modifiers:
+          - { when: { var: antykomunizm, op: '>=', value: 8 }, mul: 2 }
+        effects:
+          - { indicator: NG, add: -2 }
+          - { var: napiecie_azja, add: 2 }
+        text: >-
+          Lotnictwo Siódmej Floty bombarduje baterie na chińskim wybrzeżu. Moskwa przypomina
+          o swoim sojuszu z Pekinem.
+
+  - id: bandung
+    title: wygaszenie kryzysu
+    at: 1955-Q2
+    branches:
+      - id: oferta
+        title: Zhou Enlai proponuje rozmowy
+        historical: true
+        weight: 10
+        effects:
+          - { var: napiecie_azja, add: -1 }
+          - { var: dekolonizacja, add: 1 }
+          - { indicator: NG, add: 1 }
+        text: >-
+          Na konferencji dwudziestu dziewięciu państw Azji i Afryki w Bandungu chiński premier
+          oświadcza, że Chiny nie chcą wojny z Ameryką. Tydzień później działa milkną.
+          Świat poznaje nowe słowo: niezaangażowani.
+      - id: ostrzal-trwa
+        title: Ostrzał trwa
+        weight: 1
+        minor: true
+        delayQuarters: 2
+        text: >-
+          Mimo pojednawczych słów w Bandungu baterie na wybrzeżu strzelają dalej.
+          Kryzys tli się przez kolejne miesiące.
