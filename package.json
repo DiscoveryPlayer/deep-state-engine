@@ -18,7 +18,8 @@
     "dse": "tsx tools/cli/src/main.ts",
     "format": "prettier --write \"packages/*/{src,test}/**/*.ts\" \"tools/*/{src,test}/**/*.ts\" \"packages/ui/static/*.css\"",
     "format:check": "prettier --check \"packages/*/{src,test}/**/*.ts\" \"tools/*/{src,test}/**/*.ts\"",
-    "start": "tsx packages/server/src/main.ts"
+    "start": "tsx packages/server/src/main.ts",
+    "zdjecia": "tsx tools/cli/src/main.ts zdjecia"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

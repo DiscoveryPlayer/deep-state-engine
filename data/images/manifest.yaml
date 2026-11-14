@@ -1,0 +1,157 @@
+# Zdjęcia do kart wydarzeń (decyzja 0019).
+#
+# Samych plików nie ma w repozytorium. Pobiera je skrypt `npm run zdjecia` (albo plik
+# Pobierz-zdjecia.bat) z Wikimedia Commons do folderu data/images/pliki/. Skrypt bierze pierwszy
+# tytuł z listy `commons`, który istnieje i ma w metadanych licencję domeny publicznej (albo CC0);
+# inne licencje odrzuca. Autora i licencję zapisuje do data/images/pliki/zrodla.json.
+#
+# Zasada doboru: maszyny, miejsca, budynki i wydarzenia. Bez portretów osób publicznych.
+# `for` to tematy, przy których zdjęcie się pojawia: identyfikatory wątków, dylematów
+# i wzorców albo „lot” (karty lotów PACE).
+
+images:
+  - id: start-rakiety
+    file: start-rakiety.jpg
+    commons:
+      - 'File:Bumper8 launch-GPN-2000-000613.jpg'
+      - 'File:V-2 White Sands.jpg'
+    caption: Start rakiety doświadczalnej z przylądka Canaveral, 1950
+    for: [lot]
+
+  - id: maszyna-liczaca
+    file: maszyna-liczaca.jpg
+    commons:
+      - 'File:Univac I at Census Bureau with two operators.jpg'
+      - 'File:UNIVAC-I-BRL61-0977.jpg'
+    caption: Elektroniczna maszyna licząca UNIVAC I
+    for: [zakup-komputera]
+
+  - id: samolot-doswiadczalny
+    file: samolot-doswiadczalny.jpg
+    commons:
+      - 'File:Bell X-1 in flight.jpg'
+      - 'File:Bell X-1 46-062 (in flight).jpg'
+    caption: Samolot doświadczalny Bell X-1 w locie
+    for: [lotnictwo-kontra-naca, general-z-wizja]
+
+  - id: korea-sabre
+    file: korea-sabre.jpg
+    commons:
+      - 'File:F-86Es 51FIW Korea 1952.jpg'
+      - 'File:F-86 in korea.jpg'
+    caption: Myśliwce F-86 Sabre na lotnisku w Korei
+    for: [korea]
+
+  - id: abadan
+    file: abadan.jpg
+    commons:
+      - 'File:Abadanraffinerie.jpg'
+      - 'File:Abadanoilrefinery2.jpg'
+    caption: Rafineria w Abadanie
+    for: [abadan, kryzys-surowcowy]
+
+  - id: kapitol
+    file: kapitol.jpg
+    commons:
+      - 'File:Capitol Building Full View.jpg'
+      - 'File:United States Capitol - west front.jpg'
+    caption: Kapitol w Waszyngtonie
+    for: [maccartyzm, wybory-1952, kongres-1954, senator-z-okregu, poprawka-budzetowa, raport-kontrolerow]
+
+  - id: huta
+    file: huta.jpg
+    commons:
+      - 'File:Allegheny Ludlum steel furnace.jpg'
+      - 'File:Carnegie-Illinois Steel furnaces.jpg'
+    caption: Piec hutniczy w Pensylwanii
+    for: [stal-1952, brak-materialu, nowy-stop]
+
+  - id: proba-brytyjska
+    file: proba-brytyjska.jpg
+    commons:
+      - 'File:Op hurricane.jpg'
+      - 'File:Totem 1 test.jpg'
+    caption: Brytyjska próba atomowa u wybrzeży Australii, 1952
+    for: [bomba-brytyjska]
+
+  - id: bomba-wodorowa
+    file: bomba-wodorowa.jpg
+    commons:
+      - 'File:Ivy Mike - mushroom cloud.jpg'
+      - 'File:Castle Bravo (black and white).jpg'
+    caption: Próba termojądrowa na Pacyfiku, 1952
+    for: [bomba-wodorowa, echo-antyatomowe]
+
+  - id: plac-czerwony
+    file: plac-czerwony.jpg
+    commons:
+      - 'File:OldMoscow archive img11 Red Square.jpg'
+    caption: Plac Czerwony w Moskwie
+    for: [sukcesja-1953, parada-w-moskwie, oferta-pokojowa]
+
+  - id: manewry-rfn
+    file: manewry-rfn.jpg
+    commons:
+      - 'File:Legeroefeningen West Duitsland, Bestanddeelnr 906-7487 (A2.2).jpg'
+    caption: Manewry wojskowe w Niemczech Zachodnich
+    for: [rfn-uzbrojenie]
+
+  - id: dien-bien-phu
+    file: dien-bien-phu.png
+    commons:
+      - 'File:Dien bien phu castor or siege deinterlaced.png'
+    caption: Spadochroniarze nad Dien Bien Phu
+    for: [indochiny-1954]
+
+  - id: ciesnina-tajwanska
+    file: ciesnina-tajwanska.jpg
+    commons:
+      - 'File:80-G-657548 Tachen Islands evacuation, February 1955.jpg'
+      - 'File:USS Philippine Sea (CVA-47) underway at sea on 9 July 1955 (80-G-K-18429).jpg'
+    caption: Ewakuacja wysp Tachen, luty 1955
+    for: [ciesnina-tajwanska]
+
+  - id: bombowiec
+    file: bombowiec.jpg
+    commons:
+      - 'File:B47E in flight.jpg'
+      - 'File:Boeing B-47E Stratojet 51-2394.jpg'
+    caption: Bombowiec strategiczny B-47
+    for: [nowe-spojrzenie]
+
+  - id: rakieta-sondujaca
+    file: rakieta-sondujaca.jpg
+    commons:
+      - 'File:US V-2 launch.jpg'
+      - 'File:V-2 White Sands.jpg'
+    caption: Rakieta sondująca na poligonie White Sands
+    for: [mrg]
+
+  - id: samolot-rozpoznawczy
+    file: samolot-rozpoznawczy.jpg
+    commons:
+      - 'File:Usaf.u2.750pix.jpg'
+    caption: Samolot rozpoznawczy U-2
+    for: [otwarte-niebo]
+
+  - id: sad-najwyzszy
+    file: sad-najwyzszy.jpg
+    commons:
+      - 'File:US Supreme Court Building.jpg'
+      - 'File:Supreme Court Building Outside.jpg'
+    caption: Gmach Sądu Najwyższego w Waszyngtonie
+    for: [prawa-obywatelskie]
+
+  - id: obrona-cywilna
+    file: obrona-cywilna.jpg
+    commons:
+      - 'File:P.S. 58 - Carroll & Smith Sts. Bklyn. hold a take cover drill 01489v.jpg'
+    caption: Ćwiczenia obrony cywilnej w nowojorskiej szkole
+    for: [cwiczenia-obrony-cywilnej]
+
+  - id: szczepionka
+    file: szczepionka.jpg
+    commons:
+      - 'File:Salk headlines.jpg'
+    caption: Nagłówki gazet o szczepionce przeciw polio, kwiecień 1955
+    for: [szczepionka-polio]

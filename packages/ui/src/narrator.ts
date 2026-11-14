@@ -5,19 +5,26 @@
  * Tekst narracji przychodzi spoza gry (wkleja go gracz), więc trafia na stronę wyłącznie
  * jako tekst (`textContent`), nigdy jako HTML.
  */
-import type { DeskPayload, NarratorPackage } from './api.ts';
-import { h, plural, quarterName, signed, svg, type Child } from './dom.ts';
+import type { DeskPayload, NarratorPackageResponse } from './api.ts';
+import { h, plural, svg, type Child } from './dom.ts';
 
 export type NarrativeEntry = DeskPayload['view']['narrative'][number];
 export type NarrativeSource = NarrativeEntry['source'];
 
 export interface LiaisonState {
-  kind: 'quarter' | 'decision';
+  kind: 'quarter' | 'decision' | 'conversation' | 'event';
+  /** Dla głosów i rozmowy: sprawa do decyzji. */
   instanceId?: string;
+  /** Dla sceny wydarzenia: kod karty (W1, W2…). */
+  card?: string;
   mode: 'full' | 'short';
   source: NarrativeSource;
+  /** Czy pakiet ma zawierać warstwę ukrytą (to, czego Anderson nie wie). */
+  secrets: boolean;
   /** Pakiet pobrany z serwera albo null, gdy jeszcze się ładuje. */
-  pkg: NarratorPackage | null;
+  pkg: NarratorPackageResponse | null;
+  /** Ścieżka pliku, do którego zapisano pakiet (zamiast schowka). */
+  file: string | null;
   reply: string;
   copied: boolean;
 }
@@ -25,8 +32,10 @@ export interface LiaisonState {
 export interface LiaisonActions {
   setMode(mode: 'full' | 'short'): void;
   setSource(source: NarrativeSource): void;
+  setSecrets(on: boolean): void;
   setReply(text: string): void;
   copy(): void;
+  saveFile(): void;
   submit(): void;
 }
 
@@ -87,7 +96,8 @@ function clippings(body: string): HTMLElement {
 export function quarterNarrative(entry: NarrativeEntry, compact: boolean, onRead: () => void): HTMLElement {
   const scene = entry.sections.find((s) => s.key === 'scena') ?? entry.sections[0]!;
   const press = entry.sections.find((s) => s.key === 'prasa');
-  const others = entry.sections.filter((s) => s !== scene && s !== press);
+  // Sekcje kart wydarzeń (W1, W2…) pokazują się przy swoich kartach, nie tutaj.
+  const others = entry.sections.filter((s) => s !== scene && s !== press && !/^w\d+$/.test(s.key));
   if (compact) {
     return h(
       'div',
@@ -95,7 +105,9 @@ export function quarterNarrative(entry: NarrativeEntry, compact: boolean, onRead
       sheet(
         scene.title,
         scene.body,
-        entry.sections.length > 1 ? h('button', { class: 'btn btn-small', onClick: onRead }, 'Prasa i kuluary') : null,
+        entry.sections.some((s) => s !== scene && !/^w\d+$/.test(s.key))
+          ? h('button', { class: 'btn btn-small', onClick: onRead }, 'Prasa i kuluary')
+          : null,
       ),
     );
   }
@@ -149,6 +161,8 @@ export function liaisonBody(l: LiaisonState, busy: boolean, on: LiaisonActions):
     onInput: (e: Event) => on.setReply((e.currentTarget as HTMLTextAreaElement).value),
   });
   reply.value = l.reply;
+  // Pakiet z warstwą ukrytą nigdy nie jest wyświetlany: gracz kopiuje go albo zapisuje, nie czytając.
+  const secret = l.secrets;
   const pkg = h('textarea', {
     id: 'liaison-package',
     class: 'liaison-text',
@@ -159,17 +173,20 @@ export function liaisonBody(l: LiaisonState, busy: boolean, on: LiaisonActions):
     onFocus: (e: Event) => (e.currentTarget as HTMLTextAreaElement).select(),
   });
   pkg.value = l.pkg?.prompt ?? 'Przygotowuję pakiet…';
+  const conversation = l.kind === 'conversation';
 
   return [
     h(
       'p',
       { class: 'lead' },
-      'Narrator pracuje poza grą. Kopiujesz pakiet, wklejasz go w rozmowę z AI, a odpowiedź wklejasz tutaj. Pakiet zawiera tylko to, co wie Anderson.',
+      conversation
+        ? 'Rozmowę prowadzisz w czacie z AI: narrator podaje kwestie do wyboru, Ty odpowiadasz numerem albo własnymi słowami. Po trzech turach wypisze blok WYNIK. Wtedy wklej tu jego ostatnią odpowiedź.'
+        : 'Narrator pracuje poza grą. Kopiujesz pakiet, wklejasz go w rozmowę z AI, a odpowiedź wklejasz tutaj.',
     ),
     h(
       'section',
       { class: 'step' },
-      h('h3', null, '1. Skopiuj pakiet i wklej go w rozmowę'),
+      h('h3', null, '1. Przekaż pakiet narratorowi'),
       h(
         'fieldset',
         { class: 'choice' },
@@ -177,7 +194,7 @@ export function liaisonBody(l: LiaisonState, busy: boolean, on: LiaisonActions):
         (
           [
             ['full', 'Nowa rozmowa (pakiet z zasadami i opisem świata)'],
-            ['short', 'Ta sama rozmowa co poprzednio (sam kwartał)'],
+            ['short', 'Ta sama rozmowa co poprzednio (same dane)'],
           ] as const
         ).map(([value, label]) =>
           h(
@@ -214,7 +231,36 @@ export function liaisonBody(l: LiaisonState, busy: boolean, on: LiaisonActions):
           ),
         ),
       ),
-      pkg,
+      h(
+        'label',
+        { class: 'check' },
+        h('input', {
+          type: 'checkbox',
+          checked: secret,
+          disabled: busy,
+          onChange: (e: Event) => on.setSecrets((e.currentTarget as HTMLInputElement).checked),
+        }),
+        h(
+          'span',
+          null,
+          h('b', null, 'Dołącz warstwę ukrytą'),
+          h(
+            'small',
+            null,
+            'Narrator dostanie też to, czego Anderson nie wie: tajne wydarzenia, ukryte urazy, prawdziwe cele frakcji i to, co nadchodzi. Użyje tego do budowania nastroju. Gra nie pokaże Ci treści takiego pakietu; reszta zależy od Twojej uczciwości.',
+          ),
+        ),
+      ),
+      secret
+        ? h(
+            'p',
+            { class: 'sealed' },
+            l.pkg
+              ? `Pakiet zapieczętowany (${l.pkg.chars.toLocaleString('pl-PL')} znaków). Skopiuj go albo zapisz do pliku i przekaż narratorowi bez czytania.`
+              : 'Przygotowuję pakiet…',
+          )
+        : pkg,
+      l.file ? h('p', { class: 'sealed' }, `Zapisano do pliku: ${l.file}. Załącz go w rozmowie z AI.`) : null,
       h(
         'div',
         { class: 'step-actions' },
@@ -223,6 +269,7 @@ export function liaisonBody(l: LiaisonState, busy: boolean, on: LiaisonActions):
           { class: 'btn btn-primary', disabled: l.pkg === null, 'data-focus': 'liaison-copy', onClick: on.copy },
           l.copied ? 'Skopiowano' : 'Kopiuj pakiet',
         ),
+        h('button', { class: 'btn', disabled: l.pkg === null || busy, onClick: on.saveFile }, 'Zapisz do pliku'),
         link
           ? h(
               'a',
@@ -230,79 +277,26 @@ export function liaisonBody(l: LiaisonState, busy: boolean, on: LiaisonActions):
               `Otwórz ${SOURCE_NAMES[l.source]} w nowej karcie`,
             )
           : null,
-        l.pkg ? h('span', { class: 'meta' }, `${l.pkg.prompt.length.toLocaleString('pl-PL')} znaków`) : null,
+        l.pkg && !secret ? h('span', { class: 'meta' }, `${l.pkg.chars.toLocaleString('pl-PL')} znaków`) : null,
       ),
     ),
     h(
       'section',
       { class: 'step' },
-      h('h3', null, '2. Wklej odpowiedź narratora'),
-      h('label', { for: 'liaison-reply', class: 'meta' }, 'Gra wczyta sekcje zaczynające się od „## NAZWA”.'),
+      h('h3', null, conversation ? '2. Wklej ostatnią odpowiedź z blokiem WYNIK' : '2. Wklej odpowiedź narratora'),
+      h(
+        'label',
+        { for: 'liaison-reply', class: 'meta' },
+        conversation
+          ? 'Gra odczyta z niej literę opcji i streszczenie rozmowy. Decyzję i tak zatwierdzasz sam.'
+          : 'Gra wczyta sekcje zaczynające się od „## NAZWA”.',
+      ),
       reply,
       h(
         'div',
         { class: 'step-actions' },
         h('button', { class: 'btn btn-primary', disabled: busy, onClick: on.submit }, 'Wczytaj narrację'),
       ),
-    ),
-  ];
-}
-
-/** Odprawa po zamknięciu kwartału: co zostawił stary kwartał i co przynosi nowy. */
-export function briefingBody(p: DeskPayload): (HTMLElement | null)[] {
-  const report = p.view.reports.at(-1);
-  // Najpierw wydarzenia świata, potem reszta; reakcje i komunikaty o sytuacjach zostają w Depeszach.
-  const rank = (kind: string) => (kind === 'thread' || kind === 'template' ? 0 : 1);
-  const news = p.view.worldNews
-    .filter((n) => n.quarter === p.campaign.quarterCode && n.kind !== 'reaction' && n.kind !== 'situation')
-    .sort((a, b) => rank(a.kind) - rank(b.kind));
-  const pending = p.view.pendingDilemmas.length;
-  const labels: [keyof NonNullable<typeof report>['after'], string][] = [
-    ['ZW', 'Zaufanie Waszyngtonu'],
-    ['SO', 'Spójność Organizacji'],
-    ['PP', 'Poparcie Publiczne'],
-    ['WF', 'Wiarygodność Fasady'],
-  ];
-  return [
-    report
-      ? h(
-          'section',
-          { class: 'block' },
-          h('h3', null, `Bilans: ${quarterName(report.quarter)}`),
-          h(
-            'ul',
-            { class: 'deltas' },
-            labels.map(([k, name]) => {
-              const d = report.after[k] - report.before[k];
-              return h(
-                'li',
-                { class: d > 0 ? 'up' : d < 0 ? 'down' : '' },
-                h('span', null, name),
-                h('b', null, d === 0 ? 'bez zmian' : signed(d)),
-              );
-            }),
-          ),
-        )
-      : null,
-    h(
-      'section',
-      { class: 'block' },
-      h('h3', null, 'Na biurku od rana'),
-      news.length > 0
-        ? h(
-            'ol',
-            { class: 'headlines' },
-            news.slice(0, 6).map((n) => h('li', null, n.title)),
-          )
-        : h('p', { class: 'empty' }, 'Żadnych depesz. Rzadki, spokojny kwartał.'),
-      news.length > 6 ? h('p', { class: 'meta' }, `i ${news.length - 6} więcej w zakładce Depesze`) : null,
-      pending > 0
-        ? h(
-            'p',
-            { class: 'alert' },
-            `${pending} ${plural(pending, 'sprawa czeka', 'sprawy czekają', 'spraw czeka')} na Twoją decyzję.`,
-          )
-        : null,
     ),
   ];
 }

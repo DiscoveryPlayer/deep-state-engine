@@ -3,8 +3,8 @@
 > Ten plik czyta się na początku każdej sesji pracy i aktualizuje na jej końcu.
 > Jest pamięcią projektu — historia czatu nią nie jest.
 
-**Ostatnia aktualizacja:** 12.11.2026
-**Bieżący plaster:** 2 „Pilotaż i poprawki”; z plastra 5 wyprzedzająco zrobiony Łącznik AI (PR do zatwierdzenia)
+**Ostatnia aktualizacja:** 14.11.2026
+**Bieżący plaster:** 2 „Pilotaż i poprawki”; wyprzedzająco zrobione części plastrów 3 i 5 („Pamięć świata”, PR do zatwierdzenia)
 **Plan:** [Plan Budowy v3](PLAN_BUDOWY.md)
 
 ## Zrobione
@@ -63,20 +63,35 @@
 - **Obraz i okna:** odprawa po zamknięciu kwartału, czytnik narracji, Tablica sytuacyjna regionów, przebiegi wskaźników, komunikaty znikające same.
 - **Stan w wersji 4** z migracją 3 → 4. Testów: 94.
 
+### Pamięć świata (13–14.11.2026, decyzja 0019)
+
+- **Echa:** 91 następstw w `data/events/echoes.yaml`, podpiętych pod opcje dylematów, decyzje w wątkach i wzorce. Wracają po kilku kwartałach z informacją, z czego wynikają.
+- **Rejestr Następstw:** skutki `registry` i `registryClose`, wpisy jawne (zakładka Ludzie) i ukryte (tylko dla narratora).
+- **Bramka zapisu:** kwartał zaczyna się od wczytania pliku `.sfs`; obejście z wpisem w Kronice.
+- **Raporty Misji:** każdy nowy start z zapisu dostaje numer i formularz (wynik, przeznaczenie, klasyfikacja); rozliczenie przy zamknięciu kwartału zastąpiło „bilans lotów”.
+- **Narrator:** pełny pakiet (wydarzenia z kodami kart, przyczyny następstw, decyzje i akcje Andersona, Rejestr, loty), opcjonalna warstwa ukryta, rozmowa zakończona blokiem `WYNIK`, scena do pojedynczej karty.
+- **Interfejs:** menu główne, usuwanie kampanii (do `campaigns/usuniete/`), okno bramki, Odprawa jako karty wydarzeń ze zdjęciami, Raporty Misji w zakładce Loty (KSP).
+- **Zdjęcia:** manifest 19 pozycji i skrypt `Pobierz-zdjecia.bat` (Wikimedia Commons, tylko domena publiczna).
+- **Stan w wersji 5** z migracją 4 → 5. Testów: 109. Interfejs przejrzany w Chromium od 320 do 2560 pikseli, w motywie ciemnym i jasnym.
+
 ## Następne zadania
 
 Kolejność według Planu Budowy v3, rozdział 5.
 
 1. **Pilotaż autora 1951–1955** na prawdziwej karierze. Notatki: co bolało, co nudziło, co było niejasne.
-2. **Plaster 2:** poprawki z pilotażu, różnice między Migawkami w raporcie kwartału, wybór pliku zapisu z listy, skutek `registry`, kolejne akcje Biurka.
+2. **Plaster 2:** poprawki z pilotażu, różnice między Migawkami w raporcie kwartału, wybór pliku zapisu z listy, kolejne akcje Biurka.
 3. **Tor Treść:** blok A, lata 1956–1960 (19 wątków: Suez jako pierwszy, potem Węgry, Sputnik, Rok Geofizyczny, NASA, U-2), kolejne wzorce i szablony S03–S16.
 4. **Plaster 3 „Loty mają znaczenie”:** Dyrektywy z weryfikacją, programy testowe i karty lotów (Tristar), Rozkaz Kwartalny, Teczka Pojazdu, dane RP-1.
 
 ## Do sprawdzenia przy pilotażu
 
 - **Narrator:** czy Claude i Gemini trzymają się zasad z pakietu (nie dopisują faktów, nie podpowiadają opcji) i formatu sekcji. Gra tego nie sprawdza.
+- **Nowe formaty narratora** (decyzja 0019): sekcje `## W…` do kart, rozmowa z blokiem `## WYNIK`, zachowanie modelu z warstwą ukrytą (czy nie zdradza wprost tego, czego Anderson nie wie). Nie były sprawdzone na prawdziwych odpowiedziach.
+- **Zdjęcia:** `Pobierz-zdjecia.bat` nie był uruchomiony na prawdziwym Wikimedia Commons. Tytuły plików w manifeście mogą wymagać poprawek.
+- **Bramka zapisu:** czy okno dat (15 dni przed i 30 dni po początku kwartału) pasuje do tego, jak autor zapisuje karierę.
+- **Rozliczenie Raportów Misji** (decyzja 0019, punkt 5): liczby są tymczasowe i nie pochodzą z GDD.
+- **Echa:** czy 23–34 następstwa na pięć lat to dobre tempo i czy szansa przecieku zatajonej awarii (0,35) nie jest za wysoka.
 - **Niska wierność historii:** czy świat po kilku latach pozostaje spójny w lekturze.
-- **Bilans lotów** (decyzja 0017, punkt 7): liczby są tymczasowe i nie pochodzą z GDD.
 - **Dryf Poparcia Publicznego** i nasycenie konferencji prasowej (decyzja 0017, punkt 6).
 - **Skutki wydarzeń świata dla Nastawienia frakcji** (`faction … disposition` w gałęziach, na przykład po próbie bomby wodorowej): czy nie są zbyt częste.
 - **Napięcie Geopolityczne** w rozgrywkach próbnych dochodziło w 1955 roku do odprężenia (poziom 5). Do oceny, czy to nie za wcześnie.

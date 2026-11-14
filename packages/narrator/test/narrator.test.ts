@@ -2,7 +2,14 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { beginQuarter, createInitialState, recordNarrative, toPlayerView, type GameState } from '@dse/core';
+import {
+  beginQuarter,
+  createInitialState,
+  recordNarrative,
+  toNarratorSecrets,
+  toPlayerView,
+  type GameState,
+} from '@dse/core';
 import { loadContent } from '@dse/content';
 import {
   NarratorError,
@@ -11,6 +18,7 @@ import {
   REPLY_MAX_SECTIONS,
   ReplyError,
   buildNarratorPackage,
+  parseConversationResult,
   parseNarratorReply,
   type NarratorCast,
 } from '../src/index.ts';
@@ -36,7 +44,7 @@ test('pakiet kwartału: zasady, obsada, stan i zadanie z trzema sekcjami', () =>
     'ŚWIAT GRY',
     'OBSADA PACE',
     'STAN NA',
-    'DEPESZE TEGO KWARTAŁU',
+    'WYDARZENIA TEGO KWARTAŁU',
     'ZADANIE: NARRACJA KWARTAŁU',
   ]) {
     assert.ok(pkg.prompt.includes(part), `pakiet zawiera część „${part}”`);
@@ -52,7 +60,7 @@ test('pakiet skrócony pomija zasady i opis świata', () => {
   const short = buildNarratorPackage(view, cast, { kind: 'quarter', mode: 'short' });
   assert.ok(!short.prompt.includes('ZASADY'));
   assert.ok(!short.prompt.includes('OBSADA PACE'));
-  assert.ok(short.prompt.includes('DEPESZE TEGO KWARTAŁU'));
+  assert.ok(short.prompt.includes('WYDARZENIA TEGO KWARTAŁU'));
   assert.ok(short.prompt.length < full.prompt.length);
 });
 
@@ -192,4 +200,124 @@ test('odpowiedź jest niezaufana: limity długości i sekcji, znaki sterujące, 
     'Tekst z ukrytym znakiem <script>alert(1)</script>',
     'HTML zostaje zwykłym tekstem',
   );
+});
+
+test('warstwa ukryta: trafia do pakietu tylko na życzenie i z zasadami użycia', () => {
+  const state = campaign();
+  state.world.log.push({
+    quarter: '1951-Q1',
+    kind: 'thread',
+    ref: 'tajny.etap.galaz',
+    title: 'Tajna operacja AJAX',
+    text: 'Tylko dla narratora.',
+    visibility: 'secret',
+  });
+  state.registry.push({
+    id: 'R-0900',
+    type: 'grudge',
+    title: 'Brandt pamięta odmowę',
+    knownBy: ['brandt'],
+    hiddenFrom: [],
+    weight: 1,
+    triggers: [],
+    createdIn: '1951-Q1',
+    visibleToPlayer: false,
+    status: 'active',
+    key: 'uraza-proba',
+    source: 'Maszyna licząca: Odmówić',
+  });
+  state.world.echoQueue.push({
+    echo: 'maszyna-instalacja',
+    due: '1951-Q2',
+    source: 'zakup-komputera.kupic',
+    cause: 'Maszyna licząca: Kupić',
+  });
+  const view = toPlayerView(state);
+  const plain = buildNarratorPackage(view, cast, { kind: 'quarter', mode: 'full' });
+  assert.equal(plain.secret, false);
+  for (const hidden of ['AJAX', 'Brandt pamięta odmowę', 'przyjeżdża w skrzyniach'])
+    assert.ok(!plain.prompt.includes(hidden));
+
+  const sealed = buildNarratorPackage(view, cast, { kind: 'quarter', mode: 'full' }, toNarratorSecrets(state, content));
+  assert.equal(sealed.secret, true);
+  for (const part of [
+    'WARSTWA UKRYTA (tylko dla ciebie)',
+    'Tajna operacja AJAX',
+    'Uraza: Brandt pamięta odmowę (po: Maszyna licząca: Odmówić)',
+    '1951-Q2: Maszyna licząca przyjeżdża w skrzyniach (po: Maszyna licząca: Kupić)',
+    'Anderson jej nie zna',
+    'Rozbieżność z historią',
+  ]) {
+    assert.ok(sealed.prompt.includes(part), `warstwa ukryta zawiera „${part}”`);
+  }
+  assert.ok(sealed.prompt.indexOf('WARSTWA UKRYTA') < sealed.prompt.indexOf('ZADANIE:'), 'zadanie zostaje na końcu');
+});
+
+test('pakiet: następstwa i decyzje Andersona są oznaczone, a narrator ma od nich zacząć', () => {
+  const state = campaign();
+  state.world.log.push(
+    {
+      quarter: '1951-Q1',
+      kind: 'dilemma',
+      ref: 'zakup-komputera.kupic',
+      title: 'Maszyna licząca: Kupić',
+      text: 'PACE kupuje maszynę liczącą.',
+      visibility: 'public',
+    },
+    {
+      quarter: '1951-Q1',
+      kind: 'echo',
+      ref: 'zakup-komputera.echo.maszyna-instalacja',
+      title: 'Maszyna licząca przyjeżdża w skrzyniach',
+      text: 'Ruskin przenosi warsztat.',
+      visibility: 'public',
+      cause: 'Maszyna licząca: Kupić',
+    },
+  );
+  const view = toPlayerView(state);
+  const pkg = buildNarratorPackage(view, cast, { kind: 'quarter', mode: 'short' });
+  assert.match(
+    pkg.prompt,
+    /\[W\d\] \(następstwo; wynika z: Maszyna licząca: Kupić\) Maszyna licząca przyjeżdża w skrzyniach/,
+  );
+  assert.match(pkg.prompt, /CO ANDERSON POSTANOWIŁ I ZROBIŁ W TYM KWARTALE\n- Decyzja \[W\d\]: Maszyna licząca: Kupić/);
+  assert.match(pkg.prompt, /Zacznij od tego, co wynika z decyzji Andersona/);
+  assert.match(pkg.prompt, /## W…/);
+
+  const card = view.worldNews.find((n) => n.kind === 'echo')!.card!;
+  const scene = buildNarratorPackage(view, cast, { kind: 'event', mode: 'short', card });
+  assert.match(scene.title, /Scena: Maszyna licząca przyjeżdża/);
+  assert.match(scene.prompt, /ZADANIE: SCENA DO JEDNEGO WYDARZENIA/);
+  assert.throws(() => buildNarratorPackage(view, cast, { kind: 'event', mode: 'short', card: 'W99' }), NarratorError);
+});
+
+test('rozmowa prowadząca do decyzji: zadanie z blokiem WYNIK i odczyt litery opcji', () => {
+  const state = campaign();
+  state.world.pendingDilemmas.push({
+    instanceId: 'd-1',
+    dilemma: 'proba',
+    title: 'Hala w Ohio',
+    prompt: 'Senator czeka na odpowiedź.',
+    options: [
+      { id: 'tak', title: 'Zgodzić się' },
+      { id: 'nie', title: 'Odmówić' },
+    ],
+    defaultOption: 'nie',
+    inactionEffects: [],
+    raisedIn: '1951-Q1',
+    expiresIn: '1951-Q2',
+  } as GameState['world']['pendingDilemmas'][number]);
+  const pkg = buildNarratorPackage(toPlayerView(state), cast, {
+    kind: 'conversation',
+    mode: 'full',
+    instanceId: 'd-1',
+  });
+  assert.match(pkg.prompt, /ZADANIE: ROZMOWA PROWADZĄCA DO DECYZJI/);
+  assert.match(pkg.prompt, /## WYNIK\nOPCJA:/);
+
+  const done = parseNarratorReply('## WYNIK\nOPCJA: B\n\n## SCENA\nSenator wychodzi bez słowa.', ['WYNIK', 'SCENA']);
+  assert.equal(parseConversationResult(done.sections, 2), 1);
+  assert.equal(parseConversationResult(parseNarratorReply('## WYNIK\n**OPCJA:** a\n## SCENA\nX').sections, 2), 0);
+  assert.equal(parseConversationResult(done.sections, 1), null, 'litera spoza listy opcji');
+  assert.equal(parseConversationResult(parseNarratorReply('## SCENA\nBez wyniku.').sections, 2), null);
 });

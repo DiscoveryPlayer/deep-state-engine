@@ -48,6 +48,7 @@ export function evaluateCondition(cond: Condition, state: GameState): boolean {
     const [thread, stage] = cond.stage.split('.') as [string, string];
     return threadHistoryMatches(world, thread, stage);
   }
+  if ('registry' in cond) return state.registry.some((r) => r.key === cond.registry && r.status === 'active');
   if ('era' in cond) return compare(ERA_IDS.indexOf(state.organization.era), cond.op, ERA_IDS.indexOf(cond.era));
   const [thread, stage, branch] = cond.branch.split('.') as [string, string, string];
   return threadHistoryMatches(world, thread, stage, branch);
@@ -64,6 +65,8 @@ export function applyEffects(
   effects: readonly Effect[],
   content: WorldContent,
   source: string,
+  /** Czytelna przyczyna dla ech i wpisów Rejestru, np. „Maszyna licząca: Kupić”. */
+  cause: string = source,
 ): void {
   const world = state.world;
   for (const e of effects) {
@@ -87,6 +90,34 @@ export function applyEffects(
       if (!world.flags.includes(e.flag)) world.flags.push(e.flag);
     } else if ('clearFlag' in e) {
       world.flags = world.flags.filter((f) => f !== e.clearFlag);
+    } else if ('echo' in e) {
+      const due = quarterCode(shiftQuarter(state.quarter, e.after));
+      // To samo echo z tego samego źródła nie staje w kolejce dwa razy.
+      if (!world.echoQueue.some((x) => x.echo === e.echo && x.source === source)) {
+        world.echoQueue.push({ echo: e.echo, due, source, cause });
+      }
+    } else if ('registry' in e) {
+      const r = e.registry;
+      if (!state.registry.some((x) => x.key === r.key && x.status === 'active')) {
+        const next = Math.max(0, ...state.registry.map((x) => Number(x.id.slice(2)))) + 1;
+        state.registry.push({
+          id: `R-${String(next).padStart(4, '0')}`,
+          type: r.type,
+          title: r.title,
+          knownBy: [...r.with],
+          hiddenFrom: [],
+          weight: r.weight,
+          triggers: [],
+          createdIn: quarterCode(state.quarter),
+          visibleToPlayer: r.visible,
+          status: 'active',
+          key: r.key,
+          source: cause,
+          ...(r.note === undefined ? {} : { dmNote: r.note }),
+        });
+      }
+    } else if ('registryClose' in e) {
+      for (const x of state.registry) if (x.key === e.registryClose && x.status === 'active') x.status = e.as;
     } else {
       world.corrections.push({
         from: quarterCode(state.quarter),
@@ -95,6 +126,17 @@ export function applyEffects(
         reason: e.correction.reason,
         source,
       });
+    }
+  }
+  // Echa podpięte pod to źródło (pole `on`): ciche z terminem 0 działają od razu, reszta staje w kolejce.
+  for (const echo of content.echoes ?? []) {
+    if (!echo.on.includes(source)) continue;
+    if (echo.after === 0) {
+      if (!echo.requires || evaluateCondition(echo.requires, state)) {
+        applyEffects(state, echo.effects, content, `${source.split('.')[0]}.echo.${echo.id}`, cause);
+      }
+    } else if (!world.echoQueue.some((x) => x.echo === echo.id && x.source === source)) {
+      world.echoQueue.push({ echo: echo.id, due: quarterCode(shiftQuarter(state.quarter, echo.after)), source, cause });
     }
   }
 }

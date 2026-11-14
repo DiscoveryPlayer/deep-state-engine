@@ -89,12 +89,18 @@ test('wyciąg z prawdziwego zapisu kariery RP-1 4.8.1 autora', async () => {
   );
 });
 
-test('migawka dla silnika przechodzi schemat stanu i filtruje starty do kwartału', async () => {
+test('migawka dla silnika przechodzi schemat stanu i podaje tylko nowe starty', async () => {
   const c = await readCareerFile(SAVE);
-  const snap = toKspSnapshot(c, '1951-Q1');
-  kspSnapshotSchema.parse({ ...snap, quarter: '1951-Q1' });
-  assert.equal(snap.launchesInQuarter.length, 1);
-  assert.equal(toKspSnapshot(c, '1951-Q2').launchesInQuarter.length, 0);
+  const snap = toKspSnapshot(c, 0);
+  kspSnapshotSchema.parse({ ...snap, quarter: '1951-Q2' });
+  assert.equal(snap.newLaunches.length, c.launches.length);
+  assert.deepEqual(snap.newLaunches[0], {
+    vessel: 'Solstice 1',
+    date: '1951-03-05',
+    site: 'us_cape_canaveral',
+    failures: c.launches[0]!.failures,
+  });
+  assert.equal(toKspSnapshot(c, c.launches.length).newLaunches.length, 0, 'znane starty nie wracają');
 });
 
 test('zapis spoza kariery RP-1 daje czytelny błąd', () => {

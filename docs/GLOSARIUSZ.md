@@ -18,7 +18,7 @@
 | Postać | — | `characters[id]`, `CharacterState` | |
 | Kompetencja / Lojalność / Ambicja | — | `competence` / `loyalty` / `ambition` | 1–5 / −3…+3 / 1–5 |
 | Cechy jawne / ukryte | — | `traits` / `hiddenTraits`, `revealedTraits` | |
-| Rejestr Następstw | — | `registry`, `RegistryEntryState` | |
+| Rejestr Następstw | — | `registry[]`, `RegistryEntryState`, skutki `registry` i `registryClose`, warunek `registry` | wpis `visibleToPlayer: false` zna tylko narrator (decyzja 0019) |
 | Dług, Obietnica, Tajemnica, Uraza, Hak, Precedens, Zasługa | — | `type`: `debt`, `promise`, `secret`, `grudge`, `hook`, `precedent`, `merit` | |
 | Ciśnienie Ujawnienia | — | `pressure` | 0–6, tylko tajemnice |
 | Zegar | — | `clocks`, `ClockState` | 4, 6 lub 8 segmentów |
@@ -52,7 +52,7 @@
 | Raport kwartału | — | `reports`, `QuarterReport` | zmiany od otwarcia kwartału |
 | Księga Korekt | — | `budget.ledger`, `settleCorrection` | tryb Honorowy: gracz oznacza Korektę jako zastosowaną |
 | Jednostka Korekty | jedn. | `correctionUnitFunds` | 20% miesięcznych wynagrodzeń z ostatniej Migawki |
-| Migawka | — | `ksp.snapshots`, `KspSnapshot`, `readCareerFile` | stan kariery KSP na koniec kwartału |
+| Migawka | — | `ksp.snapshots`, `KspSnapshot`, `readCareerFile` | stan kariery KSP wczytany na początku kwartału (koniec poprzedniego) |
 | Bilans lotów | — | `closeQuarter` | reguła tymczasowa (decyzja 0017, punkt 7) |
 | Miejsce startu | — | `data/launch-sites.yaml`, `launchSiteProblem` | strony: `west`, `east`, `out_of_period` |
 | Naruszenie zasad uczciwości | — | wpis Kroniki z tagiem `naruszenie` | GDD 22; gra nie blokuje |
@@ -61,5 +61,14 @@
 | Pakiet Kontekstu | — | `buildNarratorPackage` | tylko z `PlayerView` i jawnej obsady |
 | Narracja | — | `narrative.entries`, `recordNarrative` | tekst AI wklejony przez gracza; bez skutków mechanicznych |
 | Głosy doradców | — | narracja rodzaju `decision` | sekcje `## GŁOS: …` przy sprawie do decyzji |
-| Odprawa | — | okno po zamknięciu kwartału | bilans, depesze, sprawy |
+| Odprawa | — | okno po wczytaniu zapisu na początku kwartału | bilans, karty wydarzeń, sprawy (decyzja 0019) |
 | Tablica sytuacyjna | — | `DeskPayload.regions` | jawne depesze kwartału według regionów |
+| Echo (następstwo) | — | `data/events/echoes.yaml`, `world.echoQueue`, wpis dziennika `kind: 'echo'` | wraca po czasie od decyzji, gałęzi albo wzorca; pole `cause` mówi, z czego wynika (decyzja 0019) |
+| Bramka zapisu | — | `ksp.gate`, `kspGatePending`, `skipKspGate` | kwartał zaczyna się od wczytania pliku `.sfs`; obejście zostawia wpis w Kronice |
+| Lot | — | `ksp.flights[]`, numer `M-RRRR-NN` | każdy nowy start wykryty w zapisie |
+| Raport Misji | — | `flight.report`, `fileMissionReport`, `settleFlights` | wynik, przeznaczenie, klasyfikacja; rozliczany przy zamknięciu kwartału (GDD 18.3, reguła tymczasowa) |
+| Karta wydarzenia | — | `worldNews[].card` (W1, W2…), `topic`, `cause` | jedna strona Odprawy: zdjęcie, treść, reakcje, scena narratora |
+| Warstwa ukryta narratora | — | `toNarratorSecrets`, pakiet „zapieczętowany” | to, czego Anderson nie wie; tylko do AI, na życzenie gracza |
+| Rozmowa z narratorem | — | narracja rodzaju `conversation`, `parseConversationResult` | kończy się blokiem `## WYNIK` z linią `OPCJA: <litera>`; decyzję zatwierdza gracz |
+| Scena wydarzenia | — | narracja rodzaju `event` | tekst narratora do jednej karty |
+| Manifest zdjęć | — | `data/images/manifest.yaml`, `npm run zdjecia` | zdjęcia z Wikimedia Commons, tylko domena publiczna; pliki zostają na dysku gracza |

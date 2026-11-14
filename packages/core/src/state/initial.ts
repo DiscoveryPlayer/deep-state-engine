@@ -150,7 +150,7 @@ export function createInitialState(content: GameContent, options: NewCampaignOpt
     budget: { ledger: [] },
     desk: { log: [], restBonus: 0, opening: { ...content.campaign.indicators, KP: content.campaign.currencies.KP } },
     reports: [],
-    ksp: { snapshots: [] },
+    ksp: { snapshots: [], gate: { quarter: startCode, status: 'pending' }, flights: [] },
     narrative: { entries: [] },
     status: 'active',
   };

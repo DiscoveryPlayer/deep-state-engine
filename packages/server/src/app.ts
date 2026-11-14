@@ -4,10 +4,17 @@
  * Działa wyłącznie na 127.0.0.1. Żądania zmieniające stan muszą pochodzić z tej samej strony
  * (nagłówek Origin), żeby żadna obca witryna otwarta w przeglądarce nie mogła sterować kampanią.
  */
+import { existsSync, readFileSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
+import { join } from 'node:path';
 import { z } from 'zod';
 import {
   DESK_ACTION_IDS,
+  FLIGHT_CLASSIFICATIONS,
+  FLIGHT_NOTE_MAX,
+  FLIGHT_OUTCOMES,
+  FLIGHT_PURPOSES,
   HISTORY_FIDELITY_LEVELS,
   NARRATIVE_SOURCES,
   DeskActionError,
@@ -17,6 +24,9 @@ import {
   beginQuarter,
   closeQuarter,
   createInitialState,
+  fileMissionReport,
+  formatDatePl,
+  kspGatePending,
   performDeskAction,
   quarterCode,
   quarterLabel,
@@ -24,6 +34,8 @@ import {
   recordNarrative,
   resolveDilemma,
   settleCorrection,
+  skipKspGate,
+  toNarratorSecrets,
   toPlayerView,
   type GameContent,
   type GameState,
@@ -34,12 +46,14 @@ import {
   NarratorError,
   QUARTER_SECTIONS,
   REPLY_MAX_CHARS,
+  RESULT_SECTION,
   ReplyError,
   buildNarratorPackage,
+  parseConversationResult,
   parseNarratorReply,
   type NarratorCast,
 } from '@dse/narrator';
-import type { ApiError, CampaignListItem, DeskPayload } from './api.ts';
+import type { ApiError, CampaignListItem, DeskPayload, NarratorPackageResponse, TopicImage } from './api.ts';
 import { CAMPAIGN_ID, CampaignStore } from './store.ts';
 
 export interface AppOptions {
@@ -47,6 +61,8 @@ export interface AppOptions {
   store: CampaignStore;
   /** Pliki interfejsu: ścieżka URL → treść i typ. */
   assets: Map<string, { body: string | Buffer; type: string }>;
+  /** Folder z pobranymi zdjęciami (data/images/pliki). Bez niego gra działa bez zdjęć. */
+  imagesDir?: string;
 }
 
 class HttpError extends Error {
@@ -95,13 +111,25 @@ const newCampaignBody = z.object({
 const dilemmaBody = z.object({ instanceId: z.string().min(1).max(60), optionId: z.string().min(1).max(60) });
 const actionBody = z.object({ action: z.enum(DESK_ACTION_IDS), target: z.string().min(1).max(60).optional() });
 const kspBody = z.object({ path: z.string().trim().min(1).max(1000) });
+const packageOptions = {
+  mode: z.enum(['full', 'short']),
+  /** Dołączyć warstwę ukrytą (to, czego Anderson nie wie). */
+  secrets: z.boolean().default(false),
+  /** Zapisać pakiet do pliku zamiast zwracać treść. */
+  toFile: z.boolean().default(false),
+};
+const instanceId = z.string().min(1).max(60);
+const cardCode = z.string().regex(/^W\d{1,3}$/);
 const narratorPackageBody = z.discriminatedUnion('kind', [
-  z.object({ kind: z.literal('quarter'), mode: z.enum(['full', 'short']) }),
-  z.object({ kind: z.literal('decision'), mode: z.enum(['full', 'short']), instanceId: z.string().min(1).max(60) }),
+  z.object({ kind: z.literal('quarter'), ...packageOptions }),
+  z.object({ kind: z.literal('decision'), instanceId, ...packageOptions }),
+  z.object({ kind: z.literal('conversation'), instanceId, ...packageOptions }),
+  z.object({ kind: z.literal('event'), card: cardCode, ...packageOptions }),
 ]);
 const narratorReplyBody = z.object({
-  kind: z.enum(['quarter', 'decision']),
-  instanceId: z.string().min(1).max(60).optional(),
+  kind: z.enum(['quarter', 'decision', 'conversation', 'event']),
+  instanceId: instanceId.optional(),
+  card: cardCode.optional(),
   source: z.enum(NARRATIVE_SOURCES),
   // Parser i tak przytnie tekst do REPLY_MAX_CHARS; tu tylko bezpieczny zapas na wklejkę z nadmiarem.
   text: z
@@ -109,10 +137,19 @@ const narratorReplyBody = z.object({
     .min(1)
     .max(REPLY_MAX_CHARS * 2),
 });
+const flightBody = z.object({
+  flightId: z.string().regex(/^M-\d{4}-\d{2,}$/),
+  outcome: z.enum(FLIGHT_OUTCOMES),
+  purpose: z.enum(FLIGHT_PURPOSES),
+  classification: z.enum(FLIGHT_CLASSIFICATIONS),
+  note: z.string().max(FLIGHT_NOTE_MAX).optional(),
+});
+const deleteBody = z.object({ confirm: z.string() });
 const settleBody = z.object({ quarter: z.string().regex(/^\d{4}-Q[1-4]$/) });
 
 export function createApp(options: AppOptions): Server {
-  const { content, store, assets } = options;
+  const { content, store, assets, imagesDir } = options;
+  const imageFiles = new Set((content.images ?? []).map((i) => i.file));
 
   /** Jawna obsada dla narratora: nazwy frakcji i karty głosu, bez notatek Mistrza Gry. */
   const cast: NarratorCast = {
@@ -146,6 +183,28 @@ export function createApp(options: AppOptions): Server {
     }));
   };
 
+  /**
+   * Zdjęcia według tematu. Do interfejsu trafiają tylko te z manifestu, których plik jest na dysku;
+   * autor i licencja pochodzą z pliku źródeł zapisanego przez skrypt pobierania.
+   */
+  const topicImages = (): Record<string, TopicImage> => {
+    if (!imagesDir || !content.images) return {};
+    let credits: Record<string, { artist?: string; license?: string }> = {};
+    try {
+      credits = JSON.parse(readFileSync(join(imagesDir, 'zrodla.json'), 'utf8')) as typeof credits;
+    } catch {
+      // Brak pliku źródeł: zdjęcia pokażą się bez linii o autorze.
+    }
+    const out: Record<string, TopicImage> = {};
+    for (const image of content.images) {
+      if (!existsSync(join(imagesDir, image.file))) continue;
+      const c = credits[image.file];
+      const credit = c ? [c.artist, c.license].filter(Boolean).join(', ') || null : null;
+      for (const topic of image.for) out[topic] ??= { url: `/obrazy/${image.file}`, caption: image.caption, credit };
+    }
+    return out;
+  };
+
   const payload = (id: string, state: GameState, messages: string[] = []): DeskPayload => ({
     campaign: {
       id,
@@ -162,6 +221,7 @@ export function createApp(options: AppOptions): Server {
     }),
     regions: regionBoard(state),
     launchSites: content.launchSites ?? [],
+    images: topicImages(),
     messages,
   });
 
@@ -178,6 +238,7 @@ export function createApp(options: AppOptions): Server {
           quarterLabel: quarterLabel(c.state.quarter),
           status: c.state.status,
           savedAt: c.savedAt.toISOString(),
+          historyFidelity: c.state.campaign.historyFidelity,
         }),
       );
     }
@@ -202,6 +263,13 @@ export function createApp(options: AppOptions): Server {
 
     if (verb === undefined && method === 'GET') return payload(id, state);
     if (method !== 'POST') throw new HttpError(405, 'Niedozwolona metoda.');
+
+    // Bramka zapisu: kwartał zaczyna się od wczytania zapisu KSP. Do tego czasu nie da się
+    // rozstrzygać spraw, działać na Biurku, zamawiać narracji ani zamknąć kwartału.
+    const gated = ['dilemma', 'action', 'close-quarter', 'narrator-package', 'narrator-reply', 'flight'];
+    if (kspGatePending(state) && gated.includes(verb ?? '')) {
+      throw new HttpError(409, 'Najpierw wczytaj zapis kariery KSP za poprzedni kwartał (albo świadomie go pomiń).');
+    }
 
     switch (verb) {
       case 'dilemma': {
@@ -233,52 +301,137 @@ export function createApp(options: AppOptions): Server {
           if (e instanceof CareerReadError || e instanceof ConfigNodeParseError) throw new HttpError(422, e.message);
           throw new HttpError(404, `Nie udało się odczytać pliku: ${path}`);
         }
-        const result = recordKspSnapshot(
-          state,
-          toKspSnapshot(career, quarterCode(state.quarter)),
-          content.launchSites ?? [],
-        );
+        // Nowe starty to te, których nie było w migawce z wcześniejszego kwartału.
+        const now = quarterCode(state.quarter);
+        const known = state.ksp.snapshots.filter((x) => x.quarter < now).at(-1)?.launches ?? 0;
+        if (career.launches.length < known) {
+          throw new HttpError(
+            422,
+            `Ten zapis ma mniej startów (${career.launches.length}) niż poprzednio wczytany (${known}). To wygląda na inną albo cofniętą karierę.`,
+          );
+        }
+        const result = recordKspSnapshot(state, toKspSnapshot(career, known), content.launchSites ?? []);
         await store.save(id, result.state);
+        const flights = result.flights.length;
         return payload(id, result.state, [
-          `Wczytano zapis „${career.title}” z dnia ${career.date}.`,
+          `Wczytano zapis „${career.title}” z ${formatDatePl(career.date)}. Nowe starty: ${flights}.`,
           ...result.warnings,
         ]);
       }
+      case 'ksp-skip': {
+        const next = skipKspGate(state);
+        await store.save(id, next);
+        return payload(id, next, ['Kwartał otwarty bez zapisu KSP. Odnotowano to w Kronice.']);
+      }
+      case 'flight': {
+        const body = parseBody(flightBody, await readJson(req));
+        const { flightId, note, ...report } = body;
+        const next = fileMissionReport(
+          state,
+          flightId,
+          { ...report, ...(note ? { note } : {}) },
+          content.launchSites ?? [],
+        );
+        await store.save(id, next);
+        return payload(id, next);
+      }
+      case 'delete': {
+        const body = parseBody(deleteBody, await readJson(req));
+        if (body.confirm !== id) throw new HttpError(400, 'Usunięcie kampanii wymaga potwierdzenia jej nazwą.');
+        const trashed = await store.remove(id);
+        return { deleted: id, trashed };
+      }
       case 'narrator-package': {
-        const body = parseBody(narratorPackageBody, await readJson(req));
+        const { secrets, toFile, ...request } = parseBody(narratorPackageBody, await readJson(req));
+        let pkg;
         try {
-          return buildNarratorPackage(toPlayerView(state), cast, body);
+          pkg = buildNarratorPackage(
+            toPlayerView(state),
+            cast,
+            request,
+            // Warstwa ukryta wychodzi ze stanu tylko tutaj i tylko na życzenie gracza (decyzja 0019).
+            secrets ? toNarratorSecrets(state, content) : undefined,
+          );
         } catch (e) {
           if (e instanceof NarratorError) throw new HttpError(409, e.message);
           throw e;
         }
+        let file: string | null = null;
+        if (toFile) {
+          const ref = request.kind === 'quarter' ? '' : `-${'card' in request ? request.card : request.instanceId}`;
+          const names = { quarter: 'kwartal', decision: 'glosy', conversation: 'rozmowa', event: 'scena' } as const;
+          file = await store.writePackage(id, `${quarterCode(state.quarter)}-${names[request.kind]}${ref}`, pkg.prompt);
+        }
+        return {
+          title: pkg.title,
+          secret: pkg.secret,
+          chars: pkg.prompt.length,
+          prompt: toFile ? null : pkg.prompt,
+          file,
+        } satisfies NarratorPackageResponse;
       }
       case 'narrator-reply': {
         const body = parseBody(narratorReplyBody, await readJson(req));
-        const dilemma =
-          body.kind === 'decision'
-            ? state.world.pendingDilemmas.find((d) => d.instanceId === body.instanceId)
+        const forDecision = body.kind === 'decision' || body.kind === 'conversation';
+        const dilemma = forDecision
+          ? state.world.pendingDilemmas.find((d) => d.instanceId === body.instanceId)
+          : undefined;
+        if (forDecision && !dilemma) throw new HttpError(409, 'Ta sprawa nie czeka już na decyzję.');
+        const view = toPlayerView(state);
+        const event =
+          body.kind === 'event'
+            ? view.worldNews.find((n) => n.quarter === quarterCode(state.quarter) && n.card === body.card)
             : undefined;
-        if (body.kind === 'decision' && !dilemma) throw new HttpError(409, 'Ta sprawa nie czeka już na decyzję.');
+        if (body.kind === 'event' && !event) throw new HttpError(409, 'Nie ma takiego wydarzenia w tym kwartale.');
+
+        const expected =
+          body.kind === 'quarter'
+            ? QUARTER_SECTIONS
+            : body.kind === 'decision'
+              ? [DECISION_SECTION_PREFIX]
+              : body.kind === 'conversation'
+                ? [RESULT_SECTION, 'SCENA']
+                : ['SCENA'];
         let parsed;
         try {
-          parsed = parseNarratorReply(
-            body.text,
-            body.kind === 'quarter' ? QUARTER_SECTIONS : [DECISION_SECTION_PREFIX],
-          );
+          parsed = parseNarratorReply(body.text, expected);
         } catch (e) {
           if (e instanceof ReplyError) throw new HttpError(422, e.message);
           throw e;
         }
+
+        // Rozmowa: sekcja WYNIK wskazuje opcję. Do narracji trafia reszta, a wybór zatwierdza gracz.
+        let suggestion: DeskPayload['suggestion'];
+        let sections = parsed.sections;
+        const messages = ['Narracja wczytana.', ...parsed.warnings];
+        if (body.kind === 'conversation' && dilemma) {
+          const index = parseConversationResult(sections, dilemma.options.length);
+          const option = index === null ? undefined : dilemma.options[index];
+          sections = sections.filter((x) => !x.key.startsWith('wynik'));
+          if (sections.length === 0) throw new HttpError(422, 'W odpowiedzi jest tylko blok WYNIK, bez sceny.');
+          if (option) {
+            suggestion = { instanceId: dilemma.instanceId, optionId: option.id };
+            messages.push(`Rozmowa doprowadziła do opcji: ${option.title}. Zatwierdź ją albo wybierz inną.`);
+          } else {
+            messages.push('Nie znalazłem w odpowiedzi bloku „## WYNIK” z literą opcji. Wybierz opcję samodzielnie.');
+          }
+        }
+        const titles = {
+          quarter: `Narracja: ${quarterLabel(state.quarter)}`,
+          decision: `Głosy w sprawie: ${dilemma?.title ?? ''}`,
+          conversation: `Rozmowa w sprawie: ${dilemma?.title ?? ''}`,
+          event: `Scena: ${event?.title ?? ''}`,
+        };
+        const ref = dilemma?.instanceId ?? (body.kind === 'event' ? body.card : undefined);
         const next = recordNarrative(state, {
           kind: body.kind,
-          ...(dilemma ? { ref: dilemma.instanceId } : {}),
-          title: dilemma ? `Głosy w sprawie: ${dilemma.title}` : `Narracja: ${quarterLabel(state.quarter)}`,
+          ...(ref === undefined ? {} : { ref }),
+          title: titles[body.kind],
           source: body.source,
-          sections: parsed.sections,
+          sections,
         });
         await store.save(id, next);
-        return payload(id, next, ['Narracja wczytana.', ...parsed.warnings]);
+        return { ...payload(id, next, messages), ...(suggestion ? { suggestion } : {}) };
       }
       case 'settle': {
         const body = parseBody(settleBody, await readJson(req));
@@ -302,6 +455,24 @@ export function createApp(options: AppOptions): Server {
       if (url.pathname.startsWith('/api/')) {
         if (req.method !== 'GET') assertSameOrigin(req);
         send(res, 200, await handleApi(req, url));
+        return;
+      }
+      if (url.pathname.startsWith('/obrazy/') && req.method === 'GET') {
+        // Tylko pliki wymienione w manifeście: nazwa z adresu nigdy nie staje się dowolną ścieżką.
+        const name = decodeURIComponent(url.pathname.slice('/obrazy/'.length));
+        if (!imagesDir || !imageFiles.has(name)) throw new HttpError(404, 'Nie ma takiego zdjęcia.');
+        let body: Buffer;
+        try {
+          body = await readFile(join(imagesDir, name));
+        } catch {
+          throw new HttpError(404, 'Nie ma takiego zdjęcia.');
+        }
+        res.writeHead(200, {
+          'Content-Type': name.endsWith('.png') ? 'image/png' : 'image/jpeg',
+          'Cache-Control': 'max-age=3600',
+          'X-Content-Type-Options': 'nosniff',
+        });
+        res.end(body);
         return;
       }
       const asset = assets.get(url.pathname === '/' ? '/index.html' : url.pathname);

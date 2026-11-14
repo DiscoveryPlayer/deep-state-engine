@@ -1,0 +1,1193 @@
+# Echa: dalsze ciągi decyzji Andersona i wydarzeń świata (decyzja 0019).
+#
+# Echo podpina się pod źródło polem `on` („dylemat.opcja”, „dylemat.biernosc”, „wątek.etap.opcja”,
+# „wątek.etap.gałąź” albo identyfikator wzorca) i wraca po `after` kwartałach jako depesza.
+# Echo ciche (`silent: true`) nie daje depeszy: zostawia ślad, zwykle wpis w Rejestrze Następstw.
+# Wpis z `visible: false` jest ukryty przed graczem; zna go tylko silnik i narrator.
+
+echoes:
+  # ── Lotnictwo kontra NACA ─────────────────────────────────────────────────────────
+  - id: naca-pamieta
+    on: [lotnictwo-kontra-naca.lotnictwo]
+    after: 0
+    silent: true
+    title: NACA pamięta
+    text: Laboratoria NACA zapamiętały, kto oddał samoloty doświadczalne wojsku.
+    effects:
+      - registry:
+          key: uraza-naca
+          type: grudge
+          title: Laboratoria NACA pamiętają, że Anderson oddał samoloty doświadczalne Lotnictwu
+          with: [RN, brandt]
+          visible: false
+
+  - id: lotnictwo-samoloty-wynik
+    on: [lotnictwo-kontra-naca.lotnictwo]
+    after: 3
+    title: Samoloty doświadczalne pod Lotnictwem
+    text: >-
+      Program samolotów doświadczalnych idzie szybciej, odkąd płaci za niego Lotnictwo.
+      Raporty z lotów dostają klauzulę, zanim wyschnie atrament, a inżynierowie NACA czytają
+      o własnych pomiarach w streszczeniach.
+    effects:
+      - { var: presja_wyscigu, add: 1 }
+      - { indicator: SO, add: -1 }
+
+  - id: naca-odwdziecza-sie
+    on: [lotnictwo-kontra-naca.naca]
+    after: 3
+    title: Tunel naddźwiękowy dla PACE
+    text: >-
+      Laboratorium w Langley oddaje PACE dwie zmiany tygodniowo w tunelu naddźwiękowym, poza
+      kolejką. Kierownik tunelu mówi, że to „za zeszłoroczną sprawę”.
+    effects:
+      - { var: pula_kadr, add: 1 }
+      - registry:
+          key: zasluga-naca
+          type: merit
+          title: NACA odwdzięcza się za poparcie w sporze z Lotnictwem
+          with: [RN]
+
+  - id: komitet-pierwszy-raport
+    on: [lotnictwo-kontra-naca.wspolny-komitet]
+    after: 2
+    title: Wspólny komitet wydaje pierwszy raport
+    text: >-
+      Wspólny komitet Lotnictwa i NACA wydaje pierwszy raport, podpisany przez obie strony.
+      Nikt nie jest z niego dumny, ale wszyscy się na niego powołują.
+    effects:
+      - { indicator: SO, add: 2 }
+
+  - id: pentagon-rozstrzygnal
+    on: [lotnictwo-kontra-naca.nie-angazowac, lotnictwo-kontra-naca.biernosc]
+    after: 2
+    title: Spory omijają PACE
+    text: >-
+      Następny spór o podział programów trafia od razu do Pentagonu. Do PACE przychodzi tylko
+      kopia rozstrzygnięcia, „do wiadomości”.
+    effects:
+      - { indicator: SO, add: -1 }
+      - registry:
+          key: precedens-pentagon
+          type: precedent
+          title: 'Precedens: spory między wojskiem a nauką rozstrzyga Pentagon, nie PACE'
+          with: [DPO, RN]
+
+  # ── Maszyna licząca ────────────────────────────────────────────────────────────────
+  - id: maszyna-instalacja
+    on: [zakup-komputera.kupic]
+    after: 1
+    title: Maszyna licząca przyjeżdża w skrzyniach
+    text: >-
+      Maszyna licząca przyjeżdża koleją w kilkunastu skrzyniach. Potrzebuje własnej hali,
+      chłodzenia i tyle prądu, ile zużywa małe miasteczko. Ruskin przenosi warsztat
+      mechaniczny, żeby zrobić jej miejsce.
+    effects:
+      - { faction: DOI, disposition: -1 }
+      - correction: { units: -0.3, quarters: 1, reason: 'Hala, chłodzenie i zasilanie dla maszyny liczącej' }
+
+  - id: maszyna-pierwsze-obliczenia
+    on: [zakup-komputera.kupic]
+    after: 3
+    title: Trajektoria policzona przed obiadem
+    text: >-
+      Maszyna licząca oddaje pierwszą pełną trajektorię: obliczenie, które zespół rachmistrzyń
+      robił trzy tygodnie, zajęło jej przedpołudnie. Rachmistrzynie uczą się teraz pisać
+      dla niej instrukcje. Gazety nazywają ją „mózgiem elektronowym”.
+    effects:
+      - { faction: RN, disposition: 1 }
+      - { indicator: PP, add: 1 }
+      - { flag: pace_ma_maszyne }
+
+  - id: maszyna-kolejka
+    on: [zakup-komputera.kupic]
+    after: 5
+    title: Kolejka do maszyny liczącej
+    text: >-
+      Lotnictwo prosi o nocną zmianę przy maszynie liczącej do własnych obliczeń. Rada Naukowa
+      chce wiedzieć, co wojsko liczy na jej maszynie. Odpowiedź brzmi: „tablice”.
+    effects:
+      - { faction: DPO, disposition: 1 }
+      - registry:
+          key: maszyna-nocna-zmiana
+          type: debt
+          title: Lotnictwo jest winne PACE przysługę za nocne zmiany przy maszynie liczącej
+          with: [DPO]
+
+  - id: dzierzawa-kolejka
+    on: [zakup-komputera.dzierzawa]
+    after: 2
+    title: W kolejce za Biurem Spisu
+    text: >-
+      Obliczenia do najbliższej próby czekają w kolejce za Biurem Spisu Ludności i dwiema
+      firmami ubezpieczeniowymi. Wyniki przychodzą pocztą, trzy tygodnie po terminie.
+    effects:
+      - { indicator: SO, add: -1 }
+
+  - id: suwaki-zostaja
+    on: [zakup-komputera.odmowic, zakup-komputera.biernosc]
+    after: 3
+    title: Matematycy odchodzą do maszyny
+    text: >-
+      Maszynę, której nie kupiła PACE, kupuje laboratorium Lotnictwa. Dwóch młodych matematyków
+      z zespołu obliczeniowego składa wypowiedzenia tego samego dnia. Chcą pracować tam,
+      gdzie stoi maszyna.
+    effects:
+      - { var: pula_kadr, add: -1 }
+      - registry:
+          key: uraza-maszyna
+          type: grudge
+          title: Brandt pamięta odmowę zakupu maszyny liczącej
+          with: [brandt, RN]
+          visible: false
+
+  # ── Fundusz transatlantycki ────────────────────────────────────────────────────────
+  - id: fundusz-stacje
+    on: [fundusz-transatlantycki.wplacic]
+    after: 3
+    title: Fundusz stawia pierwsze stacje
+    text: >-
+      Z funduszu transatlantyckiego powstają stacje pomiarowe w Norwegii i we Włoszech.
+      Na tabliczkach przy wejściu jest skrót PACE, a pod nim nazwy sześciu krajów.
+    effects:
+      - { indicator: WF, add: 2 }
+      - { var: jednosc_zachodu, add: 1 }
+      - registry:
+          key: zasluga-fundusz
+          type: merit
+          title: Sojusznicy pamiętają, że PACE wpłaciła do funduszu bez warunków
+          with: [anderson]
+
+  - id: fundusz-warunki-wracaja
+    on: [fundusz-transatlantycki.warunkowo]
+    after: 2
+    title: Sojusznicy liczą kontrakty z funduszu
+    text: >-
+      Delegaci europejscy podliczają pierwszy rok funduszu: cztery piąte zamówień trafiło
+      do firm amerykańskich. W Radzie Atlantyckiej pada słowo „fasada”.
+    effects:
+      - { var: jednosc_zachodu, add: -1 }
+      - { indicator: WF, add: -1 }
+      - registry:
+          key: uraza-fundusz
+          type: grudge
+          title: Delegaci europejscy uważają fundusz za sposób na dotowanie amerykańskich firm
+          with: [anderson]
+          visible: false
+
+  - id: fundusz-bez-pace
+    on: [fundusz-transatlantycki.odmowic, fundusz-transatlantycki.biernosc]
+    after: 3
+    title: Fundusz działa bez PACE
+    text: >-
+      Fundusz badań wysokich warstw atmosfery rusza bez PACE, z siedzibą w Londynie.
+      Pierwsze stypendia dostają uczeni, którzy rok wcześniej pisali podania do Andersona.
+    effects:
+      - { var: sila_wielkiej_brytanii, add: 1 }
+      - { indicator: WF, add: -1 }
+
+  # ── Uciekinier ze Wschodu ──────────────────────────────────────────────────────────
+  - id: uciekinier-notatki
+    on: [uciekinier.zatrudnic]
+    after: 2
+    chance: 0.7
+    title: Notatki uciekiniera się potwierdzają
+    text: >-
+      Zespół silnikowy sprawdził notatki uciekiniera na stanowisku prób. Liczby się zgadzają.
+      Po raz pierwszy wiadomo, z jakim ciśnieniem w komorze pracują po tamtej stronie.
+    effects:
+      - { faction: RN, disposition: 1 }
+      - { var: presja_wyscigu, add: 1 }
+
+  - id: uciekinier-watpliwosci
+    on: [uciekinier.zatrudnic]
+    after: 4
+    chance: 0.4
+    title: BAS ma wątpliwości co do uciekiniera
+    text: >-
+      Biuro Analiz Specjalnych znajduje w życiorysie uciekiniera dwa lata, których nie umie
+      potwierdzić. Dorothy Ames nie mówi, że to agent. Mówi, że nie umie powiedzieć, że nie.
+    effects:
+      - { faction: BAS, disposition: -1 }
+      - registry:
+          key: watpliwosci-uciekinier
+          type: secret
+          title: 'Tajemnica: BAS nie umie potwierdzić życiorysu uciekiniera zatrudnionego w PACE'
+          with: [anderson, ames, BAS]
+          weight: 2
+
+  - id: uciekinier-streszczenie
+    on: [uciekinier.przekazac-bas, uciekinier.biernosc]
+    after: 3
+    title: Cztery strony z dwustu godzin
+    text: >-
+      BAS przysyła streszczenie przesłuchań uciekiniera: cztery strony z dwustu godzin rozmów.
+      Rada Naukowa pyta o resztę. Reszta jest „w opracowaniu”.
+    effects:
+      - { faction: RN, disposition: -1 }
+      - registry:
+          key: dlug-bas-protokoly
+          type: debt
+          title: BAS jest winne PACE pełne protokoły przesłuchań uciekiniera
+          with: [BAS, ames]
+
+  - id: uciekinier-u-konkurencji
+    on: [uciekinier.odeslac]
+    after: 3
+    title: Uciekinier pracuje dla Brytyjczyków
+    text: >-
+      Inżynier, którego PACE nie chciała, pracuje w brytyjskim ośrodku rakietowym. Londyn
+      przysyła uprzejme podziękowanie za „wskazanie kandydata”.
+    effects:
+      - { var: sila_wielkiej_brytanii, add: 1 }
+
+  # ── Senator i zakład w jego stanie ─────────────────────────────────────────────────
+  - id: senator-dlug
+    on: [senator-z-okregu.zgodzic-sie]
+    after: 0
+    silent: true
+    title: Dług senatora
+    text: Senator z komisji środków jest winien PACE głos.
+    effects:
+      - registry:
+          key: dlug-senatora
+          type: debt
+          title: Senator z komisji środków jest winien PACE głos za halę w swoim stanie
+          with: [anderson]
+
+  - id: senator-splaca
+    on: [senator-z-okregu.zgodzic-sie]
+    after: 3
+    requires: { registry: dlug-senatora }
+    title: Senator spłaca dług
+    text: >-
+      W komisji środków pada wniosek o obcięcie budżetu PACE o dziesiątą część. Senator,
+      w którego stanie stoi nowa hala, prosi o głos i mówi przez czterdzieści minut. Wniosek
+      przepada.
+    effects:
+      - { indicator: ZW, add: 2 }
+      - { registryClose: dlug-senatora }
+
+  - id: hala-w-polu
+    on: [senator-z-okregu.zgodzic-sie]
+    after: 4
+    title: Hala daleko od torów
+    text: >-
+      Nowa hala montażowa stoi sześćdziesiąt kilometrów od najbliższej bocznicy. Każdy człon
+      rakiety jedzie do niej dwa dni ciężarówką, pod eskortą policji stanowej.
+    effects:
+      - { faction: DOI, disposition: -1 }
+      - correction: { units: -0.2, quarters: 2, reason: 'Transport do hali montażowej w stanie senatora' }
+
+  - id: senator-pamieta
+    on: [senator-z-okregu.odmowic, senator-z-okregu.biernosc]
+    after: 3
+    title: Senator dopisuje jeden paragraf
+    text: >-
+      Do ustawy budżetowej trafia paragraf, który każe PACE składać komisji środków
+      sprawozdanie co kwartał, z wykazem każdej inwestycji powyżej stu tysięcy dolarów.
+      Autorem poprawki jest senator, któremu odmówiono hali.
+    effects:
+      - { indicator: ZW, add: -2 }
+      - registry:
+          key: uraza-senatora
+          type: grudge
+          title: Senator z komisji środków pamięta odmowę w sprawie hali
+          with: [anderson]
+
+  - id: senator-notes
+    on: [senator-z-okregu.obiecac]
+    after: 0
+    silent: true
+    title: Obietnica w notesie senatora
+    text: Anderson obiecał senatorowi następną inwestycję.
+    effects:
+      - registry:
+          key: obietnica-senatorowi
+          type: promise
+          title: 'Obietnica: następna inwestycja PACE trafi do stanu senatora z komisji środków'
+          with: [anderson]
+
+  - id: senator-przypomina
+    on: [senator-z-okregu.obiecac]
+    after: 4
+    requires: { registry: obietnica-senatorowi }
+    title: Senator otwiera notes
+    text: >-
+      Senator dzwoni osobiście i czyta datę z notesu. PACE umieszcza w jego stanie magazyn
+      części zamiennych. Jest mniejszy niż hala, ale ma tabliczkę i przecięcie wstęgi.
+    effects:
+      - { indicator: ZW, add: 1 }
+      - { registryClose: obietnica-senatorowi }
+      - correction: { units: -0.2, quarters: 1, reason: 'Magazyn części w stanie senatora (spełniona obietnica)' }
+
+  # ── Kamery na poligonie ────────────────────────────────────────────────────────────
+  - id: telewizja-listy
+    on: [telewizja-na-poligonie.wpuscic]
+    after: 1
+    title: Worki listów po programie
+    text: >-
+      Po wieczornym programie o próbie PACE poczta przywozi worki listów. Dzieci pytają,
+      jak zostać inżynierem rakietowym, a dwie szkoły proszą o wycieczkę.
+    effects:
+      - { indicator: PP, add: 2 }
+
+  - id: telewizja-chce-wiecej
+    on: [telewizja-na-poligonie.wpuscic]
+    after: 3
+    title: Stacja chce stałego programu
+    text: >-
+      Stacja telewizyjna proponuje stały program z poligonu, raz w miesiącu. Dorothy Ames
+      pisze w tej sprawie jedno zdanie: raz wpuszczonej kamery nie da się już wyprosić.
+    effects:
+      - { faction: BAS, disposition: -1 }
+      - registry:
+          key: precedens-kamery
+          type: precedent
+          title: 'Precedens: kamery były już na poligonie, więc prasa oczekuje ich przy każdej próbie'
+          with: [BAS]
+
+  - id: telewizja-film-w-szkolach
+    on: [telewizja-na-poligonie.film]
+    after: 3
+    title: Film PACE krąży po szkołach
+    text: >-
+      Film z próby, zmontowany przez biuro prasowe, krąży po szkołach i klubach
+      weteranów. Nikt nie pyta, czego w nim nie pokazano.
+    effects:
+      - { indicator: PP, add: 1 }
+
+  - id: telewizja-reporter-wraca
+    on: [telewizja-na-poligonie.odmowic]
+    after: 2
+    title: Reportaż zza płotu
+    text: >-
+      Reporter, którego nie wpuszczono na poligon, robi materiał z drugiej strony ogrodzenia.
+      Farmerzy opowiadają o nocnych hukach, a kamera długo pokazuje tablicę z zakazem wstępu.
+    effects:
+      - { indicator: PP, add: -2 }
+      - { indicator: WF, add: -1 }
+
+  # ── Algieria: Hammaguir ────────────────────────────────────────────────────────────
+  - id: hammaguir-zdjecie
+    on: [algieria.philippeville.wojsko]
+    after: 2
+    title: Zdjęcie z bramy poligonu
+    text: >-
+      Zdjęcie legionistów pod tablicą PACE w Hammaguir obiega prasę arabską i trafia na salę
+      obrad ONZ. Delegat Indii pyta, co komisja pokojowych eksperymentów robi za drutem
+      kolczastym.
+    effects:
+      - { indicator: WF, add: -2 }
+      - { var: dekolonizacja, add: 1 }
+
+  - id: hammaguir-tlok-w-woomerze
+    on: [algieria.philippeville.przeniesc]
+    after: 2
+    title: Tłok w Woomerze
+    text: >-
+      Po przeniesieniu prób z Sahary harmonogram Woomery jest pełny na pół roku naprzód.
+      Australijczycy są zadowoleni z opłat, a Paryż liczy każdy pusty tydzień w Hammaguir.
+    effects:
+      - { var: sila_wielkiej_brytanii, add: 1 }
+      - { indicator: SO, add: -1 }
+
+  - id: hammaguir-konwoj
+    on: [algieria.philippeville.bez-zmian, algieria.philippeville.biernosc]
+    after: 3
+    chance: 0.5
+    title: Konwój na drodze do Hammaguir
+    text: >-
+      Konwój z paliwem dla poligonu zostaje ostrzelany na drodze z Colomb-Béchar. Nikt nie
+      ginie, ale dwie cysterny płoną do rana. Sahara okazała się mniejsza, niż zakładano.
+    effects:
+      - { indicator: SO, add: -1 }
+      - correction: { units: -0.4, quarters: 1, reason: 'Straty po ataku na konwój do Hammaguir' }
+
+  # ── Brytyjska próba atomowa ────────────────────────────────────────────────────────
+  - id: hurricane-tajemnica
+    on: [bomba-brytyjska.hurricane.zgoda]
+    after: 0
+    silent: true
+    title: Pomiary brytyjskiej próby
+    text: Stacje PACE mierzyły brytyjską próbę atomową.
+    effects:
+      - registry:
+          key: pomiary-hurricane
+          type: secret
+          title: 'Tajemnica: stacje „meteorologiczne” PACE w Woomerze mierzyły brytyjską próbę atomową'
+          with: [anderson, ames, BAS]
+          weight: 2
+
+  - id: hurricane-rewanz
+    on: [bomba-brytyjska.hurricane.zgoda]
+    after: 2
+    title: Londyn pamięta o Woomerze
+    text: >-
+      Brytyjczycy przejmują część kosztów stacji śledzących w Woomerze i dają próbom PACE
+      pierwszeństwo w kalendarzu poligonu. W piśmie nie ma słowa o powodach.
+    effects:
+      - correction: { units: 0.3, quarters: 2, reason: 'Brytyjski udział w kosztach stacji w Woomerze' }
+
+  - id: hurricane-przeciek
+    on: [bomba-brytyjska.hurricane.zgoda]
+    after: 3
+    chance: 0.5
+    requires: { registry: pomiary-hurricane }
+    title: 'Gazeta pisze: stacje PACE mierzyły bombę'
+    text: >-
+      Londyński dziennik pisze, że „pomiary meteorologiczne” PACE w Woomerze były pomiarami
+      fali uderzeniowej po próbie atomowej. Rada Naukowa dowiaduje się o tym z gazety.
+    effects:
+      - { indicator: WF, add: -3 }
+      - { faction: RN, disposition: -1 }
+      - { registryClose: pomiary-hurricane, as: revealed }
+
+  - id: hurricane-na-pismie
+    on: [bomba-brytyjska.hurricane.odmowa, bomba-brytyjska.hurricane.biernosc]
+    after: 2
+    title: Woomera według cennika
+    text: >-
+      Po odmowie w sprawie próby atomowej Londyn rozlicza PACE z każdej godziny na poligonie
+      w Woomerze. Okna startowe trzeba zamawiać z kwartalnym wyprzedzeniem, na formularzu.
+    effects:
+      - { faction: DOI, disposition: -1 }
+      - correction: { units: -0.2, quarters: 2, reason: 'Wyższe opłaty i sztywny kalendarz w Woomerze' }
+
+  # ── Hiroszima ──────────────────────────────────────────────────────────────────────
+  - id: hiroszima-teczka
+    on: [echo-antyatomowe.hiroszima.delegat]
+    after: 0
+    silent: true
+    title: Teczka po Hiroszimie
+    text: W Waszyngtonie założono teczkę uczonemu, który mówił w Hiroszimie.
+    effects:
+      - registry:
+          key: teczka-hiroszima
+          type: hook
+          title: W Waszyngtonie jest teczka uczonego Rady Naukowej, który przemawiał w Hiroszimie
+          with: [BAS, ames]
+          visible: false
+
+  - id: hiroszima-zaproszenia
+    on: [echo-antyatomowe.hiroszima.delegat]
+    after: 2
+    title: Listy z Tokio i Bombaju
+    text: >-
+      Po wystąpieniu w Hiroszimie do Rady Naukowej piszą uczelnie z Tokio i Bombaju. Proszą
+      o miejsce dla swoich aparatów w rakietach sondujących PACE.
+    effects:
+      - { indicator: WF, add: 1 }
+      - { var: pula_kadr, add: 1 }
+
+  - id: hiroszima-wyjasnienia
+    on: [echo-antyatomowe.hiroszima.delegat]
+    after: 3
+    requires:
+      all:
+        - { registry: teczka-hiroszima }
+        - { var: antykomunizm, op: '>=', value: 6 }
+    title: Uczony z Hiroszimy składa wyjaśnienia
+    text: >-
+      Fizyk, który mówił w Hiroszimie, dostaje wezwanie do złożenia wyjaśnień w sprawie
+      „kontaktów z organizacjami o charakterze wywrotowym”. Jego poświadczenie bezpieczeństwa
+      zostaje zawieszone do odwołania.
+    effects:
+      - { faction: RN, disposition: -1 }
+      - { indicator: SO, add: -2 }
+      - { registryClose: teczka-hiroszima, as: revealed }
+
+  - id: hiroszima-puste-krzeslo
+    on: [echo-antyatomowe.hiroszima.odmowa]
+    after: 2
+    title: Puste krzesło japońskiego obserwatora
+    text: >-
+      Japoński obserwator nie przyjeżdża na dwa kolejne posiedzenia Rady Atlantyckiej.
+      Poselstwo tłumaczy to „nawałem obowiązków”.
+    effects:
+      - { indicator: WF, add: -1 }
+
+  # ── Dien Bien Phu ──────────────────────────────────────────────────────────────────
+  - id: indochiny-tablice
+    on: [indochiny-1954.vulture.pomoc]
+    after: 2
+    chance: 0.6
+    title: Tablice zrzutów z nagłówkiem PACE
+    text: >-
+      Na konferencji prasowej w Genewie delegacja Wietnamu pokazuje zdobyte tablice zrzutów
+      zaopatrzenia. W nagłówku jest skrót PACE. Rzecznik komisji mówi, że to „dane
+      meteorologiczne”.
+    effects:
+      - { indicator: WF, add: -2 }
+      - { var: dekolonizacja, add: 1 }
+
+  - id: paryz-pamieta-pomoc
+    on: [indochiny-1954.vulture.pomoc]
+    after: 3
+    title: Paryż pamięta
+    text: >-
+      Francuski delegat po raz pierwszy od roku głosuje za budżetem PACE bez zastrzeżeń
+      i sam proponuje lepsze warunki dzierżawy w Hammaguir.
+    effects:
+      - { currency: KP, add: 1 }
+      - registry:
+          key: dlug-paryza
+          type: debt
+          title: Paryż jest winien PACE przysługę za pomoc pod Dien Bien Phu
+          with: [anderson]
+
+  - id: paryz-pamieta-odmowe
+    on: [indochiny-1954.vulture.odmowa, indochiny-1954.vulture.biernosc]
+    after: 3
+    title: Francuska składka w zawieszeniu
+    text: >-
+      Paryż wstrzymuje kwartalną składkę „do czasu wyjaśnienia zasad solidarności w komisji”.
+      Delegat przypomina, że zasadę nieudziału w wojnach sformułował Anderson.
+    effects:
+      - { var: jednosc_zachodu, add: -1 }
+      - correction: { units: -0.3, quarters: 1, reason: 'Wstrzymana składka Francji' }
+
+  # ── Japonia ────────────────────────────────────────────────────────────────────────
+  - id: japonia-publikacja
+    on: [japonia.olowek.dane]
+    after: 2
+    title: Japońska praca o wiatrach w jonosferze
+    text: >-
+      Stażyści z Tokio publikują pracę o wiatrach w jonosferze, opartą na pomiarach z rakiet
+      sondujących PACE. W przypisie pierwszym dziękują komisji. Rada Naukowa wiesza odbitkę
+      na tablicy.
+    effects:
+      - { faction: RN, disposition: 1 }
+      - { indicator: WF, add: 1 }
+      - registry:
+          key: teczka-stazysci
+          type: hook
+          title: BAS prowadzi teczkę japońskich stażystów w ośrodku rakiet sondujących
+          with: [BAS, ames]
+          visible: false
+
+  - id: japonia-sama
+    on: [japonia.olowek.odmowa, japonia.olowek.biernosc]
+    after: 4
+    title: Japonia liczy sama
+    text: >-
+      Japońska rakieta badawcza dolatuje do górnych warstw atmosfery bez żadnych danych
+      z Zachodu. Tokijski profesor mówi dziennikarzom, że odmowa była najlepszym, co go
+      spotkało.
+    effects:
+      - { indicator: WF, add: -1 }
+
+  # ── Nowy Kongres ───────────────────────────────────────────────────────────────────
+  - id: kongres-komisja-pamieta
+    on: [kongres-1954.wynik.zaprosic]
+    after: 2
+    title: Kongresman, który widział start
+    text: >-
+      Przy pierwszym czytaniu budżetu jeden z nowych członków komisji broni linii PACE
+      własnymi słowami. Opowiada kolegom, jak ziemia drży przy starcie.
+    effects:
+      - { indicator: ZW, add: 2 }
+      - registry:
+          key: zasluga-kongres
+          type: merit
+          title: Członkowie komisji środków pamiętają wizytę w ośrodku startowym
+          with: [anderson]
+
+  - id: kongres-raport-kontrolerow
+    on: [kongres-1954.wynik.dystans, kongres-1954.wynik.biernosc]
+    after: 2
+    title: Komisja zaczyna od kontrolerów
+    text: >-
+      Nowa komisja środków zaczyna pracę nad budżetem PACE od raportu kontrolerów.
+      To jedyny dokument o komisji, jaki jej członkowie mieli w ręku.
+    effects:
+      - { indicator: ZW, add: -2 }
+      - correction: { units: -0.3, quarters: 2, reason: 'Cięcia nowej komisji środków' }
+
+  # ── Korea: prośba Lotnictwa ────────────────────────────────────────────────────────
+  - id: yalu-dane
+    on: [korea.wojna-powietrzna.zgoda]
+    after: 2
+    title: Zespoły wracają znad Yalu
+    text: >-
+      Zespoły PACE wracają z Japonii ze skrzyniami taśm. Po raz pierwszy są pomiary drgań
+      skrzydeł z prawdziwej walki, a nie z tunelu. Delaney czyta je dwa dni bez przerwy.
+    effects:
+      - { faction: BLZ, disposition: 1 }
+      - { var: pula_kadr, add: 1 }
+
+  - id: yalu-wypadek
+    on: [korea.wojna-powietrzna.zgoda]
+    after: 1
+    chance: 0.35
+    title: Wypadek transportowca z aparaturą
+    text: >-
+      Samolot transportowy z aparaturą PACE rozbija się przy lądowaniu w Japonii. Dwóch
+      inżynierów trafia do szpitala. W laboratoriach przypominają sobie, kto ostrzegał przed
+      wysyłaniem ludzi na wojnę.
+    effects:
+      - { indicator: SO, add: -3 }
+      - registry:
+          key: uraza-yalu
+          type: grudge
+          title: Rada Naukowa pamięta rannych inżynierów wysłanych do Korei
+          with: [RN, brandt]
+          visible: false
+
+  - id: yalu-aparatura-wraca
+    on: [korea.wojna-powietrzna.aparatura, korea.wojna-powietrzna.biernosc]
+    after: 3
+    title: Aparatura wraca z Korei
+    text: >-
+      Wypożyczona aparatura wraca w skrzyniach z napisem „zużyte”. Połowa rejestratorów
+      nadaje się do muzeum. Lotnictwo dziękuje jednym zdaniem.
+    effects:
+      - correction: { units: -0.2, quarters: 1, reason: 'Wymiana aparatury zużytej w Korei' }
+
+  - id: pentagon-wlasne-laboratorium
+    on: [korea.wojna-powietrzna.odmowa]
+    after: 3
+    title: Lotnictwo buduje własne laboratorium
+    text: >-
+      Lotnictwo zakłada własne laboratorium pomiarów w locie i płaci o jedną piątą więcej
+      niż PACE. Pierwszych ośmiu inżynierów przechodzi tam w ciągu miesiąca.
+    effects:
+      - { var: pula_kadr, add: -1 }
+      - registry:
+          key: uraza-lotnictwa
+          type: grudge
+          title: Lotnictwo pamięta, że PACE odmówiła pomocy nad Yalu
+          with: [DPO, voss]
+          visible: false
+
+  # ── Podkomisja i listy cudzoziemców ────────────────────────────────────────────────
+  - id: listy-brandt
+    on: [maccartyzm.cel_pace.wydac]
+    after: 0
+    silent: true
+    title: Brandt nie wybaczył
+    text: Brandt nie wybaczył wydania list.
+    effects:
+      - registry:
+          key: uraza-listy
+          type: grudge
+          title: Brandt nie wybaczył Andersonowi wydania list cudzoziemców podkomisji
+          with: [brandt, RN]
+          weight: 2
+          visible: false
+
+  - id: listy-odejscia
+    on: [maccartyzm.cel_pace.wydac]
+    after: 2
+    title: Wypowiedzenia po wydaniu list
+    text: >-
+      Trzech uczonych z państw sojuszniczych składa wypowiedzenia w jednym tygodniu. Żaden
+      nie podaje powodu. Jeden zostawia na biurku wycinek z gazety z własnym nazwiskiem.
+    effects:
+      - { var: pula_kadr, add: -1 }
+      - { indicator: SO, add: -2 }
+      - { indicator: WF, add: -1 }
+
+  - id: bas-oslona
+    on: [maccartyzm.cel_pace.bas, maccartyzm.cel_pace.biernosc]
+    after: 2
+    title: BAS zamyka sprawę podkomisji
+    text: >-
+      Biuro Analiz Specjalnych zamyka sprawę z podkomisją za zamkniętymi drzwiami. Dorothy
+      Ames nie mówi, co obiecała. Prosi tylko o stały wgląd w akta osobowe PACE, „żeby
+      następnym razem było szybciej”.
+    effects:
+      - registry:
+          key: dlug-wobec-bas
+          type: debt
+          title: PACE jest winna BAS przysługę za osłonę przed podkomisją śledczą
+          with: [BAS, ames]
+          weight: 2
+
+  - id: odmowa-list-poparcia
+    on: [maccartyzm.cel_pace.odmowic]
+    after: 2
+    title: List uczonych w obronie PACE
+    text: >-
+      Czterdziestu uczonych z siedmiu krajów podpisuje list w obronie komisji, która nie wydała
+      swoich ludzi. List drukują gazety w Londynie, Rzymie i Ottawie.
+    effects:
+      - { indicator: SO, add: 2 }
+      - { indicator: WF, add: 1 }
+
+  # ── Rok Geofizyczny: satelita ──────────────────────────────────────────────────────
+  - id: satelita-obietnica
+    on: [mrg.zapowiedzi.z-terminem]
+    after: 0
+    silent: true
+    title: Obietnica satelity
+    text: PACE obiecała publicznie satelitę przed końcem 1958 roku.
+    effects:
+      - registry:
+          key: obietnica-satelita
+          type: promise
+          title: 'Obietnica publiczna: satelita naukowy PACE na orbicie przed końcem 1958 roku'
+          with: [anderson]
+          weight: 3
+
+  - id: satelita-odliczanie
+    on: [mrg.zapowiedzi.z-terminem]
+    after: 2
+    title: Gazety odliczają do satelity
+    text: >-
+      Dziennik z Chicago drukuje na pierwszej stronie kalendarz: ile dni zostało PACE
+      do obiecanego satelity. Inne gazety robią to samo. Marynarka i Lotnictwo wycinają
+      te kalendarze.
+    effects:
+      - { indicator: PP, add: 1 }
+      - { var: presja_wyscigu, add: 1 }
+
+  - id: satelita-pytania-o-termin
+    on: [mrg.zapowiedzi.bez-terminu, mrg.zapowiedzi.biernosc]
+    after: 2
+    title: Kongres pyta o termin satelity
+    text: >-
+      Komisja środków prosi o harmonogram prac nad satelitą. Odpowiedź „nauki się nie pogania”
+      wraca z dopiskiem na marginesie: „a budżet tak”.
+    effects:
+      - { indicator: ZW, add: -1 }
+
+  - id: satelita-marynarki
+    on: [mrg.zapowiedzi.nie]
+    after: 2
+    title: Marynarka pokazuje swojego satelitę
+    text: >-
+      Marynarka pokazuje dziennikarzom model satelity: błyszczącą kulę wielkości grejpfruta.
+      Dwóch fizyków z Rady Naukowej przechodzi do jej laboratorium jeszcze tej jesieni.
+    effects:
+      - { var: pula_kadr, add: -1 }
+      - { indicator: PP, add: -1 }
+
+  # ── Satelita rozpoznawczy ──────────────────────────────────────────────────────────
+  - id: rozpoznawczy-tajemnica
+    on: [nowe-spojrzenie.killian.przyjac]
+    after: 0
+    silent: true
+    title: Studia nad satelitą rozpoznawczym
+    text: PACE prowadzi tajne studia nad satelitą rozpoznawczym.
+    effects:
+      - registry:
+          key: satelita-rozpoznawczy
+          type: secret
+          title: 'Tajemnica: PACE prowadzi studia nad satelitą rozpoznawczym z funduszy spoza Rady Atlantyckiej'
+          with: [anderson, voss, ames, DPO, BAS]
+          weight: 3
+
+  - id: rozpoznawczy-klauzule
+    on: [nowe-spojrzenie.killian.przyjac]
+    after: 2
+    title: Dwa piętra za nową klauzulą
+    text: >-
+      Nowa klauzula tajności zamyka dwa piętra gmachu PACE przed wszystkimi, którzy nie mają
+      amerykańskiego paszportu. Uczeni z państw sojuszniczych pytają, nad czym pracują koledzy,
+      z którymi jeszcze wczoraj jedli obiad.
+    effects:
+      - { indicator: SO, add: -2 }
+      - { var: jednosc_zachodu, add: -1 }
+
+  - id: rozpoznawczy-pytanie
+    on: [nowe-spojrzenie.killian.przyjac]
+    after: 4
+    chance: 0.4
+    requires: { registry: satelita-rozpoznawczy }
+    title: Pytanie o fundusze spoza protokołu
+    text: >-
+      W Radzie Atlantyckiej delegat Kanady pyta, z jakich funduszy PACE opłaca prace, których
+      nie ma w żadnym protokole. Anderson odpowiada, że sprawdzi. Na sali nikt mu nie wierzy.
+    effects:
+      - { indicator: WF, add: -2 }
+
+  - id: prawo-przelotu
+    on: [nowe-spojrzenie.killian.cywilny]
+    after: 3
+    title: Biały Dom przyjmuje argument o prawie przelotu
+    text: >-
+      Doradcy prezydenta wpisują do raportu zdanie, które wyszło z gabinetu Andersona:
+      pierwszy satelita powinien być naukowy, żeby ustalić zasadę swobody przestrzeni nad
+      granicami. Rada Naukowa czyta je jak własne zwycięstwo.
+    effects:
+      - { indicator: ZW, add: 1 }
+      - registry:
+          key: zasluga-prawo-przelotu
+          type: merit
+          title: Biały Dom pamięta, że zasada swobody przestrzeni wyszła z PACE
+          with: [anderson, RN]
+
+  - id: lotnictwo-ma-satelite
+    on: [nowe-spojrzenie.killian.odmowic, nowe-spojrzenie.killian.biernosc]
+    after: 3
+    title: Program, którego PACE nie chciała
+    text: >-
+      Lotnictwo dostaje program satelity rozpoznawczego razem z budżetem. Część pieniędzy
+      Biuro Budżetu zdejmuje z linii PACE, bo „zadania się pokrywają”.
+    effects:
+      - { var: presja_wyscigu, add: 1 }
+      - correction: { units: -0.2, quarters: 2, reason: 'Fundusze przesunięte do programu Lotnictwa' }
+
+  # ── Berlin: inżynierowie z NRD ─────────────────────────────────────────────────────
+  - id: berlin-optycy
+    on: [nrd-1953.uciekinierzy.werbowac]
+    after: 2
+    title: Optycy z Jeny w laboratorium PACE
+    text: >-
+      Pierwsza grupa z berlińskiego punktu werbunkowego zaczyna pracę: optycy z Jeny,
+      którzy szlifowali soczewki do kamer śledzących. Po miesiącu zdjęcia z prób są ostre
+      aż do granicy klatki.
+    effects:
+      - { faction: RN, disposition: 1 }
+
+  - id: berlin-podstawiony
+    on: [nrd-1953.uciekinierzy.werbowac]
+    after: 4
+    chance: 0.4
+    title: Jeden z Berlina nie był uciekinierem
+    text: >-
+      BAS zatrzymuje technika zwerbowanego w Berlinie: przepisywał numery części na marginesach
+      listów do „ciotki w Lipsku”. Sprawa zostaje w gmachu. Na razie.
+    effects:
+      - { indicator: SO, add: -1 }
+      - registry:
+          key: podstawiony-z-berlina
+          type: secret
+          title: 'Tajemnica: przez punkt werbunkowy w Berlinie przeszedł człowiek wschodniego wywiadu'
+          with: [anderson, ames, BAS]
+          weight: 2
+
+  - id: bonn-dlug
+    on: [nrd-1953.uciekinierzy.bonn, nrd-1953.uciekinierzy.biernosc]
+    after: 0
+    silent: true
+    title: Bonn nie zapomni
+    text: Bonn obiecało, że nie zapomni.
+    effects:
+      - registry:
+          key: dlug-bonn
+          type: debt
+          title: Bonn jest winne PACE przysługę za inżynierów zostawionych niemieckim firmom
+          with: [anderson]
+
+  - id: bonn-rewanz
+    on: [nrd-1953.uciekinierzy.bonn, nrd-1953.uciekinierzy.biernosc]
+    after: 5
+    requires: { registry: dlug-bonn }
+    title: Bonn spłaca dług
+    text: >-
+      Rząd w Bonn podnosi swoją składkę do PACE o jedną trzecią, zanim ktokolwiek o to poprosi.
+      Delegat mówi tylko, że jego kraj ma dobrą pamięć.
+    effects:
+      - { registryClose: dlug-bonn }
+      - correction: { units: 0.2, quarters: 2, reason: 'Wyższa składka RFN' }
+
+  - id: szesciu-z-listy
+    on: [nrd-1953.uciekinierzy.wybrac]
+    after: 3
+    title: Jeden z sześciu
+    text: >-
+      Jeden z sześciu ludzi wybranych w Berlinie rozwiązuje kłopot z dryfem żyroskopów,
+      nad którym zespół siedział od roku. Zrobił to tak, jak robiono to w jego starym zakładzie.
+    effects:
+      - { faction: RN, disposition: 1 }
+
+  # ── Segregacja w ośrodkach ─────────────────────────────────────────────────────────
+  - id: segregacja-gubernator
+    on: [prawa-obywatelskie.brown.zniesc]
+    after: 1
+    title: Stan wstrzymuje pozwolenia
+    text: >-
+      Władze stanowe wstrzymują pozwolenie na budowę drogi do ośrodka PACE „do czasu
+      uzupełnienia dokumentacji”. Dokumentacja była kompletna od pół roku.
+    effects:
+      - { faction: DOI, disposition: -1 }
+      - correction: { units: -0.2, quarters: 2, reason: 'Wstrzymane pozwolenia stanowe po zniesieniu segregacji' }
+
+  - id: segregacja-kadry
+    on: [prawa-obywatelskie.brown.zniesc]
+    after: 3
+    title: Podania z Tuskegee i Howard
+    text: >-
+      Do ośrodków PACE przychodzą podania absolwentów Tuskegee i Howard: inżynierów
+      i matematyczek, których dotąd nie przyjmował żaden zakład na Południu. Dział kadr
+      pierwszy raz od lat ma z kogo wybierać.
+    effects:
+      - { var: pula_kadr, add: 1 }
+      - { indicator: PP, add: 1 }
+
+  - id: segregacja-incydent
+    on: [prawa-obywatelskie.brown.po-cichu]
+    after: 2
+    chance: 0.5
+    title: Incydent w stołówce ośrodka
+    text: >-
+      W stołówce ośrodka dochodzi do awantury o to, kto gdzie może usiąść. Tablic już nie ma,
+      rozkazu jeszcze nie ma, więc każdy powołuje się na co innego. Szeryf pyta, czyje prawo
+      tu obowiązuje.
+    effects:
+      - { indicator: SO, add: -2 }
+      - { indicator: WF, add: -1 }
+
+  - id: segregacja-delegat
+    on: [prawa-obywatelskie.brown.czekac, prawa-obywatelskie.brown.biernosc]
+    after: 2
+    title: Delegat odmawia wizyty
+    text: >-
+      Delegat Norwegii odmawia udziału w wizycie Rady Atlantyckiej w ośrodku w Alabamie.
+      Pisze, że nie wejdzie do budynku, który ma dwa wejścia.
+    effects:
+      - { indicator: WF, add: -1 }
+      - { var: jednosc_zachodu, add: -1 }
+
+  # ── Europejska armia i suwerenność RFN ─────────────────────────────────────────────
+  - id: ewo-zapamietane
+    on: [rfn-uzbrojenie.paryz.poprzec]
+    after: 2
+    title: Paryż zdejmuje punkt z porządku obrad
+    text: >-
+      Francuski delegat zdejmuje z porządku obrad Rady Atlantyckiej wniosek PACE o wspólną
+      sieć śledzenia. Uzasadnienie zajmuje jedną linijkę: „sprawa wymaga dalszych studiów”.
+    effects:
+      - { indicator: SO, add: -1 }
+      - registry:
+          key: uraza-paryza-ewo
+          type: grudge
+          title: Paryż pamięta, że Anderson poparł publicznie Europejską Wspólnotę Obronną
+          with: [anderson]
+          visible: false
+
+  - id: ewo-pominieci
+    on: [rfn-uzbrojenie.paryz.milczec, rfn-uzbrojenie.paryz.biernosc]
+    after: 2
+    title: Delegacja bez PACE
+    text: >-
+      Departament Stanu układa skład delegacji na rozmowy o obronie Europy. Nazwiska Andersona
+      na liście nie ma. Łącznik w Waszyngtonie mówi, że to „nic osobistego”.
+    effects:
+      - { indicator: ZW, add: -1 }
+
+  - id: rfn-pierwsza-dostawa
+    on: [rfn-uzbrojenie.suwerennosc.kontrakty]
+    after: 3
+    title: Pierwsza dostawa znad Renu
+    text: >-
+      Niemieckie zakłady dostarczają pierwszą partię żyroskopów: przed terminem i taniej
+      od amerykańskich. Haskell przynosi do gabinetu zestawienie, ile jego firmy na tym tracą.
+    effects:
+      - { faction: PRZ, disposition: -1 }
+      - correction: { units: 0.2, quarters: 2, reason: 'Tańsze dostawy z RFN' }
+
+  - id: rfn-powroty
+    on: [rfn-uzbrojenie.suwerennosc.ludzie]
+    after: 3
+    title: Instytut nad Renem
+    text: >-
+      Inżynierowie, którzy wrócili do Niemiec, zakładają instytut badań lotniczych. Pierwszy
+      rocznik prac przysyłają do PACE z dedykacją. Voss odsyła swój egzemplarz bez otwierania.
+    effects:
+      - { var: jednosc_zachodu, add: 1 }
+      - registry:
+          key: uraza-voss-specjalisci
+          type: grudge
+          title: Voss pamięta, że Anderson wypuścił do Niemiec ludzi znających programy obronne
+          with: [voss, DPO]
+          visible: false
+
+  - id: rfn-skladka
+    on: [rfn-uzbrojenie.suwerennosc.odmowa, rfn-uzbrojenie.suwerennosc.biernosc]
+    after: 2
+    title: Niemiecka składka z opóźnieniem
+    text: >-
+      Składka RFN wpływa z kwartalnym opóźnieniem. W piśmie przewodnim Bonn zauważa, że
+      suwerenne państwo samo ustala terminy swoich płatności.
+    effects:
+      - correction: { units: -0.3, quarters: 1, reason: 'Opóźniona składka RFN' }
+
+  # ── Strajk w hutach ────────────────────────────────────────────────────────────────
+  - id: dostawcy-pamietaja
+    on: [stal-1952.strajk.przesunac, stal-1952.strajk.biernosc]
+    after: 3
+    title: Zbiorniki przed terminem
+    text: >-
+      Dostawca, któremu PACE darowała kary po strajku, oddaje partię zbiorników trzy tygodnie
+      przed terminem i nie dolicza nadgodzin. Haskell mówi, że w tej branży pamięta się długo.
+    effects:
+      - correction: { units: 0.2, quarters: 1, reason: 'Dostawa przed terminem, bez dopłat' }
+      - registry:
+          key: zasluga-dostawcy
+          type: merit
+          title: Dostawcy pamiętają, że PACE nie naliczyła kar po strajku hutników
+          with: [PRZ, haskell]
+
+  - id: dostawcy-wyceniaja
+    on: [stal-1952.strajk.kary]
+    after: 3
+    title: Oferty z zapasem na kary
+    text: >-
+      W następnym przetargu wszystkie oferty są droższe o kilkanaście procent. Dostawcy
+      doliczyli „rezerwę na ryzyko umowne”. Słowa „kary” nie używa nikt.
+    effects:
+      - correction: { units: -0.3, quarters: 2, reason: 'Droższe oferty po egzekwowaniu kar umownych' }
+      - registry:
+          key: uraza-dostawcow
+          type: grudge
+          title: Prezesi firm dostawczych pamiętają kary naliczone po strajku hutników
+          with: [PRZ, haskell]
+          visible: false
+
+  # ── Triest ─────────────────────────────────────────────────────────────────────────
+  - id: wloska-aparatura
+    on: [triest.weto.kontrakt]
+    after: 3
+    title: Aparatura z Turynu
+    text: >-
+      Aparatura zamówiona we Włoszech przychodzi dwa miesiące po terminie. Działa bez zarzutu,
+      ale instrukcje są po włosku. Ruskin szuka tłumacza wśród mechaników.
+    effects:
+      - { faction: DOI, disposition: -1 }
+
+  - id: wlosi-obietnica
+    on: [triest.weto.obietnica]
+    after: 0
+    silent: true
+    title: Obietnica dla Rzymu
+    text: Anderson obiecał Włochom miejsce w następnym programie.
+    effects:
+      - registry:
+          key: obietnica-wlochom
+          type: promise
+          title: 'Obietnica w protokole: udział włoskiego przemysłu w następnym programie PACE'
+          with: [anderson]
+
+  - id: wlosi-przypominaja
+    on: [triest.weto.obietnica]
+    after: 4
+    requires: { registry: obietnica-wlochom }
+    title: Rzym przypomina o obietnicy
+    text: >-
+      Delegat Włoch kładzie na stole wyciąg z protokołu sprzed roku. PACE zamawia w Mediolanie
+      osprzęt naziemny do następnego programu. Obietnica zostaje spełniona co do litery.
+    effects:
+      - { indicator: WF, add: 1 }
+      - { registryClose: obietnica-wlochom }
+      - correction: { units: -0.2, quarters: 2, reason: 'Zamówienie we Włoszech (spełniona obietnica)' }
+
+  - id: rzym-glosuje-przeciw
+    on: [triest.weto.odmowa, triest.weto.biernosc]
+    after: 2
+    title: Włoski głos przeciw
+    text: >-
+      W głosowaniu nad regulaminem przetargów Włochy są przeciw, pierwszy raz w historii
+      komisji. Wniosek przechodzi, ale jednomyślności już nie ma.
+    effects:
+      - { indicator: SO, add: -1 }
+      - { indicator: WF, add: -1 }
+
+  # ── Nowa administracja: przegląd programów ─────────────────────────────────────────
+  - id: kontrolerzy-lista
+    on: [wybory-1952.przeglad.wspolpraca, wybory-1952.przeglad.biernosc]
+    after: 2
+    title: Czternaście pozycji do wyjaśnienia
+    text: >-
+      Kontrolerzy Biura Budżetu wracają z listą czternastu pozycji „do wyjaśnienia”. Ruskin
+      liczy, że odpowiedzi zajmą jego ludziom sześć tygodni. Waszyngton docenia, że księgi
+      były otwarte.
+    effects:
+      - { indicator: ZW, add: 1 }
+      - correction: { units: -0.3, quarters: 2, reason: 'Pozycje zakwestionowane przez kontrolerów' }
+
+  - id: bialy-dom-pamieta
+    on: [wybory-1952.przeglad.sojusznicy]
+    after: 0
+    silent: true
+    title: Biały Dom zapamiętał
+    text: Biały Dom zapamiętał, że Anderson zasłonił się umową międzynarodową.
+    effects:
+      - registry:
+          key: uraza-bialego-domu
+          type: grudge
+          title: W Białym Domu pamiętają, że Anderson zasłonił PACE umową międzynarodową
+          with: [anderson]
+          weight: 2
+          visible: false
+
+  - id: rada-rezolucja
+    on: [wybory-1952.przeglad.sojusznicy]
+    after: 2
+    title: Rezolucja Rady Atlantyckiej
+    text: >-
+      Rada Atlantycka uchwala rezolucję: budżet PACE jest zobowiązaniem wszystkich członków
+      i nie podlega jednostronnym zmianom. Głosują za nią wszyscy poza delegatem Stanów
+      Zjednoczonych, który się wstrzymuje.
+    effects:
+      - { indicator: WF, add: 1 }
+      - { indicator: SO, add: 1 }
+
+  - id: wojsko-zamowienia
+    on: [wybory-1952.przeglad.wojsko]
+    after: 2
+    title: Pentagon zamawia serię prób
+    text: >-
+      Pentagon zamawia w PACE serię prób materiałów i przyrządów. Pieniądze są pewne, a wyniki
+      dostają klauzulę. Brandt pyta, ile jeszcze takich zamówień, zanim komisja stanie się
+      poligonem wojska.
+    effects:
+      - { faction: RN, disposition: -1 }
+      - { indicator: WF, add: -1 }
+      - correction: { units: 0.4, quarters: 2, reason: 'Zamówienia Pentagonu na próby w PACE' }
+
+  # ── Echa wydarzeń losowych ─────────────────────────────────────────────────────────
+  - id: geniusz-sekcja
+    on: [geniusz-z-prowincji]
+    after: 4
+    title: Student z prowincji prowadzi sekcję
+    text: >-
+      Inżynier z małej uczelni na Środkowym Zachodzie po roku w PACE prowadzi własną sekcję.
+      Ściągnął do niej trzech kolegów z roku.
+    effects:
+      - { var: pula_kadr, add: 1 }
+
+  - id: reportaz-podania
+    on: [reportaz-tygodnika]
+    after: 1
+    title: Podania po reportażu
+    text: >-
+      Po reportażu w tygodniku dział kadr PACE dostaje cztery razy więcej podań niż zwykle.
+      Większość zaczyna się od zdania „widziałem zdjęcia”.
+    effects:
+      - { var: pula_kadr, add: 1 }
+
+  - id: kontrolerzy-przesluchanie
+    on: [raport-kontrolerow]
+    after: 2
+    title: Raport kontrolerów trafia na przesłuchanie
+    text: >-
+      Raport o zamówieniach bez przetargu trafia na przesłuchanie w podkomisji. Haskell
+      siedzi w drugim rzędzie i notuje, kto z PACE broni dostawców, a kto patrzy w stół.
+    effects:
+      - { indicator: ZW, add: -1 }
+
+  # ── Loty: zatajona awaria (kolejkuje silnik przy rozliczaniu Raportów Misji) ───────
+  - id: przeciek-zatajonej-awarii
+    after: 2
+    chance: 0.35
+    requires: { registry: zatajona-awaria }
+    title: Zatajona awaria wychodzi na jaw
+    text: >-
+      Tygodnik drukuje zdjęcie wraku na pustyni i datę, której nie ma w żadnym komunikacie
+      PACE. Rzecznik komisji potrzebuje dwóch dni, żeby znaleźć słowo „incydent”.
+    effects:
+      - { indicator: PP, add: -3 }
+      - { indicator: WF, add: -2 }
+      - { registryClose: zatajona-awaria, as: revealed }
+
+  - id: zatajona-awaria-przycicha
+    after: 6
+    silent: true
+    requires: { registry: zatajona-awaria }
+    title: Zatajona awaria przycicha
+    text: O zatajonej awarii nikt już nie pyta.
+    effects:
+      - { registryClose: zatajona-awaria }

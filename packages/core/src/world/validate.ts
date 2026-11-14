@@ -21,6 +21,13 @@ export function validateWorldContent(world: WorldContent, factionIds: ReadonlySe
     threadStages.set(t.id, stages);
   }
 
+  const echoIds = new Set((world.echoes ?? []).map((e) => e.id));
+  /** Klucze Rejestru: tworzone skutkiem `registry` i te, do których ktoś się odwołuje. */
+  const registryCreated = new Set<string>(['zatajona-awaria']);
+  const registryUsed: { key: string; file: string; where: string }[] = [];
+  /** Echa wstawiane do kolejki przez jakikolwiek skutek (plus te, które kolejkuje sam silnik). */
+  const echoQueued = new Set<string>(['przeciek-zatajonej-awarii', 'zatajona-awaria-przycicha']);
+
   const seen = new Map<string, string>();
   const claim = (id: string, file: string) => {
     const prev = seen.get(id);
@@ -49,6 +56,7 @@ export function validateWorldContent(world: WorldContent, factionIds: ReadonlySe
       )
         add(file, where, `odwołanie do nieistniejącej gałęzi "${c.branch}"`);
     }
+    if ('registry' in c) registryUsed.push({ key: c.registry, file, where });
   };
 
   const checkEffects = (effects: readonly Effect[], file: string, where: string) => {
@@ -60,6 +68,12 @@ export function validateWorldContent(world: WorldContent, factionIds: ReadonlySe
       }
       if ('divergence' in e && !regions.has(e.divergence)) add(file, w, `nieznany region "${e.divergence}"`);
       if ('faction' in e && !factionIds.has(e.faction)) add(file, w, `nieznana frakcja "${e.faction}"`);
+      if ('echo' in e) {
+        echoQueued.add(e.echo);
+        if (!echoIds.has(e.echo)) add(file, w, `nieznane echo "${e.echo}" (brak w ${WORLD_CONTENT_PATHS.echoes})`);
+      }
+      if ('registry' in e) registryCreated.add(e.registry.key);
+      if ('registryClose' in e) registryUsed.push({ key: e.registryClose, file, where: w });
     });
   };
 
@@ -197,6 +211,56 @@ export function validateWorldContent(world: WorldContent, factionIds: ReadonlySe
       checkEffects(o.effects, file, `${d.id}.${o.id}`);
     }
     if (!optionIds.has(d.defaultOption)) add(file, d.id, `opcja domyślna "${d.defaultOption}" nie istnieje`);
+  }
+
+  // Źródła, pod które można podpiąć echo polem `on`.
+  const sources = new Set<string>(world.patterns.map((p) => p.id));
+  for (const d of world.dilemmas) {
+    sources.add(`${d.id}.biernosc`);
+    for (const o of d.options) sources.add(`${d.id}.${o.id}`);
+  }
+  for (const t of world.threads) {
+    for (const s of t.stages) {
+      for (const b of s.branches) sources.add(`${t.id}.${s.id}.${b.id}`);
+      if (!s.decision) continue;
+      sources.add(`${t.id}.${s.id}.biernosc`);
+      for (const o of s.decision.options) {
+        if (s.branches.some((b) => b.id === o.id)) {
+          add(
+            `${WORLD_CONTENT_PATHS.threadsDir}/${t.id}.yaml`,
+            `${t.id}.${s.id}.decision.${o.id}`,
+            'opcja decyzji ma ten sam identyfikator co gałąź etapu; echa by ich nie rozróżniły',
+          );
+        }
+        sources.add(`${t.id}.${s.id}.${o.id}`);
+      }
+    }
+  }
+
+  for (const e of world.echoes ?? []) {
+    const file = WORLD_CONTENT_PATHS.echoes;
+    claim(`echo:${e.id}`, file);
+    for (const on of e.on) {
+      echoQueued.add(e.id);
+      if (!sources.has(on))
+        add(file, e.id, `źródło "${on}" nie istnieje (dylemat.opcja, wątek.etap.opcja albo wątek.etap.gałąź)`);
+    }
+    if (e.after === 0 && !e.silent)
+      add(file, e.id, 'echo z terminem 0 musi być ciche ("silent: true"); depesza w tym samym kwartale to tekst opcji');
+    if (e.region !== undefined && !regions.has(e.region)) add(file, e.id, `nieznany region "${e.region}"`);
+    checkCondition(e.requires, file, `${e.id}.requires`);
+    checkEffects(e.effects, file, e.id);
+    if (e.otherwise) {
+      checkEffects(e.otherwise.effects, file, `${e.id}.otherwise`);
+      if (!e.requires) add(file, e.id, 'wariant "otherwise" ma sens tylko z warunkiem "requires"');
+    }
+  }
+  for (const e of world.echoes ?? []) {
+    if (!echoQueued.has(e.id)) add(WORLD_CONTENT_PATHS.echoes, e.id, 'żaden skutek nie wstawia tego echa do kolejki');
+  }
+  for (const use of registryUsed) {
+    if (!registryCreated.has(use.key))
+      add(use.file, use.where, `żaden skutek nie tworzy wpisu Rejestru o kluczu "${use.key}"`);
   }
 
   return problems;

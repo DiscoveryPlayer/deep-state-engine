@@ -5,7 +5,14 @@
  * stanowiska frakcji, w środku zakładki pracy, po prawej sprawy do decyzji i zamknięcie kwartału.
  * Strona pokazuje wyłącznie to, co wie Anderson (widok gracza z serwera).
  */
-import { ApiFailure, api, type HistoryFidelity, type CampaignListItem, type DeskPayload } from './api.ts';
+import {
+  ApiFailure,
+  api,
+  type HistoryFidelity,
+  type NarratorTarget,
+  type CampaignListItem,
+  type DeskPayload,
+} from './api.ts';
 import { h, plural, quarterName, signed } from './dom.ts';
 import { INDICATOR_NAMES, TABS, renderPanel, type TabId } from './panels.ts';
 import {
@@ -18,15 +25,16 @@ import {
   type Settings,
 } from './settings.ts';
 
+import { findNarrative, liaisonBody, quarterNarrative, sparkline, voices, type LiaisonState } from './narrator.ts';
 import {
-  briefingBody,
-  findNarrative,
-  liaisonBody,
-  quarterNarrative,
-  sparkline,
-  voices,
-  type LiaisonState,
-} from './narrator.ts';
+  campaignTable,
+  deckPages,
+  draftFor,
+  gateBody,
+  howToPlay,
+  type FlightDraft,
+  type GateState,
+} from './opening.ts';
 
 interface AppState {
   payload: DeskPayload | null;
@@ -38,7 +46,17 @@ interface AppState {
   armed: { instanceId: string; optionId: string } | null;
   busy: boolean;
   notices: { id: number; kind: 'info' | 'error'; text: string }[];
-  dialog: 'settings' | 'close' | 'campaigns' | 'liaison' | 'reader' | 'briefing' | null;
+  /** Menu główne albo gra. Menu można otworzyć także w trakcie kampanii. */
+  screen: 'menu' | 'game';
+  dialog: 'settings' | 'close' | 'liaison' | 'reader' | 'gate' | 'deck' | null;
+  /** Bramka zapisu KSP: wpisana ścieżka i potwierdzanie pominięcia. */
+  gate: GateState;
+  /** Która strona odprawy (kart wydarzeń) jest otwarta. */
+  deck: number;
+  /** Kampania, której usunięcie czeka na potwierdzenie w menu. */
+  deleteArmed: string | null;
+  /** Niezapisane zmiany w Raportach Misji: lot → wartości formularza. */
+  flightDrafts: Record<string, FlightDraft>;
   /** Okno Łącznika AI: co zamawiamy u narratora i co gracz już wkleił. */
   liaison: LiaisonState | null;
   /** Identyfikator narracji otwartej w czytniku. */
@@ -58,7 +76,12 @@ const state: AppState = {
   armed: null,
   busy: false,
   notices: [],
+  screen: 'menu',
   dialog: null,
+  gate: { path: '', skipArmed: false },
+  deck: 0,
+  deleteArmed: null,
+  flightDrafts: {},
   liaison: null,
   reader: null,
   fidelity: 'high',
@@ -90,7 +113,36 @@ function accept(payload: DeskPayload, followQuarter: boolean): void {
   if (followQuarter || state.newsQuarter === '' || state.newsQuarter === previous) {
     state.newsQuarter = payload.campaign.quarterCode;
   }
+  // Udana operacja zamyka wcześniejsze błędy: gracz właśnie poprawił to, czego dotyczyły.
+  state.notices = state.notices.filter((n) => n.kind !== 'error');
   for (const m of payload.messages) notify('info', m);
+  state.screen = 'game';
+  // Kwartał zaczyna się od zapisu KSP: dopóki go nie ma, na wierzchu jest okno bramki.
+  if (gatePending(payload)) {
+    state.dialog = 'gate';
+    if (state.gate.path === '') state.gate.path = recall(`dse.zapis.${payload.campaign.id}`);
+  }
+}
+
+const gatePending = (p: DeskPayload) =>
+  p.view.status === 'active' &&
+  p.view.kspGate.status === 'pending' &&
+  p.view.kspGate.quarter === p.campaign.quarterCode;
+
+/** Drobne wygody zapamiętywane w tej przeglądarce (ścieżka zapisu, wybór warstwy ukrytej). */
+function recall(key: string): string {
+  try {
+    return localStorage.getItem(key) ?? '';
+  } catch {
+    return '';
+  }
+}
+function remember(key: string, value: string): void {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // Pamięć przeglądarki bywa wyłączona; gra działa bez niej.
+  }
 }
 
 /** Wykonuje operację na serwerze, blokuje przyciski na czas trwania i pokazuje błąd po polsku. */
@@ -113,17 +165,26 @@ async function run(operation: () => Promise<DeskPayload>, followQuarter = false)
 
 // ── Łącznik AI ──────────────────────────────────────────────────────────────
 
-const liaisonTarget = (l: LiaisonState) =>
-  l.kind === 'decision' && l.instanceId !== undefined
-    ? ({ kind: 'decision', instanceId: l.instanceId } as const)
-    : ({ kind: 'quarter' } as const);
+const SECRETS_KEY = 'dse.narrator.ukryta';
+
+function liaisonTarget(l: LiaisonState): NarratorTarget {
+  if (l.kind === 'event' && l.card !== undefined) return { kind: 'event', card: l.card };
+  if ((l.kind === 'decision' || l.kind === 'conversation') && l.instanceId !== undefined) {
+    return { kind: l.kind, instanceId: l.instanceId };
+  }
+  return { kind: 'quarter' };
+}
 
 /** Pobiera pakiet dla narratora. Wynik trafia do okna, jeśli gracz go w międzyczasie nie zamknął. */
 async function loadPackage(): Promise<void> {
   const l = state.liaison;
   if (!l || !state.payload) return;
   try {
-    const pkg = await api.narratorPackage(campaignId(), liaisonTarget(l), l.mode);
+    const pkg = await api.narratorPackage(campaignId(), liaisonTarget(l), {
+      mode: l.mode,
+      secrets: l.secrets,
+      toFile: false,
+    });
     if (state.liaison !== l) return;
     l.pkg = pkg;
   } catch (e) {
@@ -132,17 +193,20 @@ async function loadPackage(): Promise<void> {
   render();
 }
 
-function openLiaison(kind: 'quarter' | 'decision', instanceId?: string): void {
+function openLiaison(kind: LiaisonState['kind'], ref?: string): void {
   const p = state.payload;
   if (!p) return;
   const last = p.view.narrative.at(-1);
   state.liaison = {
     kind,
-    ...(instanceId === undefined ? {} : { instanceId }),
+    ...(ref === undefined ? {} : kind === 'event' ? { card: ref } : { instanceId: ref }),
     // Pierwszy pakiet w kampanii niesie zasady i opis świata; kolejne mogą iść do tej samej rozmowy.
-    mode: last ? 'short' : 'full',
+    // Rozmowa prowadząca do decyzji jest wieloturowa, więc najlepiej zaczyna się w nowym czacie.
+    mode: last && kind !== 'conversation' ? 'short' : 'full',
     source: last?.source ?? 'claude',
+    secrets: recall(SECRETS_KEY) === 'tak',
     pkg: null,
+    file: null,
     reply: '',
     copied: false,
   };
@@ -151,18 +215,47 @@ function openLiaison(kind: 'quarter' | 'decision', instanceId?: string): void {
   void loadPackage();
 }
 
+function reloadPackage(l: LiaisonState): void {
+  l.pkg = null;
+  l.file = null;
+  l.copied = false;
+  render();
+  void loadPackage();
+}
+
 async function copyPackage(): Promise<void> {
   const l = state.liaison;
-  if (!l?.pkg) return;
+  if (!l?.pkg?.prompt) return;
   try {
     await navigator.clipboard.writeText(l.pkg.prompt);
     l.copied = true;
   } catch {
-    // Schowek bywa zablokowany: zaznaczamy tekst, żeby gracz skopiował go sam.
-    notify('info', 'Nie mam dostępu do schowka. Zaznaczyłem pakiet: skopiuj go przez Ctrl i C.');
+    if (l.secrets) {
+      notify('error', 'Nie mam dostępu do schowka. Użyj przycisku „Zapisz do pliku” i załącz plik w rozmowie.');
+    } else {
+      // Schowek bywa zablokowany: zaznaczamy tekst, żeby gracz skopiował go sam.
+      notify('info', 'Nie mam dostępu do schowka. Zaznaczyłem pakiet: skopiuj go przez Ctrl i C.');
+    }
     render();
-    root.querySelector<HTMLTextAreaElement>('#liaison-package')?.select();
+    if (!l.secrets) root.querySelector<HTMLTextAreaElement>('#liaison-package')?.select();
     return;
+  }
+  render();
+}
+
+async function savePackageFile(): Promise<void> {
+  const l = state.liaison;
+  if (!l || !state.payload) return;
+  try {
+    const saved = await api.narratorPackage(campaignId(), liaisonTarget(l), {
+      mode: l.mode,
+      secrets: l.secrets,
+      toFile: true,
+    });
+    if (state.liaison !== l) return;
+    l.file = saved.file;
+  } catch (e) {
+    notify('error', e instanceof ApiFailure ? e.message : 'Nie udało się zapisać pakietu.');
   }
   render();
 }
@@ -176,17 +269,34 @@ async function submitReply(): Promise<void> {
     return;
   }
   const ok = await run(() => api.narratorReply(campaignId(), liaisonTarget(l), l.source, l.reply));
-  if (!ok || !state.payload) return;
-  const entry = findNarrative(state.payload.view.narrative, state.payload.campaign.quarterCode, l.kind, l.instanceId);
+  const p = state.payload;
+  if (!ok || !p) return;
   state.liaison = null;
-  state.reader = entry?.id ?? null;
-  state.dialog = entry ? 'reader' : null;
+  // Rozmowa wskazuje opcję: zaznaczamy ją w sprawie, a zatwierdza gracz.
+  if (p.suggestion) state.armed = { ...p.suggestion };
+  if (l.kind === 'event') {
+    // Scena trafia na kartę wydarzenia, więc wracamy do odprawy na tej karcie.
+    const cards = p.view.worldNews.filter((n) => n.quarter === p.campaign.quarterCode && n.card !== null);
+    const index = cards.findIndex((n) => n.card === l.card);
+    state.deck = (p.view.reports.length > 0 ? 1 : 0) + Math.max(0, index);
+    state.dialog = 'deck';
+  } else {
+    const entry = findNarrative(p.view.narrative, p.campaign.quarterCode, l.kind, l.instanceId);
+    state.reader = entry?.id ?? null;
+    state.dialog = entry ? 'reader' : null;
+  }
   render();
 }
 
 function openReader(id: string): void {
   state.reader = id;
   state.dialog = 'reader';
+  render();
+}
+
+function openDeck(index = 0): void {
+  state.deck = index;
+  state.dialog = 'deck';
   render();
 }
 
@@ -259,8 +369,20 @@ function topBar(p: DeskPayload): HTMLElement {
     h(
       'div',
       { class: 'top-actions' },
+      h('button', { class: 'btn btn-quiet', onClick: () => openDeck() }, 'Odprawa'),
       h('button', { class: 'btn btn-quiet', onClick: () => openLiaison('quarter') }, 'Narrator'),
-      h('button', { class: 'btn btn-quiet', onClick: () => openDialog('campaigns') }, 'Kampanie'),
+      h(
+        'button',
+        {
+          class: 'btn btn-quiet',
+          onClick: () => {
+            state.screen = 'menu';
+            state.dialog = null;
+            void refreshCampaigns();
+          },
+        },
+        'Menu',
+      ),
       h('button', { class: 'btn btn-quiet', onClick: () => openDialog('settings') }, 'Ustawienia'),
     ),
   );
@@ -498,14 +620,40 @@ function decisions(p: DeskPayload): HTMLElement {
 function adviserRow(d: DeskPayload['view']['pendingDilemmas'][number]): HTMLElement {
   const p = state.payload!;
   const entry = findNarrative(p.view.narrative, p.campaign.quarterCode, 'decision', d.instanceId);
+  const talk = findNarrative(p.view.narrative, p.campaign.quarterCode, 'conversation', d.instanceId);
   return h(
     'div',
     { class: 'advisers' },
+    talk
+      ? h(
+          'article',
+          { class: 'sheet sheet-small' },
+          h('h4', null, 'Rozmowa w gabinecie'),
+          talk.sections.map((x) => h('p', null, x.body)),
+        )
+      : null,
     entry ? voices(entry) : null,
     h(
-      'button',
-      { class: 'btn btn-small btn-quiet', disabled: state.busy, onClick: () => openLiaison('decision', d.instanceId) },
-      entry ? 'Poproś o głosy jeszcze raz' : 'Wysłuchaj doradców (narrator AI)',
+      'div',
+      { class: 'step-actions' },
+      h(
+        'button',
+        {
+          class: 'btn btn-small btn-quiet',
+          disabled: state.busy,
+          onClick: () => openLiaison('decision', d.instanceId),
+        },
+        entry ? 'Głosy doradców jeszcze raz' : 'Wysłuchaj doradców',
+      ),
+      h(
+        'button',
+        {
+          class: 'btn btn-small btn-quiet',
+          disabled: state.busy,
+          onClick: () => openLiaison('conversation', d.instanceId),
+        },
+        talk ? 'Rozegraj rozmowę jeszcze raz' : 'Rozegraj rozmowę z narratorem',
+      ),
     ),
   );
 }
@@ -614,6 +762,7 @@ function rail(p: DeskPayload): HTMLElement {
 
 function workArea(p: DeskPayload): HTMLElement {
   const news = p.view.worldNews.filter((n) => n.quarter === p.campaign.quarterCode).length;
+  const reportsDue = p.view.flights.filter((f) => f.detectedIn === p.campaign.quarterCode && !f.report).length;
   return h(
     'main',
     { class: 'main' },
@@ -636,6 +785,7 @@ function workArea(p: DeskPayload): HTMLElement {
           },
           t.label,
           t.id === 'depesze' && news > 0 ? h('span', { class: 'count' }, String(news)) : null,
+          t.id === 'ksp' && reportsDue > 0 ? h('span', { class: 'count' }, String(reportsDue)) : null,
         ),
       ),
     ),
@@ -645,8 +795,33 @@ function workArea(p: DeskPayload): HTMLElement {
       renderPanel(
         state.tab,
         p,
-        { newsQuarter: state.newsQuarter, busy: state.busy },
+        { newsQuarter: state.newsQuarter, busy: state.busy, flightDrafts: state.flightDrafts },
         {
+          editFlight: (flightId, draft) => {
+            // Bez przerysowania: gracz właśnie wypełnia formularz.
+            state.flightDrafts[flightId] = draft;
+          },
+          saveFlight: (flightId) => {
+            const flight = p.view.flights.find((f) => f.id === flightId);
+            if (!flight) return;
+            const { note, ...rest } = draftFor(flight, state.flightDrafts);
+            const text = note?.trim();
+            void run(() => api.fileFlight(campaignId(), flightId, { ...rest, ...(text ? { note: text } : {}) })).then(
+              (ok) => {
+                if (ok) delete state.flightDrafts[flightId];
+              },
+            );
+          },
+          openCard: (code) => {
+            const cards = p.view.worldNews.filter((n) => n.quarter === p.campaign.quarterCode && n.card !== null);
+            openDeck(
+              (p.view.reports.length > 0 ? 1 : 0) +
+                Math.max(
+                  0,
+                  cards.findIndex((n) => n.card === code),
+                ),
+            );
+          },
           act: (action, target) => void run(() => api.act(campaignId(), action, target)),
           importSave: (path) => void run(() => api.importSave(campaignId(), path)),
           askNarrator: () => openLiaison('quarter'),
@@ -744,7 +919,7 @@ function settingsDialog(): HTMLDialogElement {
 function closeDialog(p: DeskPayload): HTMLDialogElement {
   const pending = p.view.pendingDilemmas.length;
   const ud = p.view.currencies.UD;
-  const hasSave = p.view.ksp?.quarter === p.campaign.quarterCode;
+  const reportsDue = p.view.flights.filter((f) => f.detectedIn === p.campaign.quarterCode && !f.report).length;
   const warnings = [
     pending > 0
       ? `${pending} ${plural(pending, 'sprawa czeka', 'sprawy czekają', 'spraw czeka')} na decyzję. Bez niej silnik przyjmie opcję domyślną i doliczy koszt bierności.`
@@ -752,7 +927,9 @@ function closeDialog(p: DeskPayload): HTMLDialogElement {
     ud > 0
       ? `Zostało ${ud} ${plural(ud, 'punkt', 'punkty', 'punktów')} Uwagi Dowódcy. Niewykorzystane przepadają.`
       : null,
-    hasSave ? null : 'Nie wczytano zapisu KSP za ten kwartał. Loty z tego kwartału nie trafią do gry.',
+    reportsDue > 0
+      ? `${reportsDue} ${plural(reportsDue, 'lot nie ma', 'loty nie mają', 'lotów nie ma')} Raportu Misji. Gra rozliczy je jako jawne próby techniczne.`
+      : null,
   ].filter((w): w is string => w !== null);
   return dialogShell(
     `Zamknąć ${p.campaign.quarterLabel}?`,
@@ -767,7 +944,7 @@ function closeDialog(p: DeskPayload): HTMLDialogElement {
       h(
         'p',
         { class: 'meta' },
-        'Zamknięcia nie da się cofnąć w grze. Kopia stanu sprzed zamknięcia trafia do folderu campaigns/kopie.',
+        'Zamknięcia nie da się cofnąć w grze. Kopia stanu sprzed zamknięcia trafia do folderu campaigns/kopie. Następny kwartał zacznie się od wczytania zapisu KSP.',
       ),
     ],
     [
@@ -778,11 +955,12 @@ function closeDialog(p: DeskPayload): HTMLDialogElement {
           class: 'btn btn-primary',
           onClick: () => {
             state.dialog = null;
-            state.tab = 'depesze';
+            state.tab = 'biurko';
             state.armed = null;
-            void run(() => api.closeQuarter(campaignId()), true).then((ok) => {
-              if (ok) openDialog('briefing');
-            });
+            state.flightDrafts = {};
+            state.gate.skipArmed = false;
+            // Po zamknięciu `accept` sam otwiera bramkę zapisu albo, przy końcu kampanii, zostawia ekran.
+            void run(() => api.closeQuarter(campaignId()), true);
           },
         },
         'Zamknij kwartał',
@@ -792,25 +970,36 @@ function closeDialog(p: DeskPayload): HTMLDialogElement {
 }
 
 function liaisonDialog(l: LiaisonState): HTMLDialogElement {
-  const dilemma = state.payload?.view.pendingDilemmas.find((d) => d.instanceId === l.instanceId);
+  const p = state.payload;
+  const dilemma = p?.view.pendingDilemmas.find((d) => d.instanceId === l.instanceId);
+  const event = p?.view.worldNews.find((n) => n.quarter === p.campaign.quarterCode && n.card === l.card);
+  const titles: Record<LiaisonState['kind'], string> = {
+    quarter: 'Narrator: narracja kwartału',
+    decision: `Narrator: głosy w sprawie „${dilemma?.title ?? ''}”`,
+    conversation: `Narrator: rozmowa w sprawie „${dilemma?.title ?? ''}”`,
+    event: `Narrator: scena „${event?.title ?? ''}”`,
+  };
   return dialogShell(
-    l.kind === 'decision' ? `Narrator: głosy w sprawie „${dilemma?.title ?? ''}”` : 'Narrator: narracja kwartału',
+    titles[l.kind],
     liaisonBody(l, state.busy, {
       setMode: (mode) => {
         l.mode = mode;
-        l.pkg = null;
-        l.copied = false;
-        render();
-        void loadPackage();
+        reloadPackage(l);
       },
       setSource: (source) => {
         l.source = source;
         render();
       },
+      setSecrets: (on) => {
+        l.secrets = on;
+        remember(SECRETS_KEY, on ? 'tak' : 'nie');
+        reloadPackage(l);
+      },
       setReply: (text) => {
         l.reply = text;
       },
       copy: () => void copyPackage(),
+      saveFile: () => void savePackageFile(),
       submit: () => void submitReply(),
     }),
     [closeButton()],
@@ -823,42 +1012,143 @@ function readerDialog(p: DeskPayload, id: string): HTMLDialogElement | null {
   if (!entry) return null;
   return dialogShell(
     entry.title,
-    [entry.kind === 'quarter' ? quarterNarrative(entry, false, () => undefined) : voices(entry)],
+    [
+      entry.kind === 'quarter'
+        ? quarterNarrative(entry, false, () => undefined)
+        : entry.kind === 'decision'
+          ? voices(entry)
+          : h(
+              'article',
+              { class: 'sheet' },
+              entry.sections.map((x) => h('p', null, x.body)),
+            ),
+    ],
     [closeButton()],
     'dialog-wide dialog-reader',
   );
 }
 
-function briefingDialog(p: DeskPayload): HTMLDialogElement {
+/** Obowiązkowe okno na otwarcie kwartału: zapis KSP. Nie da się go zamknąć bez decyzji. */
+function gateDialog(p: DeskPayload): HTMLDialogElement {
+  const dialog = dialogShell(
+    `${p.campaign.quarterLabel}: zapis KSP`,
+    gateBody(p, state.gate, state.busy, {
+      setPath: (path) => {
+        state.gate.path = path;
+      },
+      load: () => {
+        const path = state.gate.path.trim();
+        if (path === '') {
+          notify('error', 'Podaj ścieżkę do pliku zapisu KSP.');
+          render();
+          return;
+        }
+        remember(`dse.zapis.${p.campaign.id}`, path);
+        void run(() => api.importSave(campaignId(), path)).then((ok) => {
+          if (ok) openDeck(0);
+        });
+      },
+      armSkip: (armed) => {
+        state.gate.skipArmed = armed;
+        render();
+      },
+      skip: () => {
+        state.gate.skipArmed = false;
+        void run(() => api.skipGate(campaignId())).then((ok) => {
+          if (ok) openDeck(0);
+        });
+      },
+      settle: (quarter) => void run(() => api.settle(campaignId(), quarter)),
+    }),
+    [
+      h(
+        'button',
+        {
+          class: 'btn btn-quiet',
+          onClick: () => {
+            state.screen = 'menu';
+            state.dialog = null;
+            void refreshCampaigns();
+          },
+        },
+        'Menu główne',
+      ),
+    ],
+    'dialog-wide dialog-gate',
+  );
+  // Klawisz Esc nie zamyka bramki: kwartał zaczyna się od zapisu albo od świadomego pominięcia.
+  dialog.addEventListener('cancel', (e) => e.preventDefault());
+  return dialog;
+}
+
+/** Na wąskim ekranie zakładki leżą pod wskaźnikami: po przejściu z odprawy przewijamy do nich. */
+function revealPanel(): void {
+  const tabs = root.querySelector('.tabs');
+  if (!tabs) return;
+  const top = tabs.getBoundingClientRect().top;
+  if (top < 0 || top > window.innerHeight * 0.6) tabs.scrollIntoView({ block: 'start' });
+}
+
+/** Odprawa: bilans poprzedniego kwartału, karty wydarzeń ze zdjęciami, sprawy do decyzji. */
+function deckDialog(p: DeskPayload): HTMLDialogElement {
   const ended = p.view.status !== 'active';
-  return dialogShell(
-    ended ? 'Koniec kampanii' : `Otwarcie: ${p.campaign.quarterLabel}`,
-    ended
-      ? [
-          h(
+  const pages = deckPages(p, state.busy, {
+    go: openDeck,
+    askScene: (code) => openLiaison('event', code),
+    askQuarter: () => openLiaison('quarter'),
+    toFlights: () => {
+      state.tab = 'ksp';
+      state.dialog = null;
+      render();
+      revealPanel();
+    },
+    toDesk: () => {
+      state.tab = 'biurko';
+      state.dialog = null;
+      render();
+      revealPanel();
+    },
+  });
+  const index = Math.min(Math.max(0, state.deck), pages.length - 1);
+  const page = pages[index]!;
+  const dialog = dialogShell(
+    ended ? 'Koniec kampanii' : `Odprawa: ${p.campaign.quarterLabel}`,
+    [
+      ended
+        ? h(
             'p',
             { class: 'lead' },
             p.view.status === 'dismissed'
               ? 'Waszyngton stracił zaufanie do Andersona. Biały Dom przyjmuje jego rezygnację, zanim zdąży ją napisać.'
               : 'PACE rozpada się od środka. Dyrektoriaty przestają odpowiadać na pisma z gabinetu Dowódcy Operacyjnego.',
-          ),
-          ...briefingBody(p).slice(0, 1),
-        ]
-      : briefingBody(p),
-    ended
-      ? [closeButton()]
-      : [
-          h(
-            'button',
-            {
-              class: 'btn',
-              onClick: () => openLiaison('quarter'),
-            },
-            'Poproś narratora o scenę',
-          ),
-          closeButton('Do depesz'),
-        ],
+          )
+        : null,
+      h('article', { class: 'card', 'data-scroll': 'card' }, h('h3', null, page.title), page.body),
+    ],
+    [
+      h('span', { class: 'meta deck-count' }, `${index + 1} z ${pages.length}`),
+      h('button', { class: 'btn', disabled: index === 0, onClick: () => openDeck(index - 1) }, 'Poprzednia'),
+      h(
+        'button',
+        {
+          class: index === pages.length - 1 ? 'btn' : 'btn btn-primary',
+          disabled: index === pages.length - 1,
+          'data-focus': 'deck-next',
+          onClick: () => openDeck(index + 1),
+        },
+        'Następna',
+      ),
+      closeButton(),
+    ],
+    'dialog-wide dialog-deck',
   );
+  dialog.addEventListener('keydown', (e) => {
+    const typing = ['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement).tagName);
+    if (typing) return;
+    if (e.key === 'ArrowRight' && index < pages.length - 1) openDeck(index + 1);
+    if (e.key === 'ArrowLeft' && index > 0) openDeck(index - 1);
+  });
+  return dialog;
 }
 
 const FIDELITY_CHOICES: { value: HistoryFidelity; label: string; hint: string }[] = [
@@ -895,7 +1185,9 @@ function campaignForm(): HTMLElement {
       onSubmit: (e: Event) => {
         e.preventDefault();
         state.dialog = null;
-        state.tab = 'depesze';
+        state.tab = 'biurko';
+        state.flightDrafts = {};
+        state.gate = { path: '', skipArmed: false };
         void run(() => api.create(name.value.trim().toLowerCase(), seed.value.trim(), state.fidelity), true).then(
           refreshCampaigns,
         );
@@ -942,63 +1234,93 @@ function campaignForm(): HTMLElement {
   );
 }
 
-function campaignList(): HTMLElement | null {
-  if (state.campaigns.length === 0) return null;
-  return h(
-    'ul',
-    { class: 'campaigns' },
-    state.campaigns.map((c) =>
-      h(
-        'li',
-        null,
-        h(
-          'button',
-          {
-            class: 'btn',
-            disabled: state.busy,
-            onClick: () => {
-              state.dialog = null;
-              void run(() => api.load(c.id), true);
-            },
-          },
-          c.id,
-        ),
-        h('span', { class: 'meta' }, `${c.quarterLabel}${c.status === 'active' ? '' : ', zakończona'}`),
-      ),
-    ),
-  );
-}
-
-function campaignsDialog(): HTMLDialogElement {
-  return dialogShell(
-    'Kampanie',
-    [
-      h('h3', null, 'Wczytaj kampanię'),
-      campaignList() ?? h('p', { class: 'empty' }, 'Nie ma jeszcze zapisanych kampanii.'),
-      h('h3', null, 'Nowa kampania'),
-      campaignForm(),
-    ],
-    [closeButton()],
-  );
-}
-
+/** Menu główne: kontynuacja, lista kampanii z usuwaniem, nowa kampania, instrukcja. */
 function startScreen(): HTMLElement {
+  const current = state.payload?.campaign ?? null;
+  const last = current?.id ?? lastCampaign();
+  const resume = state.campaigns.find((c) => c.id === last);
   return h(
     'main',
     { class: 'start' },
-    h('p', { class: 'brand-mark' }, 'PACE'),
-    h('h1', null, 'Pan-Atlantic Commission for Experimentation'),
     h(
-      'p',
-      { class: 'lead' },
-      'Jest styczeń 1951 roku. Eugene Anderson obejmuje funkcję Dowódcy Operacyjnego. Rakiety budujesz w KSP, a tutaj prowadzisz politykę, budżet i ludzi.',
+      'header',
+      { class: 'start-head' },
+      h('p', { class: 'brand-mark' }, 'PACE'),
+      h('h1', null, 'The Deep State Engine'),
+      h(
+        'p',
+        { class: 'lead' },
+        'Pan-Atlantic Commission for Experimentation, od stycznia 1951 roku. Rakiety budujesz w KSP, a tutaj prowadzisz politykę, budżet i ludzi.',
+      ),
+      h(
+        'div',
+        { class: 'step-actions' },
+        current
+          ? h(
+              'button',
+              {
+                class: 'btn btn-primary',
+                onClick: () => {
+                  state.screen = 'game';
+                  if (gatePending(state.payload!)) state.dialog = 'gate';
+                  render();
+                },
+              },
+              `Wróć do gry: ${current.id}, ${current.quarterLabel}`,
+            )
+          : resume
+            ? h(
+                'button',
+                {
+                  class: 'btn btn-primary',
+                  disabled: state.busy,
+                  onClick: () => void run(() => api.load(resume.id), true),
+                },
+                `Kontynuuj: ${resume.id}, ${resume.quarterLabel}`,
+              )
+            : null,
+        h('button', { class: 'btn btn-quiet', onClick: () => openDialog('settings') }, 'Ustawienia'),
+      ),
     ),
-    state.campaigns.length > 0
-      ? h('section', { class: 'block' }, h('h2', null, 'Wczytaj kampanię'), campaignList())
-      : null,
+    h(
+      'section',
+      { class: 'block' },
+      h('h2', null, 'Kampanie'),
+      campaignTable(state.campaigns, current?.id ?? null, state.deleteArmed, state.busy, {
+        open: (id) => {
+          state.deleteArmed = null;
+          state.flightDrafts = {};
+          state.gate = { path: '', skipArmed: false };
+          void run(() => api.load(id), true);
+        },
+        armDelete: (id) => {
+          state.deleteArmed = id;
+          render();
+        },
+        remove: (id) => void removeCampaign(id),
+      }),
+    ),
     h('section', { class: 'block' }, h('h2', null, 'Nowa kampania'), campaignForm()),
-    h('button', { class: 'btn btn-quiet', onClick: () => openDialog('settings') }, 'Ustawienia'),
+    h('section', { class: 'block' }, h('h2', null, 'Jak wygląda kwartał'), howToPlay()),
   );
+}
+
+async function removeCampaign(id: string): Promise<void> {
+  if (state.busy) return;
+  state.busy = true;
+  render();
+  try {
+    await api.remove(id);
+    notify('info', `Kampania „${id}” usunięta z listy. Plik jest w folderze campaigns/usuniete.`);
+    if (state.payload?.campaign.id === id) state.payload = null;
+    state.deleteArmed = null;
+    state.campaigns = await api.campaigns();
+  } catch (e) {
+    notify('error', e instanceof ApiFailure ? e.message : 'Nie udało się usunąć kampanii.');
+  } finally {
+    state.busy = false;
+    render();
+  }
 }
 
 // ── Rysowanie ───────────────────────────────────────────────────────────────
@@ -1036,7 +1358,9 @@ function render(): void {
     scroll.set(el.dataset.scroll!, el.scrollTop + el.scrollLeft * 1e6);
   const focusKey = (document.activeElement as HTMLElement | null)?.dataset?.focus;
 
-  const p = state.payload;
+  const p = state.screen === 'game' ? state.payload : null;
+  // Bramka zapisu wraca na wierzch, dopóki kwartał na nią czeka (wyjątkiem są Ustawienia).
+  if (p && gatePending(p) && state.dialog !== 'settings') state.dialog = 'gate';
   const children: (HTMLElement | null)[] = p
     ? [
         h(
@@ -1052,11 +1376,11 @@ function render(): void {
 
   let dialog: HTMLDialogElement | null = null;
   if (state.dialog === 'settings') dialog = settingsDialog();
-  else if (state.dialog === 'campaigns') dialog = campaignsDialog();
   else if (state.dialog === 'close' && p) dialog = closeDialog(p);
   else if (state.dialog === 'liaison' && p && state.liaison) dialog = liaisonDialog(state.liaison);
   else if (state.dialog === 'reader' && p && state.reader) dialog = readerDialog(p, state.reader);
-  else if (state.dialog === 'briefing' && p) dialog = briefingDialog(p);
+  else if (state.dialog === 'gate' && p) dialog = gateDialog(p);
+  else if (state.dialog === 'deck' && p) dialog = deckDialog(p);
   if (dialog) children.push(dialog);
 
   root.replaceChildren(...children.filter((c): c is HTMLElement => c !== null));
@@ -1086,8 +1410,7 @@ async function boot(): Promise<void> {
   applySettings(state.settings);
   try {
     state.campaigns = await api.campaigns();
-    const last = lastCampaign();
-    if (last && state.campaigns.some((c) => c.id === last)) accept(await api.load(last), true);
+    // Gra zawsze otwiera się na menu głównym; ostatnią kampanię wczytuje przycisk „Kontynuuj”.
   } catch (e) {
     notify('error', e instanceof ApiFailure ? e.message : 'Nie udało się wczytać gry.');
   }

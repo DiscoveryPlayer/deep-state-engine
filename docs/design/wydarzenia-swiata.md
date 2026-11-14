@@ -250,3 +250,28 @@ Standard wątku głębokiego z Dossier III (część VII) jest wdrożony w silni
 
 **Strojenie:** `npm run dse -- swiat --serie 300 --do 1955-Q4 --decyzje losowe` pokazuje częstości gałęzi. W serii 300 kampanii z 11.11.2026 gałąź historyczna wygrywa w większości etapów w ponad 90% przypadków, ale etapów jest tyle, że żadna kampania nie przebiegła w całości zgodnie z historią: w każdej coś poszło inaczej.
 
+## 13. Wersja 3: echa i Rejestr Następstw (14.11.2026, decyzja 0019)
+
+Decyzje i gałęzie wątków mają dalszy ciąg. Opisuje go plik `data/events/echoes.yaml`.
+
+```yaml
+- id: maszyna-kolejka
+  on: [zakup-komputera.kupic]      # źródło: dylemat.opcja
+  after: 5                          # po ilu kwartałach wraca (domyślnie 2; 0 tylko z silent: true)
+  title: Kolejka do maszyny liczącej
+  text: Lotnictwo prosi o nocną zmianę przy maszynie liczącej…
+  effects:
+    - { faction: DPO, disposition: 1 }
+    - registry: { key: maszyna-nocna-zmiana, type: debt, title: …, with: [DPO] }
+```
+
+Pola opcjonalne: `requires` (warunek; gdy niespełniony, echo stosuje `otherwise` i nie daje depeszy), `chance` (losuje `Rng` kampanii), `silent`, `visibility`, `region`.
+
+Zasady dla piszących treść:
+
+- Źródłem w `on` może być `dylemat.opcja`, `dylemat.biernosc`, `wątek.etap.opcja`, `wątek.etap.gałąź` albo identyfikator wzorca. Jedno echo może mieć kilka źródeł.
+- Każda opcja dylematu powinna mieć co najmniej jedno echo: jawne (depesza) albo ciche (ślad w Rejestrze).
+- Wpis Rejestru z `visible: false` jest ukryty przed graczem i trafia tylko do warstwy ukrytej narratora. Nadaje się na urazy, haki i tajemnice, o których Anderson dowie się z następstw.
+- Wpis utworzony kluczem `key` zamyka skutek `{ registryClose: key }`, a sprawdza warunek `{ registry: key }`.
+- `npm run dse -- waliduj` zgłasza echo podpięte pod nieistniejące źródło, echo bez żadnego źródła i klucz Rejestru, którego nic nie tworzy.
+- `npm run dse -- swiat --serie 200 --do 1955-Q4` podaje średnią liczbę ech i nowych wpisów Rejestru na symulację.

@@ -70,4 +70,32 @@ export class CampaignStore {
     this.file(id);
     await writeFile(join(dir, `${id}.${quarterCode(state.quarter)}.json`), serializeState(state), 'utf8');
   }
+
+  /**
+   * Usuwa kampanię z listy. Plik nie znika z dysku: trafia do campaigns/usuniete/ z datą w nazwie,
+   * żeby pomyłkę dało się cofnąć ręcznie. Zwraca nazwę pliku w koszu.
+   */
+  async remove(id: string, now: Date = new Date()): Promise<string> {
+    const source = this.file(id);
+    const dir = join(this.dir, 'usuniete');
+    await mkdir(dir, { recursive: true });
+    const stamp = now.toISOString().replace(/[-:]/g, '').replace(/\..*$/, '');
+    const name = `${id}.${stamp}.json`;
+    await rename(source, join(dir, name));
+    return name;
+  }
+
+  /**
+   * Zapisuje pakiet dla narratora do pliku, np. campaigns/pakiety/pace-1951/1953-Q2-kwartal.md.
+   * Gracz załącza ten plik w rozmowie z AI, nie otwierając go. Zwraca pełną ścieżkę.
+   */
+  async writePackage(id: string, name: string, text: string): Promise<string> {
+    this.file(id);
+    if (!/^[a-z0-9][a-z0-9-]{0,60}$/i.test(name)) throw new Error(`Nieprawidłowa nazwa pakietu: "${name}".`);
+    const dir = join(this.dir, 'pakiety', id);
+    await mkdir(dir, { recursive: true });
+    const path = join(dir, `${name}.md`);
+    await writeFile(path, text, 'utf8');
+    return path;
+  }
 }

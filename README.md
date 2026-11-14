@@ -7,7 +7,7 @@ Grasz Eugene'em Andersonem, Dowódcą Operacyjnym **PACE** — *Pan-Atlantic Com
 Experimentation* — i prowadzisz zachodni program kosmiczny przez zimną wojnę, od 1951 roku.
 W KSP budujesz rakiety i latasz. Tutaj płacisz za to polityczną cenę.
 
-> Stan projektu: **da się grać w lata 1951–1955** w przeglądarce (plaster 1 Planu Budowy v3). Szczegóły w [docs/STATUS.md](docs/STATUS.md).
+> Stan projektu: **da się grać w lata 1951–1955** w przeglądarce. Decyzje mają następstwa, loty z KSP mają Raporty Misji, a narrator dostaje pełny obraz kwartału. Szczegóły w [docs/STATUS.md](docs/STATUS.md).
 
 ## Jak zagrać
 
@@ -20,23 +20,39 @@ Potrzebujesz **Node.js w wersji LTS** (22 lub nowszej, instalator ze strony node
 
 Na macOS i Linuksie: `npm install`, potem `npm start` w terminalu w folderze projektu.
 
+Gra otwiera się w **menu głównym**: wracasz do kampanii, zakładasz nową albo usuwasz starą. Usunięta kampania trafia do folderu `campaigns/usuniete/`, więc da się ją przywrócić ręcznie.
+
 ### Jeden kwartał
 
-1. **Depesze:** przeczytaj, co się wydarzyło na świecie. Zakładka *Wywiad* pokazuje pogłoski z oceną wiarygodności.
-2. **Sprawy do decyzji** (prawa kolumna): wybierz opcję i zatwierdź. Sprawa zostawiona bez decyzji rozstrzygnie się sama, zwykle z kosztem.
-3. **Biurko:** wydaj Uwagę Dowódcy (6 punktów na kwartał) na spotkania, lobbing, konferencję prasową albo zlecenie dla wywiadu. Na wszystko nie wystarczy.
-4. **KSP:** zagraj kwartał w swojej karierze RP-1. W zakładce *Budżet* znajdziesz Korekty do wpisania w KSP (tryb Honorowy), a w zakładce *Loty (KSP)* wczytasz plik zapisu, podając jego ścieżkę, na przykład `C:\Gry\KSP\saves\PACE\persistent.sfs`.
-5. **Zamknij kwartał.** Odprawa pokaże, co się zmieniło i co przyszło na biurko. Gra kończy się, gdy Zaufanie Waszyngtonu albo Spójność Organizacji spadną do zera.
+1. **Zapis z KSP.** Kwartał zaczyna się od okna z prośbą o plik zapisu kariery z początku tego kwartału, na przykład `C:\Gry\KSP\saves\PACE\persistent.sfs`. Pierwszy kwartał otwiera zapis nowej kariery, każdy następny zapis po rozegraniu poprzedniego kwartału w KSP. Jeśli zapisu nie masz, wybierz „Nie mam zapisu za ten kwartał”; gra odnotuje to w Kronice i pójdzie dalej bez lotów.
+2. **Odprawa.** Po wczytaniu zapisu gra pokazuje karty: bilans poprzedniego kwartału, wydarzenia na świecie, następstwa Twoich wcześniejszych decyzji, nowe loty i sprawy do decyzji. Dalej kolejność wybierasz sam.
+3. **Raporty Misji** (zakładka *Loty (KSP)*): każdy nowy start z zapisu dostaje formularz. Podajesz wynik, przeznaczenie i klasyfikację lotu. Od tego zależy, co zobaczy prasa, Waszyngton i frakcje. Zatajone niepowodzenie nic nie kosztuje od razu, ale może wrócić jako przeciek.
+4. **Sprawy do decyzji** (prawa kolumna): wybierz opcję i zatwierdź. Sprawa zostawiona bez decyzji rozstrzygnie się sama, zwykle z kosztem. Większość wyborów wraca po kilku kwartałach jako następstwo i zostawia ślad w Rejestrze (zakładka *Ludzie*).
+5. **Biurko:** wydaj Uwagę Dowódcy (6 punktów na kwartał) na spotkania, lobbing, konferencję prasową albo zlecenie dla wywiadu. Na wszystko nie wystarczy.
+6. **Zamknij kwartał.** Okno następnego kwartału poda Korektę budżetu do wpisania w karierze (tryb Honorowy) i poprosi o zapis. Teraz grasz ten kwartał w KSP; zapis z jego końca otwiera następny. Gra kończy się, gdy Zaufanie Waszyngtonu albo Spójność Organizacji spadną do zera.
 
 ### Narrator (Claude albo Gemini)
 
 Gra sama nie łączy się z AI. Narrator działa przez kopiuj-wklej:
 
-1. Kliknij **Narrator** u góry ekranu (albo „Wysłuchaj doradców” przy sprawie do decyzji).
+1. Kliknij **Narrator** u góry ekranu.
 2. **Kopiuj pakiet** i wklej go w rozmowę z Claude albo Gemini w przeglądarce. Za pierwszym razem wybierz „Nowa rozmowa”; w kolejnych kwartałach możesz zostać w tej samej rozmowie i wysyłać krótszy pakiet.
 3. Skopiuj całą odpowiedź i wklej ją w drugim polu okna. **Wczytaj narrację.**
 
-Scena z gabinetu pojawi się na Biurku, wycinki prasowe i kuluary w Depeszach, a głosy dyrektorów przy sprawie. Narracja niczego nie zmienia w grze: liczby i wydarzenia ustala silnik. Pakiet zawiera tylko to, co wie Anderson.
+Są cztery zlecenia:
+
+- **Narracja kwartału:** scena z gabinetu, krótkie sceny do kart wydarzeń, wycinki prasowe i kuluary.
+- **Scena od narratora** na karcie wydarzenia: tekst do tej jednej karty.
+- **Wysłuchaj doradców** przy sprawie do decyzji: głosy dyrektorów.
+- **Rozegraj rozmowę z narratorem** przy sprawie do decyzji: prowadzisz w czacie AI rozmowę jako Anderson, narrator po każdej wypowiedzi daje Ci kilka możliwych odpowiedzi. Na końcu AI wypisuje blok `WYNIK` z jedną z opcji przygotowanych przez grę. Po wklejeniu gra zaznacza tę opcję, a Ty ją zatwierdzasz albo wybierasz inną.
+
+Narracja niczego nie zmienia w grze: liczby i wydarzenia ustala silnik.
+
+**Warstwa ukryta.** Zwykły pakiet zawiera tylko to, co wie Anderson. Pole „Dołącz warstwę ukrytą” dodaje to, czego nie wie: tajne wydarzenia, ukryte wpisy Rejestru, prawdziwe zamiary frakcji i to, co nadchodzi. Narrator używa tego do nastroju i niedopowiedzeń. Taki pakiet jest zapieczętowany: gra nie pokazuje jego treści, tylko kopiuje go do schowka albo zapisuje do pliku w `campaigns/pakiety/`, który załączasz w rozmowie. Nie ma tu hasła. Jeśli otworzysz ten plik, zepsujesz sobie mgłę wojny.
+
+### Zdjęcia do kart wydarzeń
+
+Uruchom raz **`Pobierz-zdjecia.bat`** (potrzebny internet). Skrypt pobierze z Wikimedia Commons zdjęcia z listy `data/images/manifest.yaml` i weźmie tylko te, które są w domenie publicznej. Autor i licencja każdego pliku trafiają do `data/images/pliki/zrodla.json` i są pokazane pod zdjęciem. Czego nie uda się pobrać, tego gra po prostu nie pokaże. Własne pozycje dopisujesz w manifeście: nazwa pliku, tytuł pliku w Commons, podpis i tematy, przy których zdjęcie ma się pojawiać.
 
 ### Zbieżność z historią
 
@@ -44,7 +60,7 @@ Przy zakładaniu kampanii wybierasz, jak często świat idzie drogą znaną z hi
 
 Ustawienia wyglądu (motyw ciemny i jasny, rozmiar tekstu, układ, kontrast, animacje) są pod przyciskiem *Ustawienia*. Powiększanie strony (Ctrl i plus, Ctrl i minus) przestawia układ, zamiast go rozlewać.
 
-Pliki kampanii (`campaigns/`) i klucze API (`.env`) zostają wyłącznie na Twoim dysku. Repozytorium je ignoruje, a gra nie łączy się z internetem. Do AI trafia tylko to, co sam skopiujesz i wkleisz.
+Pliki kampanii (`campaigns/`), pobrane zdjęcia i klucze API (`.env`) zostają wyłącznie na Twoim dysku. Repozytorium je ignoruje. Sama gra nie łączy się z internetem; robi to tylko skrypt pobierania zdjęć, kiedy go uruchomisz. Do AI trafia tylko to, co sam skopiujesz i wkleisz.
 
 ## Dokumenty
 
@@ -71,13 +87,14 @@ npm run dse -- waliduj                               # sprawdza treść gry w da
 npm run dse -- swiat --do 1955-Q4 --prawda           # jedna symulacja świata z warstwą ukrytą
 npm run dse -- swiat --serie 300 --do 1955-Q4        # statystyka gałęzi z 300 symulacji
 npm run dse -- swiat --serie 300 --wiernosc niska    # to samo dla niższej zbieżności z historią
+npm run zdjecia                                      # pobiera zdjęcia do kart wydarzeń (to samo co Pobierz-zdjecia.bat)
 npm start -- --port 4790 --bez-przegladarki          # serwer na innym porcie, bez otwierania przeglądarki
 ```
 
 ## Struktura
 
 ```
-data/                 treść gry w YAML: frakcje, postaci, wydarzenia świata, miejsca startu
+data/                 treść gry w YAML: frakcje, postaci, wydarzenia świata, echa, miejsca startu, manifest zdjęć
 packages/core         silnik: stan, świat, pętla kwartału, Biurko (bez plików i sieci)
 packages/content      wczytywanie i walidacja treści z data/
 packages/ksp-bridge   odczyt zapisów KSP RP-1 (.sfs)

@@ -237,6 +237,31 @@ export function advanceWorld(input: GameState, content: WorldContent): WorldStep
     }
   }
 
+  // 1b. Echa: dalsze ciągi decyzji i rozstrzygnięć, które miały wrócić w tym kwartale.
+  const dueEchoes = world.echoQueue.filter((x) => quartersBetween(parseQuarterCode(x.due), now) >= 0);
+  world.echoQueue = world.echoQueue.filter((x) => !dueEchoes.includes(x));
+  for (const queued of dueEchoes) {
+    const echo = content.echoes?.find((e) => e.id === queued.echo);
+    if (!echo) continue;
+    if (echo.chance < 1 && !rng.chance(echo.chance)) continue;
+    const met = !echo.requires || evaluateCondition(echo.requires, state);
+    const variant = met ? echo : echo.otherwise;
+    if (!variant) continue;
+    // Odwołanie zaczyna się od źródła (wątku albo dylematu), więc echo dziedziczy jego region i zdjęcie.
+    const ref = `${queued.source.split('.')[0]}.echo.${echo.id}`;
+    applyEffects(state, variant.effects, content, ref, queued.cause);
+    if (echo.silent) continue;
+    log({
+      quarter: q,
+      kind: 'echo',
+      ref,
+      title: variant.title,
+      text: variant.text,
+      visibility: echo.visibility,
+      cause: queued.cause,
+    });
+  }
+
   // 2. Start wątków historycznych.
   for (const t of [...content.threads].sort((a, b) => a.id.localeCompare(b.id))) {
     if (world.threads[t.id]) continue;
@@ -295,7 +320,7 @@ export function advanceWorld(input: GameState, content: WorldContent): WorldStep
       continue;
     }
     if (sit.startedIn === q) continue;
-    applyEffects(state, ongoing.effects, content, `${sit.thread}.${sit.stage}.${sit.branch}.sytuacja`);
+    applyEffects(state, ongoing.effects, content, `${sit.thread}.${sit.stage}.${sit.branch}.sytuacja`, ongoing.title);
     sit.remaining -= 1;
   }
 
@@ -368,7 +393,8 @@ export function advanceWorld(input: GameState, content: WorldContent): WorldStep
       }
       const ref = `${inst.def}.${stage.id}.${branch.id}`;
 
-      applyEffects(state, branch.effects, content, ref);
+      const cause = fill(`${def.title}: ${stage.title}`, inst.params);
+      applyEffects(state, branch.effects, content, ref, cause);
       // Rozbieżność rośnie, gdy świat ODCHODZI od historii: w etapie z gałęzią historyczną
       // wypadła inna. W etapie alternatywnym historii już nie ma, więc nie liczy się drugi raz
       // (taki etap może podnieść Rozbieżność jawnie, skutkiem `divergence`).
@@ -394,7 +420,7 @@ export function advanceWorld(input: GameState, content: WorldContent): WorldStep
         historical: branch.historical,
       });
       for (const [i, reaction] of branch.reactions.entries()) {
-        applyEffects(state, reaction.effects, content, `${ref}.reakcja-${i + 1}`);
+        applyEffects(state, reaction.effects, content, `${ref}.reakcja-${i + 1}`, cause);
         log({
           quarter: q,
           kind: 'reaction',
@@ -463,7 +489,7 @@ export function advanceWorld(input: GameState, content: WorldContent): WorldStep
     if (!cooldownPassed(record?.last, pat.cooldownQuarters, now)) continue;
     if (pat.conditions && !evaluateCondition(pat.conditions, state)) continue;
     if (!rng.chance(chance(pat.chancePerQuarter, pat.chanceModifiers, state))) continue;
-    applyEffects(state, pat.effects, content, pat.id);
+    applyEffects(state, pat.effects, content, pat.id, pat.title);
     world.patternLog[pat.id] = { count: (record?.count ?? 0) + 1, last: q };
     log({ quarter: q, kind: 'pattern', ref: pat.id, title: pat.title, text: pat.text, visibility: pat.visibility });
   }
@@ -570,8 +596,9 @@ function resolvePending(
     text = option.text;
     optionTitle = option.title;
   }
-  applyEffects(state, effects, content, `${pending.dilemma}.${optionId}`);
-  if (byDefault) applyEffects(state, inaction, content, `${pending.dilemma}.biernosc`);
+  const cause = `${title}: ${optionTitle}`;
+  applyEffects(state, effects, content, `${pending.dilemma}.${optionId}`, cause);
+  if (byDefault) applyEffects(state, inaction, content, `${pending.dilemma}.biernosc`, `${title}: bez decyzji`);
   world.pendingDilemmas = world.pendingDilemmas.filter((p) => p.instanceId !== instanceId);
   log({
     quarter: quarterCode(state.quarter),

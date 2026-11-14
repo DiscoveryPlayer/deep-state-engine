@@ -11,7 +11,10 @@ import {
   CONTENT_FILES,
   WORLD_CONTENT_PATHS,
   dilemmasFileSchema,
+  echoesFileSchema,
   launchSitesContentSchema,
+  IMAGE_MANIFEST_FILE,
+  imageManifestSchema,
   patternsFileSchema,
   threadContentSchema,
   threadTemplateContentSchema,
@@ -116,8 +119,10 @@ async function loadWorld(dataDir: string, problems: ContentProblem[]): Promise<W
   const patterns = (await optional(WORLD_CONTENT_PATHS.patterns, patternsFileSchema))?.patterns ?? [];
   const dilemmas = (await optional(WORLD_CONTENT_PATHS.dilemmas, dilemmasFileSchema))?.dilemmas ?? [];
 
+  const echoes = (await optional(WORLD_CONTENT_PATHS.echoes, echoesFileSchema))?.echoes ?? [];
+
   if (!definition) return undefined;
-  return { definition, threads, templates, patterns, dilemmas };
+  return { definition, threads, templates, patterns, dilemmas, echoes };
 }
 
 /** Wczytuje i waliduje całą treść gry. Rzuca ContentLoadError z pełną listą problemów. */
@@ -156,6 +161,42 @@ export async function loadContent(dataDir: string): Promise<GameContent> {
       seenSites.add(site.id);
     }
   }
+  let images: GameContent['images'];
+  try {
+    await readFile(join(dataDir, IMAGE_MANIFEST_FILE), 'utf8');
+    images = parseWith(
+      imageManifestSchema,
+      await readYaml(dataDir, IMAGE_MANIFEST_FILE, problems),
+      IMAGE_MANIFEST_FILE,
+      problems,
+    )?.images;
+  } catch {
+    images = undefined;
+  }
+  if (images) {
+    const seenFiles = new Set<string>();
+    for (const image of images) {
+      if (seenFiles.has(image.file))
+        problems.push({ file: IMAGE_MANIFEST_FILE, where: image.id, message: 'powtórzona nazwa pliku zdjęcia' });
+      seenFiles.add(image.file);
+    }
+    // Temat musi być czymś, co gra zna: inaczej zdjęcie nigdy się nie pokaże.
+    if (world) {
+      const topics = new Set<string>([
+        'lot',
+        ...world.threads.map((t) => t.id),
+        ...world.templates.map((t) => t.id),
+        ...world.patterns.map((x) => x.id),
+        ...world.dilemmas.map((d) => d.id),
+      ]);
+      for (const image of images) {
+        for (const topic of image.for) {
+          if (!topics.has(topic))
+            problems.push({ file: IMAGE_MANIFEST_FILE, where: image.id, message: `nieznany temat "${topic}"` });
+        }
+      }
+    }
+  }
   if (problems.length > 0) throw new ContentLoadError(problems);
 
   const p = parsed as {
@@ -173,6 +214,7 @@ export async function loadContent(dataDir: string): Promise<GameContent> {
     registry: p.registry.entries,
     ...(world ? { world } : {}),
     ...(launchSites ? { launchSites } : {}),
+    ...(images ? { images } : {}),
   };
 
   const refProblems = validateContentReferences(content);

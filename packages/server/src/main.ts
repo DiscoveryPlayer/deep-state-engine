@@ -7,6 +7,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { ContentLoadError, loadContent } from '@dse/content';
+import { IMAGE_FILES_DIR } from '@dse/core';
 import { createApp } from './app.ts';
 import { buildAssets } from './bundle.ts';
 import { CampaignStore } from './store.ts';
@@ -45,7 +46,8 @@ async function main(): Promise<void> {
   const content = await loadContent(values.dane ?? resolve(REPO_ROOT, 'data'));
   const assets = await buildAssets(resolve(REPO_ROOT, 'packages/ui'));
   const store = new CampaignStore(values.kampanie ?? resolve(REPO_ROOT, 'campaigns'));
-  const server = createApp({ content, store, assets });
+  const dataDir = values.dane ?? resolve(REPO_ROOT, 'data');
+  const server = createApp({ content, store, assets, imagesDir: resolve(dataDir, IMAGE_FILES_DIR) });
 
   server.on('error', (e: NodeJS.ErrnoException) => {
     if (e.code === 'EADDRINUSE') {
