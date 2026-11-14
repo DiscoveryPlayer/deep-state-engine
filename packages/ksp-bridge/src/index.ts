@@ -19,8 +19,11 @@ export async function readCareerFile(filePath: string): Promise<CareerSummary> {
   return summarizeCareer(parseConfigNode(text), basename(filePath));
 }
 
-/** Migawka dla silnika: fakty z kariery i starty z kwartału kampanii `quarter`. */
-export function toKspSnapshot(career: CareerSummary, quarter: string): Omit<KspSnapshot, 'quarter'> {
+/**
+ * Migawka dla silnika: fakty z kariery i starty, które przybyły od poprzedniej migawki.
+ * `knownLaunches` to liczba startów w poprzedniej migawce (0 przy pierwszym wczytaniu).
+ */
+export function toKspSnapshot(career: CareerSummary, knownLaunches: number): Omit<KspSnapshot, 'quarter'> {
   return {
     file: career.file,
     title: career.title,
@@ -38,8 +41,8 @@ export function toKspSnapshot(career: CareerSummary, quarter: string): Omit<KspS
     failures: career.failures,
     contractsCompleted: career.contractsCompleted,
     programs: career.programs,
-    launchesInQuarter: career.launches
-      .filter((l) => l.quarter === quarter)
-      .map((l) => ({ vessel: l.vessel, date: l.date, site: l.site })),
+    newLaunches: career.launches
+      .slice(Math.max(0, knownLaunches))
+      .map((l) => ({ vessel: l.vessel, date: l.date, site: l.site, failures: l.failures })),
   };
 }

@@ -5,6 +5,7 @@
  *   npm run dse -- nowa-kampania --ziarno PACE-1951 --wyjscie campaigns/pace-1951.json
  *   npm run dse -- stan campaigns/pace-1951.json [--prawda]
  *   npm run dse -- swiat --do 1960-Q4 --ziarno PACE-1951 [--prawda] [--serie 200]
+ *   npm run dse -- zdjecia [--od-nowa]
  */
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
@@ -24,6 +25,7 @@ import {
   type HistoryFidelity,
 } from '@dse/core';
 import { ContentLoadError, loadContent } from '@dse/content';
+import { downloadImages } from './images.ts';
 import { renderStateReport } from './report.ts';
 import { renderWorldRun, renderWorldSeries } from './world.ts';
 
@@ -48,6 +50,9 @@ Polecenia:
                  albo losowe (Anderson wybiera losowo).
       --prawda pokazuje tajne wpisy, gałęzie historyczne i stan świata na koniec.
       --serie N liczy N symulacji z różnymi ziarnami i pokazuje statystykę.
+  zdjecia [--od-nowa] [--dane <folder>]
+      Pobiera z Wikimedia Commons zdjęcia do kart wydarzeń (data/images/manifest.yaml).
+      Bierze tylko pliki z domeny publicznej. --od-nowa pobiera także te, które już są.
 `;
 
 async function main(argv: string[]): Promise<number> {
@@ -65,7 +70,7 @@ async function main(argv: string[]): Promise<number> {
         console.log(
           `Świat: ${w.definition.regions.length} regionów, ${w.definition.variables.length} zmiennych, ` +
             `${w.threads.length} wątków, ${w.templates.length} szablonów, ${w.patterns.length} wzorców, ` +
-            `${w.dilemmas.length} dylematów.`,
+            `${w.dilemmas.length} dylematów, ${w.echoes?.length ?? 0} ech.`,
         );
       }
       return 0;
@@ -169,6 +174,26 @@ async function main(argv: string[]): Promise<number> {
       if (values.prawda) console.log('UWAGA: warstwa faktyczna — zawiera informacje ukryte przed Andersonem.\n');
       console.log(`Świat 1951-Q1 – ${values.do} · ziarno "${values.ziarno}" · decyzje: ${values.decyzje}\n`);
       console.log(renderWorldRun(shown, state, world, values.prawda));
+      return 0;
+    }
+    case 'zdjecia': {
+      const { values } = parseArgs({
+        args: rest,
+        options: { dane: { type: 'string' }, 'od-nowa': { type: 'boolean', default: false } },
+      });
+      const dataDir = values.dane ?? DEFAULT_DATA_DIR;
+      const content = await loadContent(dataDir);
+      const images = content.images ?? [];
+      if (images.length === 0) {
+        console.log('W manifeście data/images/manifest.yaml nie ma żadnych zdjęć.');
+        return 0;
+      }
+      console.log(`Pobieram zdjęcia z Wikimedia Commons (${images.length} w manifeście):`);
+      const tally = await downloadImages(dataDir, images, { force: values['od-nowa'] });
+      console.log(
+        `Gotowe. Pobrane: ${tally.saved}, już były: ${tally.present}, pominięte: ${tally.skipped}. ` +
+          'Pominięte zdjęcia gra po prostu pomija; karty wydarzeń działają bez nich.',
+      );
       return 0;
     }
     case undefined:

@@ -51,6 +51,31 @@ STEPS[3] = (s) => ({
   narrative: { entries: [] },
 });
 
+STEPS[4] = (s) => {
+  // 4 → 5: echa decyzji, bramka zapisu KSP i Raporty Misji (decyzja 0019).
+  const quarter = s.quarter as { year: number; q: number };
+  const code = `${quarter.year}-Q${quarter.q}`;
+  const ksp = s.ksp as { snapshots: (Record<string, unknown> & { quarter: string })[] };
+  const snapshots = ksp.snapshots.map(({ launchesInQuarter, ...rest }) => ({
+    ...rest,
+    newLaunches: ((launchesInQuarter as Record<string, unknown>[] | undefined) ?? []).map((l) => ({
+      failures: 0,
+      ...l,
+    })),
+  }));
+  return {
+    ...s,
+    schemaVersion: 5,
+    world: { echoQueue: [], ...(s.world as object) },
+    ksp: {
+      snapshots,
+      // Kampania, która ma już zapis z bieżącego kwartału, nie musi wczytywać go drugi raz.
+      gate: { quarter: code, status: snapshots.some((x) => x.quarter === code) ? 'loaded' : 'pending' },
+      flights: [],
+    },
+  };
+};
+
 export class StateMigrationError extends Error {
   constructor(message: string) {
     super(message);

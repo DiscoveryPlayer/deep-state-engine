@@ -19,5 +19,7 @@ export * from './world/simulate.ts';
 export * from './world/validate.ts';
 export * from './turn/desk.ts';
 export * from './turn/quarter.ts';
+export * from './turn/flights.ts';
 export * from './narrative.ts';
+export * from './view/narratorView.ts';
 export * from './view/playerView.ts';

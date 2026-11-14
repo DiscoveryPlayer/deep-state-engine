@@ -10,6 +10,8 @@ const KIND_LABEL = {
   dilemma: 'dylemat',
   reaction: 'reakcja',
   situation: 'sytuacja',
+  echo: 'echo',
+  flight: 'lot',
 } as const;
 
 function wrap(text: string, indent: string, width = 96): string {
@@ -100,8 +102,12 @@ export function renderWorldSeries(runs: GameState[], content: WorldContent): str
   let choicesHistorical = 0;
   let correctionUnits = 0;
 
+  let echoesFired = 0;
+  let registryNew = 0;
   for (const s of runs) {
     let onTrack = true;
+    echoesFired += s.world.log.filter((e) => e.kind === 'echo').length;
+    registryNew += s.registry.filter((r) => r.key !== undefined).length;
     for (const inst of Object.values(s.world.threads)) {
       if (inst.fromTemplate) {
         inc(templates, `${inst.def} (${Object.values(inst.params).join(', ')})`);
@@ -133,6 +139,9 @@ export function renderWorldSeries(runs: GameState[], content: WorldContent): str
   L.push(
     `  Zbieżność z historią: ${pct(choicesHistorical, Math.max(1, choices)).trim()} rozstrzygnięć w etapach z wyborem ` +
       `(średnio ${(choices / n).toFixed(1)} takich etapów na symulację)`,
+  );
+  L.push(
+    `  Następstwa: średnio ${(echoesFired / n).toFixed(1)} ech i ${(registryNew / n).toFixed(1)} nowych wpisów Rejestru na symulację`,
   );
   L.push(`  Średnia suma Korekt budżetu: ${(correctionUnits / n).toFixed(2)} jedn.`);
   L.push('');

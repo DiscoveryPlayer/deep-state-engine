@@ -102,3 +102,16 @@ export function parseNarratorReply(raw: string, expected: readonly string[] = []
   if (found.length > 0 && missing.length > 0) warnings.push(`Brakuje sekcji: ${missing.join(', ')}.`);
   return { sections: result, warnings };
 }
+
+/**
+ * Odczytuje wynik rozmowy prowadzącej do decyzji: literę opcji z sekcji WYNIK. Zwraca indeks
+ * opcji (A = 0) albo null, gdy sekcji nie ma lub litera jest spoza listy. Wybór i tak
+ * zatwierdza gracz; AI tylko wskazuje, dokąd doprowadziła rozmowa.
+ */
+export function parseConversationResult(sections: ParsedReply['sections'], optionCount: number): number | null {
+  const result = sections.find((s) => s.key === 'wynik' || s.key.startsWith('wynik-'));
+  const match = result ? /OPCJA\s*[:\-–]?\s*([A-Za-z])\b/.exec(result.body) : null;
+  if (!match) return null;
+  const index = match[1]!.toUpperCase().charCodeAt(0) - 65;
+  return index >= 0 && index < optionCount ? index : null;
+}

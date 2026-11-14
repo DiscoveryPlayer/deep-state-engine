@@ -4,7 +4,25 @@
  */
 import type { DeskActionInfo, LaunchSite, PlayerView } from '@dse/core';
 
-export type { NarratorPackage } from '@dse/narrator';
+/** Pakiet dla narratora w odpowiedzi serwera: treść do schowka albo ścieżka do zapisanego pliku. */
+export interface NarratorPackageResponse {
+  title: string;
+  /** Czy pakiet zawiera warstwę ukrytą. Interfejs nigdy nie wyświetla treści takiego pakietu. */
+  secret: boolean;
+  chars: number;
+  /** Treść pakietu; null, gdy pakiet został zapisany do pliku. */
+  prompt: string | null;
+  /** Ścieżka pliku na dysku gracza; null, gdy pakiet idzie przez schowek. */
+  file: string | null;
+}
+
+/** Zdjęcie do tematu wydarzenia (tylko pliki, które są na dysku). */
+export interface TopicImage {
+  url: string;
+  caption: string;
+  /** Autor i licencja z Wikimedia Commons, jeśli skrypt pobierania je zapisał. */
+  credit: string | null;
+}
 
 export interface FactionInfo {
   id: string;
@@ -22,6 +40,10 @@ export interface DeskPayload {
   /** Tablica sytuacyjna: regiony świata i liczba jawnych depesz z bieżącego kwartału. */
   regions: { id: string; title: string; news: number }[];
   launchSites: LaunchSite[];
+  /** Zdjęcia według tematu depeszy (`worldNews[].topic`). */
+  images: Record<string, TopicImage>;
+  /** Po rozmowie z narratorem: opcja, do której doprowadziła rozmowa. Wybór i tak zatwierdza gracz. */
+  suggestion?: { instanceId: string; optionId: string };
   /** Komunikat po ostatniej operacji (np. ostrzeżenia po wczytaniu zapisu KSP). */
   messages: string[];
 }
@@ -31,6 +53,7 @@ export interface CampaignListItem {
   quarterLabel: string;
   status: string;
   savedAt: string;
+  historyFidelity: string;
 }
 
 export interface ApiError {

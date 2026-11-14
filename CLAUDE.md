@@ -18,8 +18,13 @@
 - `packages/core` nie importuje `node:fs`, `node:net`, `fetch` ani niczego z KSP i AI. Dostaje dane i zwraca dane.
 - Losowość wyłącznie przez `Rng` z ziarnem; stan generatora zapisuje się w stanie gry.
 - Każda liczba z GDD to dane (`data/*.yaml`) albo nazwana stała z komentarzem o źródle (np. „GDD 7.1”).
-- Do interfejsu i do AI dane ze stanu trafiają WYŁĄCZNIE przez `toPlayerView` (zasada Z4).
+- Do interfejsu dane ze stanu trafiają WYŁĄCZNIE przez `toPlayerView` (zasada Z4).
   Nowe pole stanu domyślnie nie jest widoczne dla gracza.
+- Do AI idzie `toPlayerView`, a na wyraźne życzenie gracza także `toNarratorSecrets` (decyzja 0019).
+  To jedyne drugie wyjście ze stanu i wolno go użyć tylko w pakiecie narratora. Interfejs nie
+  wyświetla treści takiego pakietu; idzie ona do schowka albo do pliku w `campaigns/pakiety/`.
+- Zdjęcia do kart wydarzeń: tylko maszyny, miejsca, budynki i wydarzenia z domeny publicznej,
+  bez portretów osób publicznych. Pliki pobiera gracz skryptem; do repozytorium trafia sam manifest.
 - Zmiana kształtu stanu → podnieś `STATE_SCHEMA_VERSION` i dopisz decyzję o migracji.
 - Identyfikatory w kodzie po angielsku, komentarze, komunikaty i treść gry po polsku (decyzja 0003).
 - TypeScript tylko ze składnią wymazywalną (`erasableSyntaxOnly`): bez `enum`, `namespace` i parametrów-właściwości w konstruktorach.

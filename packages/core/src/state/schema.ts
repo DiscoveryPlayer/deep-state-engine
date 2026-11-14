@@ -16,7 +16,7 @@ import { factionIdSchema, registryTypeSchema } from '../content/schema.ts';
  * Wersja 3: wątki głębokie (sytuacje, pogłoski, decyzje etapów), budżet, Biurko, raporty,
  * migawki KSP i status kampanii (decyzja 0017). Migracje w migrate.ts.
  */
-export const STATE_SCHEMA_VERSION = 4 as const;
+export const STATE_SCHEMA_VERSION = 5 as const;
 
 const quarterSchema = z.object({
   year: z.number().int().min(1900).max(2100),
@@ -114,6 +114,10 @@ export const registryEntryStateSchema = z.object({
   visibleToPlayer: z.boolean(),
   status: z.enum(['active', 'resolved', 'revealed']),
   dmNote: z.string().optional(),
+  /** Klucz z treści gry: po nim warunki i echa odnajdują wpis utworzony skutkiem `registry`. */
+  key: z.string().optional(),
+  /** Skąd wpis się wziął, np. „Maszyna licząca: Kupić”. */
+  source: z.string().optional(),
 });
 
 export const directiveStateSchema = z.object({
@@ -168,7 +172,9 @@ export const threadInstanceSchema = z.object({
 
 export const worldLogEntrySchema = z.object({
   quarter: qcode,
-  kind: z.enum(['thread', 'template', 'pattern', 'dilemma', 'reaction', 'situation']),
+  kind: z.enum(['thread', 'template', 'pattern', 'dilemma', 'reaction', 'situation', 'echo', 'flight']),
+  /** Dla ech: z czego wynika wpis, np. „Maszyna licząca: Kupić” (decyzja 0019). */
+  cause: z.string().optional(),
   /** Dla reakcji: kto mówi. */
   actor: z.string().optional(),
   /** Odwołanie: "wątek.etap.gałąź", identyfikator wzorca albo dylematu. */
@@ -234,6 +240,10 @@ export const worldStateSchema = z.object({
   situations: z.array(situationSchema),
   corrections: z.array(correctionEntrySchema),
   log: z.array(worldLogEntrySchema),
+  /** Echa czekające na swój kwartał: dalsze ciągi decyzji i wydarzeń (decyzja 0019). */
+  echoQueue: z.array(
+    z.object({ echo: z.string().min(1), due: qcode, source: z.string().min(1), cause: z.string().min(1) }),
+  ),
   /** Licznik do identyfikatorów instancji (szablony, dylematy). */
   seq: z.number().int().min(0),
 });
@@ -311,8 +321,50 @@ export const kspSnapshotSchema = z.object({
   failures: z.number().int().min(0),
   contractsCompleted: z.number().int().min(0),
   programs: z.array(z.object({ name: z.string(), status: z.enum(['active', 'completed']) })),
-  /** Starty w kwartale migawki. */
-  launchesInQuarter: z.array(z.object({ vessel: z.string(), date: z.string(), site: z.string().nullable() })),
+  /** Starty, które przybyły od poprzedniej migawki (z poprzedniego kwartału kampanii). */
+  newLaunches: z.array(
+    z.object({
+      vessel: z.string(),
+      date: z.string(),
+      site: z.string().nullable(),
+      /** Liczba awarii części zapisanych przy tym starcie w dzienniku kariery. */
+      failures: z.number().int().min(0),
+    }),
+  ),
+});
+
+/**
+ * Bramka zapisu: na otwarciu kwartału gracz wczytuje zapis KSP z końca poprzedniego kwartału
+ * (decyzja 0019). `skipped` to świadome pominięcie, odnotowane w Kronice.
+ */
+export const kspGateSchema = z.object({ quarter: qcode, status: z.enum(['pending', 'loaded', 'skipped']) });
+
+/** Raport Misji (GDD 18.3): pola, których zapis nie zna, a które są wyborem politycznym. */
+export const FLIGHT_OUTCOMES = ['success', 'partial', 'failure'] as const;
+export const FLIGHT_PURPOSES = ['science', 'defense', 'crewed', 'test', 'allied'] as const;
+export const FLIGHT_CLASSIFICATIONS = ['public', 'confidential', 'secret'] as const;
+export const FLIGHT_NOTE_MAX = 200;
+export const missionReportSchema = z.object({
+  outcome: z.enum(FLIGHT_OUTCOMES),
+  purpose: z.enum(FLIGHT_PURPOSES),
+  classification: z.enum(FLIGHT_CLASSIFICATIONS),
+  /** Uwagi Dowódcy: jedno zdanie, trafia do narratora jako kontekst. */
+  note: z.string().max(FLIGHT_NOTE_MAX).optional(),
+  /** Raport wypełniony przez silnik wartościami domyślnymi, bo gracz go nie złożył. */
+  auto: z.boolean(),
+});
+export const flightSchema = z.object({
+  /** Numer misji, np. M-1951-03. */
+  id: z.string().regex(/^M-\d{4}-\d{2,}$/),
+  vessel: z.string(),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  site: z.string().nullable(),
+  failures: z.number().int().min(0),
+  /** Kwartał kampanii, na którego otwarciu lot wczytano z zapisu. */
+  detectedIn: qcode,
+  /** Czy skutki lotu zostały już rozliczone przy zamknięciu kwartału. */
+  settled: z.boolean(),
+  report: missionReportSchema.optional(),
 });
 
 /** Wierność historii: jak często świat idzie drogą historyczną (decyzja 0018). */
@@ -337,7 +389,7 @@ export const campaignSettingsSchema = z.object({
  * Narracja: teksty napisane przez AI na podstawie widoku gracza i wklejone przez gracza
  * (decyzja 0018). Nie mają żadnego skutku mechanicznego (zasada Z3) i są w całości jawne.
  */
-export const NARRATIVE_KINDS = ['quarter', 'decision'] as const;
+export const NARRATIVE_KINDS = ['quarter', 'decision', 'conversation', 'event'] as const;
 export const NARRATIVE_SOURCES = ['claude', 'gemini', 'other'] as const;
 export const narrativeEntrySchema = z.object({
   /** Klucz wpisu: kwartał, rodzaj i odniesienie. Ponowny import zastępuje wpis o tym samym kluczu. */
@@ -381,7 +433,7 @@ export const gameStateSchema = z.object({
   budget: budgetStateSchema,
   desk: deskStateSchema,
   reports: z.array(quarterReportSchema),
-  ksp: z.object({ snapshots: z.array(kspSnapshotSchema) }),
+  ksp: z.object({ snapshots: z.array(kspSnapshotSchema), gate: kspGateSchema, flights: z.array(flightSchema) }),
   narrative: z.object({ entries: z.array(narrativeEntrySchema) }),
   /** active — gra trwa; dismissed — Anderson odwołany (ZW 0); collapsed — rozpad organizacji (SO 0). */
   status: z.enum(['active', 'dismissed', 'collapsed']),
@@ -402,6 +454,8 @@ export type Situation = z.infer<typeof situationSchema>;
 export type BudgetLedgerEntry = z.infer<typeof budgetLedgerEntrySchema>;
 export type QuarterReport = z.infer<typeof quarterReportSchema>;
 export type KspSnapshot = z.infer<typeof kspSnapshotSchema>;
+export type Flight = z.infer<typeof flightSchema>;
+export type MissionReport = z.infer<typeof missionReportSchema>;
 export type DeskActionRecord = z.infer<typeof deskActionRecordSchema>;
 
 /** Pusty stan świata — zmienne i Rozbieżność uzupełnia silnik z treści (ensureWorldState). */
@@ -418,6 +472,7 @@ export function emptyWorldState(): WorldState {
     situations: [],
     corrections: [],
     log: [],
+    echoQueue: [],
     seq: 0,
   };
 }

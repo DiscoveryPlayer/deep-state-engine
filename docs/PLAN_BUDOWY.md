@@ -2,9 +2,9 @@
 
 | | |
 |---|---|
-| **Wersja** | 3.0 (11.11.2026) |
+| **Wersja** | 3.0 (11.11.2026), stan prac uzupełniony 14.11.2026 |
 | **Zastępuje** | Plan 1.0 ([plan/plan-budowy-v1.md](plan/plan-budowy-v1.md)) i wersję roboczą 2.0 ([plan/plan-budowy-v2-projekt.md](plan/plan-budowy-v2-projekt.md)) |
-| **Podstawa** | GDD v1.0, Dokument Decyzyjny v1.1, decyzje 0001–0017, rozstrzygnięcia autora z listopada 2026 |
+| **Podstawa** | GDD v1.0, Dokument Decyzyjny v1.1, decyzje 0001–0019, rozstrzygnięcia autora z listopada 2026 |
 | **Cel** | Powiedzieć, co już działa, co budujemy dalej i w jakiej kolejności |
 
 Analiza dziewięciu problemów z planu 2.0 (rozdział 2 tamtego dokumentu) pozostaje aktualna i ten plan jej nie powtarza. Zmienia się kolejność prac.
@@ -27,35 +27,38 @@ Dlatego wersja 3 buduje **plastrami**. Każdy plaster przechodzi przez wszystkie
 
 ---
 
-## 2. Gdzie jesteśmy (11.11.2026)
+## 2. Gdzie jesteśmy (14.11.2026)
 
 ### 2.1. Co działa
 
 | Obszar | Stan | Gdzie |
 |---|---|---|
-| Stan gry, losowość z ziarnem, zapis i migracje (wersja 3) | działa, testy | `packages/core/src/state` |
-| Widok gracza (zasada Z4) | działa, testy wycieku | `packages/core/src/view` |
+| Stan gry, losowość z ziarnem, zapis i migracje (wersja 5) | działa, testy | `packages/core/src/state` |
+| Widok gracza (zasada Z4) i warstwa ukryta narratora | działa, testy wycieku | `packages/core/src/view` |
 | Wydarzenia świata: wątki głębokie, szablony, wzorce, dylematy, Rozbieżność | działa, testy | `packages/core/src/world` |
 | Pętla kwartału: otwarcie, akcje Biurka, zamknięcie, raport, zakończenia | działa, testy | `packages/core/src/turn` |
 | Budżet: Korekty w jednostkach, księga, rozliczanie w trybie Honorowym | działa | `turn/quarter.ts` |
 | Odczyt zapisów KSP (.sfs), Migawka, kontrola miejsc startu | działa na zapisie autora | `packages/ksp-bridge` |
+| Echa decyzji i Rejestr Następstw (jawny i ukryty) | działa, testy | `world/`, `data/events/echoes.yaml` |
+| Bramka zapisu, loty i Raporty Misji | działa, testy | `turn/flights.ts` |
+| Łącznik AI: pełny pakiet, warstwa ukryta, rozmowa, scena wydarzenia | działa, testy; nie sprawdzony na prawdziwych odpowiedziach | `packages/narrator` |
 | Lokalny serwer z API | działa, testy | `packages/server` |
-| Interfejs w przeglądarce | działa, 7 widoków | `packages/ui` |
-| Treść 1951–1955 | 24 wątki, 2 szablony, 35 wzorców, 6 dylematów, 15 zmiennych świata | `data/events` |
+| Interfejs w przeglądarce | działa: menu główne, bramka, Odprawa z kartami, 7 widoków | `packages/ui` |
+| Treść 1951–1955 | 24 wątki, 2 szablony, 35 wzorców, 6 dylematów, 91 ech, 15 zmiennych świata | `data/events` |
 | Miejsca startu | 31 miejsc z okresami dostępności | `data/launch-sites.yaml` |
 
-Testów jest 94. `npm run check` przechodzi.
+Testów jest 109. `npm run check` przechodzi.
 
 ### 2.2. Czego gra jeszcze nie robi
 
 To lista uczciwa, żeby pilotaż nie rozczarował:
 
-1. **Loty prawie nie wpływają na politykę.** Migawka KSP daje dziś tylko prosty „bilans lotów” (kontrakty i awarie, decyzja 0017 punkt 7). Nie ma Dyrektyw, kart lotów ani programów testowych.
+1. **Loty wpływają na politykę tylko przez Raporty Misji.** Od 14.11.2026 każdy start z zapisu ma raport, a jego wynik, przeznaczenie i klasyfikacja zmieniają wskaźniki (decyzja 0019, reguła tymczasowa). Nadal nie ma Dyrektyw, kart lotów ani programów testowych.
 2. **Nie ma przeciwnika.** ZSRR istnieje w depeszach i zmiennych świata, ale nie ma własnego programu kosmicznego ani kalendarza.
-3. **Narrator działa przez kopiuj-wklej.** Od 12.11.2026 gra buduje pakiet dla Claude albo Gemini w przeglądarce i wczytuje wklejoną odpowiedź (decyzja 0018). Depesze nadal pochodzą z plików YAML; narrator dopisuje do nich scenę, prasę, kuluary i głosy doradców.
+3. **Narrator działa przez kopiuj-wklej.** Gra buduje pakiet dla Claude albo Gemini w przeglądarce i wczytuje wklejoną odpowiedź (decyzje 0018 i 0019). Depesze nadal pochodzą z plików YAML; narrator dopisuje do nich sceny, prasę, kuluary, głosy doradców i rozmowy.
 4. **Ludzie są statyczni.** Sześciu dyrektorów ma cechy i Lojalność, ale nie starzeją się, nie odchodzą i nie mają własnych wątków.
 5. **Budżet to tylko Korekty.** Nie ma budżetu rocznego, Sesji Budżetowej ani Wniosków Programowych.
-6. **Rejestr Następstw stoi.** Decyzje nie tworzą jeszcze Długów, Uraz i Obietnic.
+6. **Rejestr Następstw dopiero rusza.** Decyzje tworzą już wpisy jawne i ukryte, a echa je zamykają (decyzja 0019). Wpisów nie da się jeszcze wykorzystać w akcjach Biurka (Przysługa, Śledztwo).
 7. **Zapis do KSP nie istnieje.** Korekty wpisujesz w KSP ręcznie (tryb Honorowy).
 8. **Po 1955 roku świat cichnie.** Treść kończy się na IV kwartale 1955. Grać da się dalej, ale depesz będzie coraz mniej.
 
@@ -100,20 +103,26 @@ Zależności idą w jedną stronę: `ui → server → core, content, ksp-bridge
 
 ```
 otwarcie kwartału (silnik)
-  świat: dylematy po terminie → nowe wątki → szablony → sytuacje trwające
+  świat: dylematy po terminie → echa z kolejki → nowe wątki → szablony → sytuacje trwające
          → etapy wątków (pogłoska, decyzja, rozstrzygnięcie, reakcje) → wzorce → dylematy
   Uwaga Dowódcy: 6 (+ premia po Odpoczynku)
         │
 gracz   ▼
-  czyta depesze i oceny wywiadu
+  wczytuje zapis kariery (.sfs) z początku kwartału → gra zakłada Raporty Misji nowym startom
+  czyta Odprawę: bilans, karty wydarzeń, następstwa, oceny wywiadu
+  wypełnia Raporty Misji
   rozstrzyga sprawy do decyzji (albo świadomie je zostawia)
   wydaje Uwagę Dowódcy na akcje Biurka
-  gra w KSP, wpisuje Korekty do kariery, wczytuje zapis (.sfs)
         │
 zamknięcie kwartału (silnik)
   Korekty do księgi → zegary Cierpliwości frakcji → przepływ PP → ZW → dryf PP
-  → bilans lotów z Migawki → raport → sprawdzenie zakończeń → otwarcie następnego kwartału
+  → rozliczenie Raportów Misji → raport → sprawdzenie zakończeń → otwarcie następnego kwartału
+        │
+gracz   ▼
+  wpisuje Korektę do kariery i gra ten kwartał w KSP; zapis z jego końca otwiera następny kwartał
 ```
+
+Od decyzji 0019 kwartał zaczyna się bramką zapisu: gracz wczytuje plik `.sfs` z początku kwartału, gra wykrywa nowe starty i zakłada im Raporty Misji, a potem pokazuje Odprawę. W kroku „świat” przed nowymi wątkami wracają echa z kolejki.
 
 Kampania zapisuje się po każdej operacji. Przed każdym zamknięciem kwartału serwer robi kopię w `campaigns/kopie/`.
 
@@ -149,7 +158,7 @@ Autor gra 1951–1955 na prawdziwej karierze i notuje, co boli, co nudzi i co je
 | Poprawki z pilotażu | Balans wskaźników, tempo depesz, czytelność ekranów |
 | Różnice między Migawkami | Raport kwartału pokazuje, co się zmieniło w karierze: starty, technologie, kontrakty, personel |
 | Wybór pliku zapisu | Zamiast wklejania ścieżki: lista zapisów z folderu KSP ustawionego raz w kampanii |
-| Skutek `registry` | Decyzje tworzą wpisy Rejestru Następstw (Dług, Uraza, Obietnica), widoczne w zakładce Ludzie |
+| Skutek `registry` ✔ | Zrobione 14.11.2026 (decyzja 0019): wpisy jawne w zakładce Ludzie, ukryte tylko dla narratora |
 | Pozostałe akcje Biurka | Z GDD 10.2: Rozmowa z postacią, Inspekcja, Mediacja, Przysługa; reszta (Śledztwo, Przetasowanie, Przegląd techniczny) razem z systemami, których dotyczą |
 | Kandydaci na wiceprezydenta | Sprawdzenie w grze, czy wybór z 1952 roku jest odczuwalny do 1955 |
 
@@ -168,7 +177,7 @@ To najważniejszy brak: dziś KSP i meta-gra prawie się nie spotykają.
 | Dane RP-1 (dawna 1C) | `tools/rp1-extract`: lata technologii, programy, silniki z RP-1 4.8.1 do `data/rp1/` |
 | Paczka „PACE Flight Test” (2K) | Jeden kontrakt Contract Configurator do testu u autora. Opcjonalna |
 
-Bilans lotów z plastra 1 zostaje zastąpiony rozliczaniem Dyrektyw.
+**Zrobione wyprzedzająco (decyzja 0019):** bramka zapisu na początku kwartału, wykrywanie startów i Raport Misji z rozliczeniem tymczasowym. Rozliczanie Dyrektyw zastąpi tę regułę.
 
 **Kamień M1.5.** Lot Tristara rozliczony z prawdziwego zapisu: karta zaliczona albo nie, z uzasadnieniem.
 
@@ -187,7 +196,9 @@ Bilans lotów z plastra 1 zostaje zastąpiony rozliczaniem Dyrektyw.
 
 **Zrobione (decyzja 0018):** Łącznik AI, czyli Pakiet Kontekstu z widoku gracza, narracja kwartału i głosy doradców przez kopiuj-wklej, bez klucza API.
 
-**Zostaje:** memoranda dyrektorów po akcjach Biurka, rozmowa z postacią, referent Wniosków, kronika roku, opcjonalne bezpośrednie połączenie z API. Zasada Z3 bez wyjątków: AI dostaje wynik z silnika i `PlayerView`, zwraca tekst. Palety epok (Dossier III, część V) jako dane dla wzorców. Ślepy test modeli. Klucz API tylko w lokalnym `.env`.
+**Zrobione (decyzja 0019):** pełny pakiet z następstwami i czynami Andersona, warstwa ukryta na życzenie gracza, rozmowa prowadząca do decyzji, sceny do kart wydarzeń, zdjęcia z domeny publicznej.
+
+**Zostaje:** memoranda dyrektorów po akcjach Biurka, referent Wniosków, kronika roku, opcjonalne bezpośrednie połączenie z API. Zasada Z3 bez wyjątków: AI dostaje wynik z silnika i `PlayerView` (a na życzenie gracza warstwę ukrytą), zwraca tekst. Palety epok (Dossier III, część V) jako dane dla wzorców. Ślepy test modeli. Klucz API tylko w lokalnym `.env`.
 
 **Kamień M3.**
 

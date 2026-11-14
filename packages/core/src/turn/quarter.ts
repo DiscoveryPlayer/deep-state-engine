@@ -5,14 +5,15 @@
  *   closeQuarter  — rozlicza kwartał (Korekty, frakcje, przepływy wskaźników), zapisuje raport,
  *                   przechodzi do następnego kwartału i od razu go otwiera.
  *
- * Gracz działa MIĘDZY tymi krokami: czyta depesze, rozstrzyga sprawy na Biurku, wydaje
- * Uwagę Dowódcy, gra w KSP i importuje zapis. Silnik niczego nie cofa i niczego nie zgaduje.
+ * Gracz działa MIĘDZY tymi krokami: wczytuje zapis KSP z końca poprzedniego kwartału (bramka,
+ * `turn/flights.ts`), składa Raporty Misji, czyta depesze, rozstrzyga sprawy na Biurku i wydaje
+ * Uwagę Dowódcy. Silnik niczego nie cofa i niczego nie zgaduje.
  */
 import type { GameContent, LaunchSite } from '../content/schema.ts';
-import type { BudgetLedgerEntry, GameState, KspSnapshot, QuarterReport, WorldLogEntry } from '../state/schema.ts';
-import { kspSnapshotSchema } from '../state/schema.ts';
-import { nextQuarter, parseQuarterCode, quarterCode, quarterLabel, quarterOfDate, quartersBetween } from '../time.ts';
+import type { BudgetLedgerEntry, GameState, QuarterReport, WorldLogEntry } from '../state/schema.ts';
+import { nextQuarter, parseQuarterCode, quarterCode, quarterLabel, quartersBetween } from '../time.ts';
 import { advanceWorld } from '../world/engine.ts';
+import { settleFlights } from './flights.ts';
 
 /** Uwaga Dowódcy na kwartał (GDD 6.1 i 10.1). */
 export const BASE_UD = 6;
@@ -29,16 +30,8 @@ const PP_HIGH = 70;
  */
 const PP_DRIFT_HIGH = 55;
 const PP_DRIFT_LOW = 45;
-/**
- * Bilans lotów z migawek KSP (reguła tymczasowa, decyzja 0017 punkt 7). Porównuje migawkę
- * zamykanego kwartału z poprzednią: ukończone kontrakty to sukces widoczny w prasie i w Kongresie,
- * awarie w locie to złe nagłówki. Zastąpi ją rozliczanie Dyrektyw i kart lotów (GDD 14).
- */
-const FLIGHT_CONTRACT_PP = 1;
-const FLIGHT_CONTRACT_PP_MAX = 3;
+/** Ukończone kontrakty w KSP to wynik, który Waszyngton widzi w sprawozdaniach (decyzja 0019). */
 const FLIGHT_CONTRACT_ZW = 1;
-const FLIGHT_FAILURE_PP = 1;
-const FLIGHT_FAILURE_PP_MAX = 2;
 /** Nastawienie frakcji, od którego zegar Cierpliwości rośnie albo się cofa (GDD 7.1). */
 const DISPOSITION_ANGRY = -2;
 const DISPOSITION_CONTENT = 2;
@@ -62,6 +55,9 @@ export function beginQuarter(input: GameState, content: GameContent): QuarterSte
   let state = structuredClone(input);
   let entries: WorldLogEntry[] = [];
   state.desk.opening = { ...state.indicators, KP: state.currencies.KP };
+  // Nowy kwartał zaczyna się od wczytania zapisu KSP (bramka, decyzja 0019).
+  const code = quarterCode(state.quarter);
+  if (state.ksp.gate.quarter !== code) state.ksp.gate = { quarter: code, status: 'pending' };
   if (content.world) {
     const step = advanceWorld(state, content.world);
     state = step.state;
@@ -179,28 +175,19 @@ export function closeQuarter(input: GameState, content: GameContent): CloseQuart
   if (state.indicators.PP > PP_DRIFT_HIGH) state.indicators.PP -= 1;
   else if (state.indicators.PP < PP_DRIFT_LOW) state.indicators.PP += 1;
 
-  // 4. Migawka KSP: bilans lotów albo przypomnienie w trybie Honorowym.
-  const current = state.ksp.snapshots.find((s) => s.quarter === q);
+  // 4. Fakty z KSP: kontrakty z migawki wczytanej na otwarciu kwartału i Raporty Misji (decyzja 0019).
+  const current = state.ksp.snapshots.find((x) => x.quarter === q);
   if (!current) {
-    notes.push('Brak migawki kariery KSP za ten kwartał — fakty z lotów nie zostały wczytane.');
+    notes.push('Kwartał bez zapisu kariery KSP: fakty z lotów nie zostały wczytane.');
   } else {
-    const previous = state.ksp.snapshots.filter((s) => s.quarter < q).at(-1);
+    const previous = state.ksp.snapshots.filter((x) => x.quarter < q).at(-1);
     const contracts = Math.max(0, current.contractsCompleted - (previous?.contractsCompleted ?? 0));
-    const failures = Math.max(0, current.failures - (previous?.failures ?? 0));
     if (contracts > 0) {
-      const pp = Math.min(FLIGHT_CONTRACT_PP_MAX, contracts * FLIGHT_CONTRACT_PP);
-      state.indicators.PP = clamp(state.indicators.PP + pp, 0, 100);
       state.indicators.ZW = clamp(state.indicators.ZW + FLIGHT_CONTRACT_ZW, 0, 100);
-      notes.push(
-        `Bilans lotów: ukończone kontrakty (${contracts}). Poparcie Publiczne +${pp}, Zaufanie Waszyngtonu +${FLIGHT_CONTRACT_ZW}.`,
-      );
-    }
-    if (failures > 0) {
-      const pp = Math.min(FLIGHT_FAILURE_PP_MAX, failures * FLIGHT_FAILURE_PP);
-      state.indicators.PP = clamp(state.indicators.PP - pp, 0, 100);
-      notes.push(`Bilans lotów: awarie w locie (${failures}). Poparcie Publiczne −${pp}.`);
+      notes.push(`Kontrakty ukończone w KSP (${contracts}): Zaufanie Waszyngtonu +${FLIGHT_CONTRACT_ZW}.`);
     }
   }
+  notes.push(...settleFlights(state, content));
 
   const newsCount = state.world.log.filter((e) => e.quarter === q && e.visibility === 'public').length;
   const report: QuarterReport = {
@@ -230,67 +217,6 @@ export function settleCorrection(input: GameState, quarter: string): GameState {
   if (!entry) throw new QuarterError(`Nie ma rozliczenia budżetu za kwartał ${quarter}.`);
   entry.settled = true;
   return state;
-}
-
-export interface KspImportResult {
-  state: GameState;
-  /** Ostrzeżenia po polsku, np. o dacie zapisu poza kwartałem. */
-  warnings: string[];
-}
-
-/**
- * Zapisuje migawkę kariery KSP dla bieżącego kwartału. Fakty z KSP są nienaruszalne (zasada Z1):
- * silnik ich nie poprawia, tylko ostrzega, gdy data zapisu nie pasuje do kwartału.
- */
-export function recordKspSnapshot(
-  input: GameState,
-  raw: Omit<KspSnapshot, 'quarter'>,
-  sites: readonly LaunchSite[] = [],
-): KspImportResult {
-  const state = structuredClone(input);
-  const q = quarterCode(state.quarter);
-  const snapshot = kspSnapshotSchema.parse({ ...raw, quarter: q });
-  const warnings: string[] = [];
-  const saveQuarter = quarterOfDate(snapshot.date);
-  const diff = quartersBetween(state.quarter, saveQuarter);
-  if (diff < 0) {
-    warnings.push(
-      `Zapis jest z ${snapshot.date}, czyli sprzed bieżącego kwartału (${quarterLabel(state.quarter)}). ` +
-        'Jeśli to cofnięcie przez granicę rozliczonego kwartału, silnik potraktuje je jako naruszenie zasad uczciwości.',
-    );
-  } else if (diff > 0) {
-    const end = nextQuarter(state.quarter);
-    const boundary = Date.UTC(end.year, (end.q - 1) * 3, 1);
-    const days = Math.floor((Date.parse(`${snapshot.date}T00:00:00Z`) - boundary) / 86_400_000);
-    if (days > QUARTER_TOLERANCE_DAYS) {
-      warnings.push(
-        `Zapis jest z ${snapshot.date}: ${days} dni po końcu kwartału. Dozwolone okno to ${QUARTER_TOLERANCE_DAYS} dni.`,
-      );
-    } else if (days > QUARTER_TOLERANCE_DAYS / 2) {
-      warnings.push(`Zapis jest z ${snapshot.date}: ${days} dni po końcu kwartału (w oknie tolerancji).`);
-    }
-  }
-  // Miejsca startu: start z miejsca, które w świecie gry nie działa, to naruszenie zasad
-  // uczciwości (GDD 22). Silnik ostrzega i zapisuje, ale niczego nie blokuje ani nie cofa.
-  for (const launch of snapshot.launchesInQuarter) {
-    if (launch.site === null || sites.length === 0) continue;
-    const problem = launchSiteProblem(sites, launch.site, state.quarter);
-    if (problem) {
-      warnings.push(`Start „${launch.vessel}” (${launch.date}): ${problem}`);
-      state.chronicle.push({
-        quarter: q,
-        text: `Naruszenie zasad uczciwości: start „${launch.vessel}” — ${problem}`,
-        tags: ['ksp', 'naruszenie'],
-      });
-    }
-  }
-  state.ksp.snapshots = [...state.ksp.snapshots.filter((s) => s.quarter !== q), snapshot];
-  state.chronicle.push({
-    quarter: q,
-    text: `Wczytano zapis kariery KSP (${snapshot.date}): fundusze ${Math.round(snapshot.funds)}, starty ${snapshot.launches}.`,
-    tags: ['ksp'],
-  });
-  return { state, warnings };
 }
 
 /** Dlaczego z miejsca nie można startować w danym kwartale (po polsku) albo null, gdy można. */

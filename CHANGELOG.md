@@ -2,6 +2,19 @@
 
 Najnowsze na górze. Każdy wpis odpowiada jednemu pull requestowi.
 
+## 2026-11-14 — Pamięć świata: echa, Rejestr, bramka zapisu, Raporty Misji (decyzja 0019)
+
+- **Echa** (`data/events/echoes.yaml`, 91 pozycji): następstwa decyzji, gałęzi wątków i wzorców wracają po kilku kwartałach jako depesze z dopiskiem, z czego wynikają. Kolejka `world.echoQueue`, warunki, szansa, echa ciche.
+- **Rejestr Następstw:** skutki `registry` i `registryClose`, warunek `registry`. Wpisy jawne w zakładce Ludzie; wpisy ukryte widzi tylko narrator.
+- **Bramka zapisu:** kwartał zaczyna się od wczytania pliku `.sfs`. Do tego czasu serwer odrzuca decyzje, akcje i zamknięcie kwartału. Obejście „Nie mam zapisu” zostawia wpis w Kronice.
+- **Raporty Misji** (GDD 18.3): nowe starty z zapisu dostają numer `M-RRRR-NN` i formularz (wynik, przeznaczenie, klasyfikacja, uwaga). Rozliczenie przy zamknięciu kwartału zastępuje „bilans lotów”; zatajone niepowodzenie tworzy Tajemnicę, która może wrócić jako przeciek.
+- **Narrator:** pełny pakiet (kody kart, przyczyny następstw, decyzje i akcje Andersona, Rejestr, loty), opcjonalna **warstwa ukryta** (`toNarratorSecrets`) w pakiecie zapieczętowanym, kopiowanym do schowka albo zapisywanym do `campaigns/pakiety/`, **rozmowa** zakończona blokiem `## WYNIK`, **scena** do pojedynczej karty.
+- **Interfejs:** menu główne, usuwanie kampanii (plik trafia do `campaigns/usuniete/`), okno bramki, Odprawa jako karty wydarzeń ze zdjęciami i tekstem narratora, Raporty Misji w zakładce Loty (KSP), przyczyny następstw w Depeszach.
+- **Zdjęcia:** `data/images/manifest.yaml` (19 pozycji) i `Pobierz-zdjecia.bat` / `npm run zdjecia`, który pobiera z Wikimedia Commons tylko pliki z domeny publicznej. Pliki zostają na dysku gracza.
+- **Stan kampanii w wersji 5** z migracją 4 → 5 (starsza kampania po aktualizacji poprosi o zapis za bieżący kwartał).
+- `CLAUDE.md`: zasada Z4 ma drugie wyjście ze stanu, wyłącznie do pakietu narratora.
+- Testy: 109 (było 94).
+
 ## 2026-11-12 — Wierność historii i Łącznik AI (decyzja 0018)
 
 - **Wierność historii:** wybór przy zakładaniu kampanii (wysoka, umiarkowana, niska; około 90%, 70% i 50% rozstrzygnięć historycznych). Polecenie `dse swiat` dostało opcję `--wiernosc` i miarę zbieżności w raporcie serii.

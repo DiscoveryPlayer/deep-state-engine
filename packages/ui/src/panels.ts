@@ -5,6 +5,7 @@
 import type { DeskPayload } from './api.ts';
 import { h, plural, quarterName, signed, type Child } from './dom.ts';
 import { findNarrative, narrativeInvite, quarterNarrative, regionBoard } from './narrator.ts';
+import { cardNarrative, datePl, missionReports, registryList, type FlightDraft } from './opening.ts';
 
 export const TABS = [
   { id: 'biurko', label: 'Biurko' },
@@ -24,12 +25,18 @@ export interface PanelActions {
   showQuarter(code: string): void;
   askNarrator(): void;
   readNarrative(id: string): void;
+  editFlight(flightId: string, draft: FlightDraft): void;
+  saveFlight(flightId: string): void;
+  /** Otwiera odprawę na karcie wydarzenia o danym kodzie. */
+  openCard(code: string): void;
 }
 
 export interface PanelState {
   /** Kwartał pokazywany w Depeszach. */
   newsQuarter: string;
   busy: boolean;
+  /** Niezapisane zmiany w Raportach Misji. */
+  flightDrafts: Record<string, FlightDraft>;
 }
 
 const INDICATOR_NAMES: Record<string, string> = {
@@ -47,6 +54,8 @@ const NEWS_KIND: Record<string, string> = {
   dilemma: 'Decyzja',
   reaction: 'Reakcja',
   situation: 'Sytuacja',
+  echo: 'Następstwo',
+  flight: 'Lot',
 };
 
 function empty(text: string): HTMLElement {
@@ -176,14 +185,29 @@ function newsPanel(p: DeskPayload, state: PanelState, on: PanelActions): HTMLEle
         : h(
             'ol',
             { class: 'news' },
-            items.map((n) =>
-              h(
+            items.map((n) => {
+              const story = n.card ? cardNarrative(p.view.narrative, n.quarter, n.card) : null;
+              return h(
                 'li',
                 { class: `news-item kind-${n.kind}` },
                 h('span', { class: 'tag' }, n.actor ?? NEWS_KIND[n.kind] ?? n.kind),
-                h('div', null, h('strong', null, n.title), h('p', null, n.text)),
-              ),
-            ),
+                h(
+                  'div',
+                  null,
+                  h('strong', null, n.title),
+                  n.cause ? h('p', { class: 'meta' }, `Następstwo: ${n.cause}`) : null,
+                  h('p', null, n.text),
+                  story ? h('p', { class: 'news-story' }, story.body) : null,
+                  n.card && isCurrent
+                    ? h(
+                        'button',
+                        { class: 'btn btn-small btn-quiet', onClick: () => on.openCard(n.card!) },
+                        'Otwórz kartę',
+                      )
+                    : null,
+                ),
+              );
+            }),
           ),
     ),
     // Fakty najpierw, opowieść po nich: narracja niczego nie dodaje do depesz, tylko je ożywia.
@@ -400,13 +424,12 @@ function peoplePanel(p: DeskPayload): HTMLElement {
     ),
     section(
       'Rejestr Następstw',
-      view.registry.length === 0
-        ? empty('Rejestr jest pusty. Długi, obietnice i urazy pojawią się wraz z decyzjami.')
-        : h(
-            'ul',
-            { class: 'notes' },
-            view.registry.map((r) => h('li', null, h('b', null, `${REGISTRY_TYPES[r.type] ?? r.type}: `), r.title)),
-          ),
+      h(
+        'p',
+        { class: 'lead' },
+        'Długi, obietnice, urazy i tajemnice, o których Anderson wie. Wracają w późniejszych wydarzeniach. Nie wszystko, co ludzie zapamiętali, jest tu zapisane.',
+      ),
+      registryList(view) ?? empty('Rejestr jest pusty. Wpisy pojawią się wraz z decyzjami.'),
     ),
   );
 }
@@ -415,24 +438,74 @@ function peoplePanel(p: DeskPayload): HTMLElement {
 
 function kspPanel(p: DeskPayload, state: PanelState, on: PanelActions): HTMLElement {
   const snap = p.view.ksp;
+  const now = p.campaign.quarterCode;
   const input = h('input', {
     type: 'text',
     id: 'save-path',
-    placeholder: 'np. D:\\SteamLibrary\\steamapps\\common\\Kerbal Space Program\\saves\\PACE\\persistent.sfs',
+    placeholder: 'np. D:\\KSP\\saves\\PACE\\persistent.sfs',
     autocomplete: 'off',
     spellcheck: 'false',
   });
   const siteName = (id: string | null) =>
     id === null ? 'nieznane' : (p.launchSites.find((s) => s.id === id)?.name ?? id);
+  const past = p.view.flights.filter((f) => f.detectedIn !== now).reverse();
+  const reports = missionReports(p, state.flightDrafts, state.busy, { edit: on.editFlight, save: on.saveFlight });
+  const OUT = { success: 'sukces', partial: 'częściowy sukces', failure: 'niepowodzenie' } as const;
+  const PUR = {
+    science: 'naukowe',
+    defense: 'obronne',
+    crewed: 'załogowe',
+    test: 'próba',
+    allied: 'sojusznicze',
+  } as const;
+  const CLS = { public: 'jawny', confidential: 'poufny', secret: 'tajny' } as const;
   return h(
     'div',
     { class: 'panel-body' },
     section(
-      'Wczytaj zapis kariery',
+      `Raporty Misji: ${p.campaign.quarterLabel}`,
+      reports ??
+        empty(
+          p.view.kspGate.status === 'skipped'
+            ? 'Ten kwartał został otwarty bez zapisu KSP, więc gra nie zna lotów z poprzedniego kwartału.'
+            : 'W zapisie wczytanym na otwarcie kwartału nie było nowych startów.',
+        ),
+    ),
+    snap === null
+      ? section(
+          'Stan kariery',
+          empty('Nie wczytano jeszcze żadnego zapisu. Bez niego gra nie zna Twoich lotów ani funduszy.'),
+        )
+      : section(
+          `Stan kariery na ${datePl(snap.date)}`,
+          h(
+            'dl',
+            { class: 'facts' },
+            ...(
+              [
+                ['Kariera', snap.title],
+                ['Wczytano na otwarcie', quarterName(snap.quarter)],
+                ['Fundusze', Math.round(snap.funds).toLocaleString('pl-PL')],
+                ['Reputacja', snap.reputation.toFixed(0)],
+                ['Zaufanie (Confidence)', snap.confidence.toFixed(0)],
+                ['Inżynierowie i naukowcy', `${snap.engineers} i ${snap.researchers}`],
+                ['Miesięczne wynagrodzenia', Math.round(snap.monthlySalaries).toLocaleString('pl-PL')],
+                ['Miejsce startu', siteName(snap.launchSite || null)],
+                [
+                  'Starty w karierze',
+                  `${snap.launches} (${snap.failures} ${plural(snap.failures, 'awaria części', 'awarie części', 'awarii części')})`,
+                ],
+                ['Programy', snap.programs.map((x) => x.name).join(', ') || 'brak'],
+              ] as const
+            ).flatMap(([k, v]) => [h('dt', null, k), h('dd', null, v)]),
+          ),
+        ),
+    section(
+      'Wczytaj zapis ponownie',
       h(
         'p',
         { class: 'lead' },
-        'Po sesji w KSP zapisz grę, zamknij KSP i podaj tu ścieżkę do pliku zapisu. Gra tylko czyta ten plik i niczego w nim nie zmienia.',
+        'Zapis wczytuje się na otwarcie kwartału. Tutaj możesz go podmienić, jeśli wskazałeś zły plik. Złożone Raporty Misji zostaną zachowane.',
       ),
       h(
         'form',
@@ -452,43 +525,24 @@ function kspPanel(p: DeskPayload, state: PanelState, on: PanelActions): HTMLElem
         ),
       ),
     ),
-    snap === null
+    past.length > 0
       ? section(
-          'Stan kariery',
-          empty('Nie wczytano jeszcze żadnego zapisu. Bez niego gra nie zna Twoich lotów ani funduszy.'),
-        )
-      : section(
-          `Stan kariery na ${snap.date}`,
+          'Dziennik lotów',
           h(
-            'dl',
-            { class: 'facts' },
-            ...(
-              [
-                ['Kariera', snap.title],
-                ['Wczytano dla kwartału', quarterName(snap.quarter)],
-                ['Fundusze', Math.round(snap.funds).toLocaleString('pl-PL')],
-                ['Reputacja', snap.reputation.toFixed(0)],
-                ['Zaufanie (Confidence)', snap.confidence.toFixed(0)],
-                ['Inżynierowie i naukowcy', `${snap.engineers} i ${snap.researchers}`],
-                ['Miesięczne wynagrodzenia', Math.round(snap.monthlySalaries).toLocaleString('pl-PL')],
-                ['Miejsce startu', siteName(snap.launchSite || null)],
-                [
-                  'Starty w karierze',
-                  `${snap.launches} (${snap.failures} ${plural(snap.failures, 'awaria', 'awarie', 'awarii')})`,
-                ],
-                ['Programy', snap.programs.map((x) => x.name).join(', ') || 'brak'],
-              ] as const
-            ).flatMap(([k, v]) => [h('dt', null, k), h('dd', null, v)]),
-          ),
-          h('h4', null, 'Starty w tym kwartale'),
-          snap.launchesInQuarter.length === 0
-            ? empty('W zapisie nie ma startów z bieżącego kwartału.')
-            : h(
-                'ul',
-                { class: 'notes' },
-                snap.launchesInQuarter.map((l) => h('li', null, `${l.date}: ${l.vessel} (${siteName(l.site)})`)),
+            'ul',
+            { class: 'notes' },
+            past.map((f) =>
+              h(
+                'li',
+                null,
+                h('b', null, `${f.id} „${f.vessel}”`),
+                ` ${datePl(f.date)}, ${siteName(f.site)}`,
+                f.report ? `: ${OUT[f.report.outcome]}, ${PUR[f.report.purpose]}, ${CLS[f.report.classification]}` : '',
               ),
-        ),
+            ),
+          ),
+        )
+      : null,
   );
 }
 

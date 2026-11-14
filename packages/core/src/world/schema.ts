@@ -18,7 +18,7 @@
  * zod sprawdza je przy wczytaniu, a silnik nie musi niczego parsować ani wykonywać.
  */
 import { z } from 'zod';
-import { factionIdSchema } from '../content/schema.ts';
+import { factionIdSchema, registryTypeSchema } from '../content/schema.ts';
 
 const id = z.string().regex(/^[a-z0-9][a-z0-9_-]*$/, 'identyfikator: małe litery, cyfry, "-" lub "_" (np. "abadan")');
 const quarterCode = z.string().regex(/^\d{4}-Q[1-4]$/, 'kod kwartału, np. 1951-Q1');
@@ -58,7 +58,8 @@ export type Condition =
   | { flag: string }
   | { stage: string }
   | { branch: string }
-  | { era: EraId; op: ComparisonOp };
+  | { era: EraId; op: ComparisonOp }
+  | { registry: string };
 
 const op = z.enum(COMPARISON_OPS);
 
@@ -80,6 +81,8 @@ export const conditionSchema: z.ZodType<Condition> = z.lazy(() =>
       })
       .strict(),
     z.object({ era: z.enum(ERA_IDS), op }).strict(),
+    /** Czy w Rejestrze Następstw jest aktywny wpis o tym kluczu. */
+    z.object({ registry: id }).strict(),
   ]),
 );
 
@@ -115,6 +118,33 @@ export const effectSchema = z.union([
       }),
     })
     .strict(),
+  /**
+   * Echo: dalszy ciąg, który silnik wywoła za `after` kwartałów (decyzja 0019).
+   * Definicje ech są w `events/echoes.yaml`.
+   */
+  z.object({ echo: id, after: z.number().int().min(1).max(12) }).strict(),
+  /**
+   * Wpis Rejestru Następstw (GDD 12). `visible: false` tworzy wpis ukryty: gracz go nie widzi,
+   * ale warunki i echa mogą się do niego odwołać przez `key`.
+   */
+  z
+    .object({
+      registry: z
+        .object({
+          key: id,
+          type: registryTypeSchema,
+          title: z.string().min(1),
+          /** Kto wie albo kogo wpis dotyczy (postaci, frakcje, „anderson”). */
+          with: z.array(z.string().min(1)).default(['anderson']),
+          weight: z.number().int().min(1).max(3).default(1),
+          visible: z.boolean().default(true),
+          note: z.string().optional(),
+        })
+        .strict(),
+    })
+    .strict(),
+  /** Zamyka aktywny wpis Rejestru o danym kluczu: rozliczony (`resolved`) albo ujawniony (`revealed`). */
+  z.object({ registryClose: id, as: z.enum(['resolved', 'revealed']).default('resolved') }).strict(),
 ]);
 export type Effect = z.infer<typeof effectSchema>;
 
@@ -422,12 +452,52 @@ export const worldDefinitionSchema = z
 export const patternsFileSchema = z.object({ patterns: z.array(patternContentSchema).default([]) }).strict();
 export const dilemmasFileSchema = z.object({ dilemmas: z.array(dilemmaContentSchema).default([]) }).strict();
 
+// ── Echa ────────────────────────────────────────────────────────────────────
+
+/**
+ * Echo: krótkie wydarzenie, które wraca po decyzji albo rozstrzygnięciu. Trafia do kolejki
+ * skutkiem `echo` i odpala się w wyznaczonym kwartale.
+ */
+export const echoContentSchema = z
+  .object({
+    id,
+    /**
+     * Źródła, po których echo samo staje w kolejce: „dylemat.opcja”, „dylemat.biernosc”,
+     * „wątek.etap.opcja” (decyzja etapu), „wątek.etap.gałąź” albo identyfikator wzorca.
+     * Puste, gdy echo wstawia do kolejki skutek `echo` albo sam silnik.
+     */
+    on: z.array(z.string().min(1)).default([]),
+    /** Po ilu kwartałach od źródła echo wraca. 0 działa od razu i wymaga `silent`. */
+    after: z.number().int().min(0).max(12).default(2),
+    /** Echo ciche: stosuje skutki (np. wpis Rejestru) bez depeszy. */
+    silent: z.boolean().default(false),
+    title: z.string().min(1),
+    text: z.string().min(1),
+    effects: z.array(effectSchema).default([]),
+    visibility: visibility.default('public'),
+    /** Warunek sprawdzany w kwartale terminu. Niespełniony: echo przepada albo idzie wariant `otherwise`. */
+    requires: conditionSchema.optional(),
+    /** Szansa odpalenia (losowana raz, w kwartale terminu). */
+    chance: z.number().min(0).max(1).default(1),
+    otherwise: z
+      .object({ title: z.string().min(1), text: z.string().min(1), effects: z.array(effectSchema).default([]) })
+      .strict()
+      .optional(),
+    region: id.optional(),
+    source: z.string().optional(),
+  })
+  .strict();
+export type EchoContent = z.infer<typeof echoContentSchema>;
+export const echoesFileSchema = z.object({ echoes: z.array(echoContentSchema).default([]) }).strict();
+
 export interface WorldContent {
   definition: z.infer<typeof worldDefinitionSchema>;
   threads: ThreadContent[];
   templates: ThreadTemplateContent[];
   patterns: PatternContent[];
   dilemmas: DilemmaContent[];
+  /** Echa decyzji (opcjonalne: świat bez pliku `echoes.yaml` nie ma ech). */
+  echoes?: EchoContent[];
 }
 
 /**
@@ -440,4 +510,5 @@ export const WORLD_CONTENT_PATHS = {
   templatesDir: 'events/templates',
   patterns: 'events/patterns.yaml',
   dilemmas: 'events/dilemmas.yaml',
+  echoes: 'events/echoes.yaml',
 } as const;

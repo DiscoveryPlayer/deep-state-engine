@@ -171,6 +171,35 @@ export type TraitContent = z.infer<typeof traitSchema>;
 export type CharacterContent = z.infer<typeof characterContentSchema>;
 export type RegistryEntryContent = z.infer<typeof registryEntryContentSchema>;
 
+// ── Zdjęcia ─────────────────────────────────────────────────────────────────
+
+/**
+ * Wpis manifestu zdjęć (data/images/manifest.yaml). Same pliki nie są częścią repozytorium:
+ * pobiera je skrypt `npm run zdjecia` z Wikimedia Commons, po sprawdzeniu licencji.
+ */
+export const imageEntrySchema = z
+  .object({
+    id: z.string().regex(/^[a-z0-9][a-z0-9-]*$/),
+    /** Nazwa pliku na dysku, w data/images/pliki/. */
+    file: z.string().regex(/^[a-z0-9][a-z0-9-]*\.(jpg|png)$/),
+    /**
+     * Tytuły plików w Wikimedia Commons, np. „File:Ivy Mike - mushroom cloud.jpg”. Skrypt bierze
+     * pierwszy, który istnieje i ma licencję domeny publicznej.
+     */
+    commons: z.array(z.string().regex(/^File:.+\.(jpe?g|png|tiff?|gif)$/i)).min(1),
+    /** Podpis po polsku. */
+    caption: z.string().min(1),
+    /** Tematy, przy których zdjęcie się pojawia: identyfikatory wątków, dylematów, wzorców albo „lot”. */
+    for: z.array(z.string().min(1)).min(1),
+  })
+  .strict();
+export type ImageEntry = z.infer<typeof imageEntrySchema>;
+export const imageManifestSchema = z.object({ images: z.array(imageEntrySchema) }).strict();
+export const IMAGE_MANIFEST_FILE = 'images/manifest.yaml';
+/** Folder z pobranymi zdjęciami i plik z opisami źródeł (względem data/). */
+export const IMAGE_FILES_DIR = 'images/pliki';
+export const IMAGE_CREDITS_FILE = 'images/pliki/zrodla.json';
+
 export interface GameContent {
   campaign: CampaignContent;
   factions: FactionContent[];
@@ -181,6 +210,8 @@ export interface GameContent {
   world?: WorldContent;
   /** Miejsca startu (data/launch-sites.yaml). Opcjonalne w testach. */
   launchSites?: LaunchSite[];
+  /** Manifest zdjęć (data/images/manifest.yaml). Opcjonalny. */
+  images?: ImageEntry[];
 }
 
 /** Pliki treści i ich schematy — wspólna lista dla loadera i testów. */

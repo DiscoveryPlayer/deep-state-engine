@@ -7,10 +7,14 @@ import {
   beginQuarter,
   closeQuarter,
   createInitialState,
+  echoContentSchema,
+  fileMissionReport,
+  kspGatePending,
   launchSiteProblem,
   performDeskAction,
   recordKspSnapshot,
   settleCorrection,
+  skipKspGate,
   toPlayerView,
   worldDefinitionSchema,
   patternContentSchema,
@@ -49,15 +53,37 @@ function content(): GameContent {
   };
 }
 
-function start(): GameState {
-  return beginQuarter(createInitialState(content(), { id: 't', seed: 'PACE-1951' }), content()).state;
+function start(c: GameContent = content()): GameState {
+  return beginQuarter(createInitialState(c, { id: 't', seed: 'PACE-1951' }), c).state;
+}
+
+/** Treść z echami, które silnik sam kolejkuje po zatajonej awarii. */
+function contentWithEchoes(): GameContent {
+  const c = content();
+  const echo = (id: string, extra: object) =>
+    echoContentSchema.parse({ id, title: id, text: 'Echo.', requires: { registry: 'zatajona-awaria' }, ...extra });
+  return {
+    ...c,
+    world: {
+      ...c.world!,
+      echoes: [
+        echo('przeciek-zatajonej-awarii', {
+          effects: [
+            { indicator: 'PP', add: -3 },
+            { registryClose: 'zatajona-awaria', as: 'revealed' },
+          ],
+        }),
+        echo('zatajona-awaria-przycicha', { silent: true, effects: [{ registryClose: 'zatajona-awaria' }] }),
+      ],
+    },
+  };
 }
 
 const snapshot: Omit<KspSnapshot, 'quarter'> = {
   file: 'persistent.sfs',
   title: 'PACE (CAREER)',
   ut: 7_000_000,
-  date: '1951-03-23',
+  date: '1951-01-08',
   funds: 20_000,
   reputation: 10,
   confidence: 300,
@@ -70,7 +96,7 @@ const snapshot: Omit<KspSnapshot, 'quarter'> = {
   failures: 1,
   contractsCompleted: 1,
   programs: [{ name: 'EarlyXPlanes', status: 'active' }],
-  launchesInQuarter: [{ vessel: 'Solstice 1', date: '1951-03-10', site: 'us_cape_canaveral' }],
+  newLaunches: [{ vessel: 'Solstice 1', date: '1951-01-05', site: 'us_cape_canaveral', failures: 0 }],
 };
 
 test('otwarcie kwartału: wydarzenia świata i pełna Uwaga Dowódcy', () => {
@@ -87,7 +113,7 @@ test('zamknięcie kwartału: Korekty w budżecie, raport, następny kwartał otw
   assert.equal(report.quarter, '1951-Q1');
   assert.equal(report.correctionUnits, -0.5);
   assert.equal(state.budget.ledger[0]!.unitFunds, null, 'bez migawki KSP wartość jednostki jest nieznana');
-  assert.ok(report.notes.some((n) => /Brak migawki kariery KSP/.test(n)));
+  assert.ok(report.notes.some((n) => /bez zapisu kariery KSP/.test(n)));
   assert.equal(state.world.log.filter((e) => e.quarter === '1951-Q2').length, 1, 'nowy kwartał ma już depesze');
   const second = closeQuarter(state, c);
   assert.equal(second.report.correctionUnits, -1, 'dwie Korekty po −0,5 nakładają się w drugim kwartale');
@@ -102,11 +128,34 @@ test('migawka KSP: jednostka Korekty to 20% miesięcznych wynagrodzeń; ostrzeż
   const closed = closeQuarter(ok.state, c);
   assert.equal(closed.state.budget.ledger[0]!.unitFunds, 800);
   assert.equal(toPlayerView(closed.state).budget.ledger[0]!.funds, -400);
-  assert.ok(!closed.report.notes.some((n) => /Brak migawki/.test(n)));
-  const late = recordKspSnapshot(start(), { ...snapshot, date: '1951-05-20' });
-  assert.match(late.warnings[0]!, /49 dni po końcu kwartału/);
-  const early = recordKspSnapshot(closed.state, snapshot);
-  assert.match(early.warnings[0]!, /sprzed bieżącego kwartału/);
+  assert.ok(!closed.report.notes.some((n) => /bez zapisu/.test(n)));
+  // Zapis ma pochodzić z początku kwartału: 30 dni zapasu, potem ostrzeżenie.
+  const late = recordKspSnapshot(start(), { ...snapshot, date: '1951-03-20' });
+  assert.match(late.warnings[0]!, /78 dni po początku kwartału/);
+  // W II kwartale zapis ze stycznia znaczy, że I kwartał nie został dograny...
+  const early = recordKspSnapshot(closed.state, { ...snapshot, ut: snapshot.ut + 1, newLaunches: [] });
+  assert.match(early.warnings[0]!, /poprzedni kwartał nie został w KSP rozegrany do końca/);
+  // ...a zapis starszy niż poprzedni to cofnięcie kariery.
+  const rewound = recordKspSnapshot(closed.state, { ...snapshot, ut: snapshot.ut - 1, newLaunches: [] });
+  assert.ok(rewound.warnings.some((w) => /naruszenie zasad uczciwości/.test(w)));
+  assert.ok(rewound.state.chronicle.some((x) => x.tags.includes('naruszenie')));
+});
+
+test('bramka zapisu: kwartał czeka na zapis, wczytanie albo pominięcie ją otwiera', () => {
+  const c = content();
+  const opened = start();
+  assert.ok(kspGatePending(opened));
+  const loaded = recordKspSnapshot(opened, snapshot);
+  assert.ok(!kspGatePending(loaded.state));
+  assert.equal(loaded.state.ksp.gate.status, 'loaded');
+  const skipped = skipKspGate(opened);
+  assert.equal(skipped.ksp.gate.status, 'skipped');
+  assert.ok(skipped.chronicle.some((x) => x.tags.includes('bez-zapisu')));
+  assert.throws(() => skipKspGate(skipped), /nie czeka na zapis/);
+  // Zamknięcie kwartału otwiera następny i bramka znów czeka.
+  const next = closeQuarter(loaded.state, c).state;
+  assert.deepEqual(next.ksp.gate, { quarter: '1951-Q2', status: 'pending' });
+  assert.ok(kspGatePending(next));
 });
 
 test('przepływ PP → ZW i zegary Cierpliwości frakcji', () => {
@@ -201,7 +250,7 @@ test('migawka KSP: start z miejsca drugiej strony trafia do Kroniki jako narusze
   assert.equal(clean.warnings.length, 0);
   const cheat = recordKspSnapshot(
     start(),
-    { ...snapshot, launchesInQuarter: [{ vessel: 'Wostok', date: '1951-03-10', site: 'kz_baikonur' }] },
+    { ...snapshot, newLaunches: [{ vessel: 'Wostok', date: '1951-01-05', site: 'kz_baikonur', failures: 0 }] },
     sites,
   );
   assert.equal(cheat.warnings.length, 1);
@@ -223,18 +272,109 @@ test('raport kwartału liczy zmiany od otwarcia kwartału, razem z akcjami Biurk
   );
 });
 
-test('bilans lotów: kontrakty i awarie z migawki zmieniają wskaźniki przy zamknięciu kwartału', () => {
-  const c = content();
-  const plain = closeQuarter(start(), c);
-  const flown = closeQuarter(recordKspSnapshot(start(), { ...snapshot, contractsCompleted: 5, failures: 3 }).state, c);
-  // Te same ziarna i ta sama treść: różnica to wyłącznie bilans lotów (+3 PP za kontrakty, −2 PP za awarie).
-  assert.equal(flown.report.after.PP - plain.report.after.PP, 1);
-  assert.equal(flown.report.after.ZW - plain.report.after.ZW, 1);
-  assert.ok(flown.report.notes.some((n) => /ukończone kontrakty \(5\)/.test(n)));
-  assert.ok(flown.report.notes.some((n) => /awarie w locie \(3\)/.test(n)));
+const launch = (vessel: string, date: string, failures = 0) => ({ vessel, date, site: 'us_cape_canaveral', failures });
 
-  // Następny kwartał liczy tylko przyrost względem poprzedniej migawki.
-  const next = recordKspSnapshot(flown.state, { ...snapshot, date: '1951-06-20', contractsCompleted: 5, failures: 3 });
-  const quiet = closeQuarter(next.state, c);
-  assert.ok(!quiet.report.notes.some((n) => /Bilans lotów/.test(n)));
+test('Raport Misji: lot z zapisu dostaje numer, depeszę i formularz; raport można poprawiać', () => {
+  const loaded = recordKspSnapshot(
+    start(),
+    { ...snapshot, newLaunches: [launch('A-1', '1951-01-03'), launch('A-2', '1951-01-06', 2)] },
+    sites,
+  );
+  assert.deepEqual(
+    loaded.flights.map((f) => f.id),
+    ['M-1951-01', 'M-1951-02'],
+  );
+  const entry = () => toPlayerView(state).worldNews.find((n) => n.topic === 'lot' && /A-2/.test(n.title))!;
+  let state = loaded.state;
+  assert.equal(entry().kind, 'flight');
+  assert.match(entry().text, /Start 6 stycznia 1951, Cape Canaveral\..*awarie części.*\(2\).*czeka na wypełnienie/);
+
+  state = fileMissionReport(
+    state,
+    'M-1951-02',
+    { outcome: 'failure', purpose: 'defense', classification: 'secret', note: ' Pękł zbiornik. ' },
+    sites,
+  );
+  assert.match(
+    entry().text,
+    /wynik — niepowodzenie; przeznaczenie — obronne; lot tajny\. Uwagi Dowódcy: Pękł zbiornik\./,
+  );
+  assert.equal(
+    state.world.log.filter((e) => e.ref === 'lot.M-1951-02').length,
+    1,
+    'depesza lotu jest jedna i zmienia treść',
+  );
+  assert.throws(
+    () => fileMissionReport(state, 'M-1951-99', { outcome: 'success', purpose: 'test', classification: 'public' }),
+    /Nie ma lotu/,
+  );
+
+  // Ponowne wczytanie zapisu w tym samym kwartale zachowuje złożony raport.
+  const again = recordKspSnapshot(
+    state,
+    { ...snapshot, newLaunches: [launch('A-1', '1951-01-03'), launch('A-2', '1951-01-06', 2)] },
+    sites,
+  );
+  assert.equal(again.state.ksp.flights.length, 2);
+  assert.equal(again.state.ksp.flights.find((f) => f.vessel === 'A-2')!.report!.outcome, 'failure');
+});
+
+test('rozliczenie lotów: prasa, Waszyngton, fasada, frakcje i zatajona awaria', () => {
+  const c = contentWithEchoes();
+  const base = closeQuarter(
+    recordKspSnapshot(start(c), { ...snapshot, contractsCompleted: 0, newLaunches: [] }).state,
+    c,
+  );
+  const fly = (reports: [string, Parameters<typeof fileMissionReport>[2]][]) => {
+    let s = recordKspSnapshot(start(c), {
+      ...snapshot,
+      contractsCompleted: 0,
+      newLaunches: reports.map(([v]) => launch(v, '1951-01-04')),
+    }).state;
+    reports.forEach(([, r], i) => {
+      s = fileMissionReport(s, `M-1951-0${i + 1}`, r);
+    });
+    return closeQuarter(s, c);
+  };
+  const diff = (r: ReturnType<typeof closeQuarter>, k: 'ZW' | 'PP' | 'WF') => r.report.after[k] - base.report.after[k];
+
+  // Dwa jawne sukcesy naukowe: PP +2, ZW +1, Rada Naukowa +1.
+  const science = fly([
+    ['S-1', { outcome: 'success', purpose: 'science', classification: 'public' }],
+    ['S-2', { outcome: 'success', purpose: 'science', classification: 'public' }],
+  ]);
+  assert.equal(diff(science, 'PP'), 2);
+  assert.equal(diff(science, 'ZW'), 1);
+  assert.equal(science.state.factions.RN!.disposition - base.state.factions.RN!.disposition, 1);
+  assert.ok(science.state.ksp.flights.every((f) => f.settled));
+
+  // Jawna awaria lotu obronnego: PP −2, ZW −1, WF −1.
+  const crash = fly([['D-1', { outcome: 'failure', purpose: 'defense', classification: 'public' }]]);
+  assert.deepEqual([diff(crash, 'PP'), diff(crash, 'ZW'), diff(crash, 'WF')], [-2, -1, -1]);
+
+  // Zatajona awaria: prasa nic nie wie, ale w Rejestrze jest Tajemnica i echo w kolejce.
+  const hushed = fly([['T-1', { outcome: 'failure', purpose: 'test', classification: 'secret' }]]);
+  assert.equal(diff(hushed, 'PP'), 0);
+  assert.ok(
+    toPlayerView(hushed.state).registry.some(
+      (r) => r.type === 'secret' && /Zatajona awaria: lot M-1951-01/.test(r.title),
+    ),
+  );
+  assert.deepEqual(
+    hushed.state.world.echoQueue.map((x) => [x.echo, x.due]),
+    [
+      ['przeciek-zatajonej-awarii', '1951-Q3'],
+      ['zatajona-awaria-przycicha', '1952-Q3'],
+    ],
+  );
+
+  // Lot bez raportu: rozliczony domyślnie jako jawna próba techniczna.
+  const lazy = closeQuarter(
+    recordKspSnapshot(start(c), { ...snapshot, contractsCompleted: 0, newLaunches: [launch('L-1', '1951-01-04')] })
+      .state,
+    c,
+  );
+  assert.ok(lazy.report.notes.some((n) => /wypełnione domyślnie \(1\)/.test(n)));
+  assert.equal(lazy.state.ksp.flights[0]!.report!.auto, true);
+  assert.equal(diff(lazy, 'PP'), 1);
 });

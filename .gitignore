@@ -13,6 +13,9 @@ coverage/
 campaigns/
 backups/
 
+# Zdjęcia pobierane skryptem `npm run zdjecia` (w repozytorium jest tylko manifest)
+data/images/pliki/
+
 # System
 .DS_Store
 Thumbs.db
